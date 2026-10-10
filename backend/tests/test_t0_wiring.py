@@ -7,7 +7,7 @@ from backend import main
 
 
 def test_main_mounts_existing_routers() -> None:
-    paths = {route.path for route in main.app.routes}
+    paths = set(main.app.openapi()["paths"])
     expected = {"response": "/api/decisions", "state": "/api/state", "incidents": "/api/incidents", "demo": "/api/demo/attack", "metrics": "/api/metrics"}
     for name, path in expected.items():
         exists = importlib.util.find_spec(f"backend.api.{name}") is not None
