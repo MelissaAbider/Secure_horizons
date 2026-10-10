@@ -17,7 +17,7 @@ Ten tasks, each run by one person with their own Claude Code. This part says **c
 
 | Task | What it delivers | Needs (mock meanwhile) | Unblocks |
 |---|---|---|---|
-| **T0** Foundations | repo skeleton, models, helpers, store, fallbacks, API on fixtures, fixtures, Makefile, guardrails | nothing | everyone |
+| **T0** Foundations | repo skeleton, models, helpers, store, API entry point, fixtures, Makefile, guardrails | nothing | everyone |
 | **T1** On-chain contracts | tokens, rsETH bridge with its flaw, oracle, 2 lending protocols, vault with guardian, evidence registry; local and Fuji deployment; ABIs; funding the roles with test AVAX | T0 | T2, T3, T4, T7, T8, T9 |
 | **T2** Scenario | seed, attack (3 variants, random seed), normal traffic, reset, run ground truth, demo routes | T1 (local chain as soon as `make deploy` works) | T3, T4, T5, T6, T7 |
 | **T3** Monitoring | collector, rules R1 to R5, engine, state routes | T1/T2 (series `fixtures/snapshots_*.jsonl`) | T4, T5, T6, T7 |
@@ -39,8 +39,7 @@ Ten tasks, each run by one person with their own Claude Code. This part says **c
 **Concretely, you build:**
 - the **data contract in code**: `backend/models.py` (Pydantic models from 2.6) and its exact mirror `frontend/src/types.ts`;
 - the **shared building blocks**: `settings.py` (`.env` variables, test keys derived from anvil's public mnemonic, the local chain), `chain.py` (read and send transactions), `store.py` (memory + JSONL files);
-- the **fallbacks** in `backend/_stubs.py` and `backend/api/_fixtures.py`: do-nothing `Engine`, `Responder`, `Executor`, `IncidentManager` and routers that serve the fixtures. `main.py` uses them only while the real module of T2/T3/T4/T5/T7 is missing, so T0 never creates a file another task owns;
-- the **API** `backend/main.py` with 5 routers serving the fixtures on every route in 2.9;
+- the **API entry point** `backend/main.py`: mounts the router of each task and wires engine → responder → incidents, for the modules that exist. A task plugs in by adding its own file, so T0 never creates a file another task owns;
 - the **fixtures** that tell the attack story, regenerable with `python -m fixtures._generate`;
 - the **tooling**: `Makefile`, `.env.example`, `.gitignore`, gitleaks (secret detector) as pre-commit, `CLAUDE.md`, `docs/contract-requests.md`.
 
@@ -57,16 +56,15 @@ Ten tasks, each run by one person with their own Claude Code. This part says **c
 - `send()`: per-sender lock, estimated gas × 1.3, 120 s timeout, compatible with web3.py 6 and 7.
 - `get_executor()` always returns the same instance; dry-run (simulation with no real transaction) if `DRY_RUN_ACTIONS=true`.
 - A single uvicorn worker; engine started only if `ENGINE_ENABLED=true`. No make target sets `NETWORK`.
-- No business logic in the fallbacks; no key in any versioned file.
+- No business logic in T0 files; no key in any versioned file.
 
-**Deliverables.** `backend/models.py`, `settings.py`, `chain.py`, `store.py`, `fixtures.py`, `main.py`, `_stubs.py`, `api/_fixtures.py`, `fixtures/*`, `frontend/src/types.ts`, `Makefile`, `mk/t0.mk`, `CLAUDE.md`, `.env.example`, `.gitignore`, `.pre-commit-config.yaml`, `requirements.txt`, tests `backend/tests/test_t0_*.py`. Branch `t0-foundations`, merged into `main` before everything else.
+**Deliverables.** `backend/models.py`, `settings.py`, `chain.py`, `store.py`, `fixtures.py`, `main.py`, `fixtures/*`, `frontend/src/types.ts`, `Makefile`, `mk/t0.mk`, `CLAUDE.md`, `.env.example`, `.gitignore`, `.pre-commit-config.yaml`, `requirements.txt`, tests `backend/tests/test_t0_*.py`. Branch `t0-foundations`, merged into `main` before everything else.
 
 **Acceptance tests (the ones that matter).**
 - T0-01 / T0-02: each fixture validates against its model and tells the story (`incident.saved_usd == 1325000.0`, `state.positions == []`, `verify.stored_hash` = `record_hash` of the R1 decision).
 - T0-03: recomputing keccak256 (a cryptographic hash) of the canonical JSON of the R1 decision gives back `record_hash`.
-- T0-04: with `USE_FIXTURES=true`, every route answers 200; `GET /api/incidents/UNKNOWN` → 404; `approve` returns `approved`.
 - T0-05: in `local` with no key, `deployer` = `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, 3 bots; in `fuji` with no key, `private_key("guardian")` raises `RuntimeError`.
-- T0-07: `main.py` imports and the `engine` → `responder` → `incidents` wiring is in place.
+- T0-04: `main.py` imports and mounts the router of every task module that exists.
 - T0-10 / T0-11: gitleaks finds no secret; `types.ts` compiles with `--strict`.
 
 **While waiting for the others.** Nothing to wait for: T0 depends on nobody, its only input is section 2 of this document. Afterwards, T0 approves contract change requests (2.12) and coordinates integration.
@@ -611,8 +609,7 @@ Each file has **a single owning task**. You only modify your task's files.
 ├── abi/<Contrat>.json           T1 (exported by make abi)
 ├── scenario/                    T2 (except scenario/__init__.py, created by T0)
 ├── backend/
-│   ├── __init__.py main.py models.py settings.py chain.py store.py fixtures.py
-│   │   _stubs.py api/_fixtures.py                                                T0 (frozen)
+│   ├── __init__.py main.py models.py settings.py chain.py store.py fixtures.py   T0 (frozen)
 │   ├── collector.py engine.py rules.py config/rules.yaml api/state.py            T3
 │   ├── responder.py executor.py notify.py evidence.py cli.py
 │   │   config/playbook.yaml api/response.py                                      T4
@@ -977,7 +974,7 @@ Errors, always with `{"detail": "..."}`:
 
 CORS open (`*`).
 
-### 2.10 Store and internal wiring (T0 provides the signatures and fallbacks)
+### 2.10 Store and internal wiring (T0 provides the signatures)
 
 ```python
 # backend/store.py (T0 ; in memory + JSONL writes in data/runtime/<network>/)
@@ -1022,7 +1019,7 @@ class IncidentManager:
 def get_executor() -> Executor   # singleton: DryRunExecutor if DRY_RUN_ACTIONS=true, otherwise Web3Executor
 ```
 
-Wiring (in `backend/main.py`, T0): `responder = Responder(store, get_executor())`, `engine.on_alerts(responder.handle)` then `responder.on_decisions(incidents.handle)`. While a task's module does not exist yet, `main.py` takes a do-nothing stand-in from `backend/_stubs.py` (classes) or `backend/api/_fixtures.py` (routes that serve the fixtures). As soon as a task adds its own file (for example `backend/responder.py`), `main.py` uses it with no edit: no file ever has two authors. If a task's module exists but fails to import, the error is raised, never hidden.
+Wiring (in `backend/main.py`, T0): `responder = Responder(store, get_executor())`, `engine.on_alerts(responder.handle)` then `responder.on_decisions(incidents.handle)`. `main.py` only mounts and wires the modules that exist: as soon as a task adds its file (for example `backend/responder.py`), it is used with no edit to `main.py`, so no file ever has two authors. A missing module is skipped (its routes answer 404 until then; the dashboard has its own fixture mode meanwhile). A module that exists but fails to import raises.
 
 Shared operating rules:
 
@@ -1081,7 +1078,7 @@ Every task follows the same outline:
 
 | Task | What it delivers | Needs (mock meanwhile) | Unblocks |
 |---|---|---|---|
-| **T0** Foundations | repo skeleton, models, helpers, store, fallbacks, API on fixtures, fixtures, Makefile, safeguards | nothing | everyone |
+| **T0** Foundations | repo skeleton, models, helpers, store, API entry point, fixtures, Makefile, safeguards | nothing | everyone |
 | **T1** On-chain contracts | tokens, rsETH bridge with its flaw, oracle, 2 lending protocols, vault with guardian, evidence registry; local and Fuji deployment; ABIs; funding roles with test AVAX | T0 | T2, T3, T4, T7, T8, T9 |
 | **T2** Scenario | seed, attack (3 variants, random seed), normal traffic, reset, run ground truth, demo routes | T1 (local chain as soon as `make deploy` works) | T3, T4, T5, T6, T7 |
 | **T3** Monitoring | collector, rules R1 to R5, engine, state routes | T1/T2 (`fixtures/snapshots_*.jsonl` series) | T4, T5, T6, T7 |
@@ -1095,15 +1092,15 @@ Every task follows the same outline:
 
 ### T0 · Repo foundations and shared contract
 
-**Goal.** Lay down the shared skeleton so every task can start on its own from minute one: directory tree, data contract in code, blockchain helpers, store, do-nothing fallbacks for the wired-together classes, an API serving fixtures on every route, consistent fixtures, Makefile, security safeguards. It is **the first commit merged into `main`**; every branch starts from it. The person holding T0 then validates contract change requests (2.12) and coordinates integration (section 4).
+**Goal.** Lay down the shared skeleton so every task can start on its own from minute one: directory tree, data contract in code, blockchain helpers, store, an API entry point that mounts each task's module, consistent fixtures, Makefile, security safeguards. It is **the first commit merged into `main`**; every branch starts from it. The person holding T0 then validates contract change requests (2.12) and coordinates integration (section 4).
 
 **Depends on.** Nothing.
 
 **Unblocks.** All tasks.
 
 **Owned files.**
-- Permanently T0: `TASKS.md`, `CLAUDE.md`, `Makefile`, `mk/t0.mk`, `.env.example`, `.gitignore`, `.pre-commit-config.yaml`, `requirements.txt`, `backend/__init__.py`, `backend/api/__init__.py`, `backend/tests/__init__.py`, `scenario/__init__.py`, `evaluation/__init__.py`, `backend/main.py`, `backend/models.py`, `backend/settings.py`, `backend/chain.py`, `backend/store.py`, `backend/fixtures.py`, `backend/_stubs.py`, `backend/api/_fixtures.py`, `fixtures/*`, `frontend/src/types.ts`, `docs/contract-requests.md`, `backend/tests/test_t0_*.py`.
-- T0 creates **no file owned by another task**. The stand-ins live in `backend/_stubs.py` and `backend/api/_fixtures.py`; `backend/main.py` switches to the real module (`engine.py`, `responder.py`, `executor.py`, `incidents.py`, `api/state.py`, `api/response.py`, `api/incidents.py`, `api/demo.py`, `api/metrics.py`) as soon as its owning task adds it. `backend/config/rules.yaml` is created by T3 and `backend/config/playbook.yaml` by T4.
+- Permanently T0: `TASKS.md`, `CLAUDE.md`, `Makefile`, `mk/t0.mk`, `.env.example`, `.gitignore`, `.pre-commit-config.yaml`, `requirements.txt`, `backend/__init__.py`, `backend/api/__init__.py`, `backend/tests/__init__.py`, `scenario/__init__.py`, `evaluation/__init__.py`, `backend/main.py`, `backend/models.py`, `backend/settings.py`, `backend/chain.py`, `backend/store.py`, `backend/fixtures.py`, `fixtures/*`, `frontend/src/types.ts`, `docs/contract-requests.md`, `backend/tests/test_t0_*.py`.
+- T0 creates **no file owned by another task**: `backend/main.py` uses the real module (`engine.py`, `responder.py`, `executor.py`, `incidents.py`, `api/state.py`, `api/response.py`, `api/incidents.py`, `api/demo.py`, `api/metrics.py`) as soon as its owning task adds it. `backend/config/rules.yaml` is created by T3 and `backend/config/playbook.yaml` by T4.
 - `backend/models.py` and `backend/settings.py` start from the provisional versions written by T4 (contract requests CR-001 and CR-002) and are completed by T0.
 
 **Read before starting.** Sections 1 and 2 in full.
@@ -1123,9 +1120,7 @@ Every task follows the same outline:
 | `backend/settings.py` | variables from 2.1, fallback to anvil accounts locally | all Python tasks |
 | `backend/chain.py` | functions from 2.4 | T2, T3, T4, T7 |
 | `backend/store.py` | `Store` class from 2.10 + `store` instance | T2, T3, T4, T5, T7 |
-| Fallbacks `backend/_stubs.py` (`Engine`, `Responder`, `plan_actions`, `IncidentManager`, `get_executor`) | signatures from 2.10, "does nothing" behaviour, used only while the real module is missing | T3, T4, T5 (adding the real module is enough) |
 | `backend/main.py` | FastAPI app, CORS, 5 routers, wiring from 2.10, engine start if `ENGINE_ENABLED=true` | everyone |
-| Fixture routers `backend/api/_fixtures.py` | all routes from 2.9, responses = fixtures, used only while the owning router is missing | T6 from minute one |
 | `fixtures/` | files from 2.13, regenerable with `python -m fixtures._generate` | T3, T4, T5, T6, T7 |
 | `Makefile` + `mk/t0.mk` | `include mk/*.mk`, targets `setup`, `backend`, `demo`, `test`, `help`, `test-t0` | everyone |
 | `.env.example` | all variables from 2.1, empty values, one comment line each | everyone |
@@ -1159,16 +1154,11 @@ Every task follows the same outline:
 
 6. **`backend/store.py`**: the class from 2.10, thread-safe (a `threading.RLock`). Data in memory; every append is also written as JSONL in `data/runtime/<network>/` (`snapshots.jsonl`, `alerts.jsonl`, `decisions.jsonl`, `incidents.jsonl`). `snapshots(limit)` keeps at most 2,000 snapshots in memory. `reset()` clears memory and renames the JSONL files with a timestamp suffix. `update_decision` replaces by id; `upsert_incident` inserts or replaces by id.
 
-7. **Fallbacks** in `backend/_stubs.py` (same signatures as 2.10, no business logic):
-   - `Engine`: `on_alerts` stores subscribers in `handlers`; `process` stores the snapshot and returns `[]`; `run_forever` loops on `asyncio.sleep(POLL_INTERVAL_S)` without reading anything.
-   - `plan_actions(...)` returns `[]`; `Responder.handle` returns `[]`; `on_decisions` stores subscribers in `handlers`.
-   - `IncidentManager.handle` returns `None`.
-   - `DryRunExecutor` (fake hash `"0xdry" + sha256(params).hex()[:59]`) and `get_executor()`, which always returns the same instance.
-   - `backend/store.py` exposes `generation` (integer incremented by `reset()`).
+7. **No stubs.** `backend/store.py` exposes `generation` (integer incremented by `reset()`). T0 writes no placeholder for the other tasks' classes: `main.py` (step 8) only uses the modules that exist.
 
-8. **`backend/main.py`**: creates `app`, adds CORS `*`, includes the `state`, `response`, `incidents`, `demo`, `metrics` routers with the `/api` prefix, instantiates `engine = Engine(store)`, `responder = Responder(store, get_executor())`, `incidents = IncidentManager(store)`, wires `engine.on_alerts(responder.handle)` then `responder.on_decisions(incidents.handle)`, and on startup launches `asyncio.create_task(engine.run_forever())` if `ENGINE_ENABLED=true`. A single uvicorn worker (the store is in memory). Each component is loaded with `_load(module, attr, fallback)`: the real module if it exists, the fallback if that exact module is missing; any other import error is raised. `main.SOURCES` records `real` or `fallback` per component and is logged at startup.
+8. **`backend/main.py`**: creates `app`, adds CORS `*`, mounts `backend/api/<name>.py` for each of `state`, `response`, `incidents`, `demo`, `metrics` that exists (prefix `/api`), builds `engine`, `responder` (with `get_executor()`) and `incidents` from the modules that exist, wires `engine.on_alerts(responder.handle)` and `responder.on_decisions(incidents.handle)` when both sides exist, and on startup launches `engine.run_forever()` if `ENGINE_ENABLED=true`. A missing module is skipped; a module that fails to import raises. A single uvicorn worker (the store is in memory).
 
-9. **Fixture routers** in `backend/api/_fixtures.py`: one `APIRouter` per owning file (`state`, `response`, `incidents`, `demo`, `metrics`) with every route from 2.9. `main.py` mounts the owning task's `backend/api/<name>.py` when it exists, otherwise the matching fixture router, so each route exists only once. Each route returns its fixture validated by the Pydantic model; `GET /api/series` extracts the `"<deployment_id>:<asset>"` array from `series.json`; `GET /api/incidents` wraps `incident.json` in a list. `approve` and `submit` modify the in-memory copy and return it. `metrics` reads `data/eval/metrics.json` if it exists, otherwise the fixture.
+9. **Routes**: each task serves its own routes in its own router file, with the fixtures when `USE_FIXTURES=true` (`GET /api/series` reads the `"<deployment_id>:<asset>"` array of `series.json`; `GET /api/incidents` wraps `incident.json` in a list).
 
 10. **Fixtures**: `fixtures/_generate.py` regenerates everything from `models.py`, with rules R1 to R5 from 2.7 and the matrix from 2.8. The story told by the "with reaction" fixtures:
     - block 45,201,812: forged mint of 5,000 rsETH;
@@ -1200,10 +1190,9 @@ Every task follows the same outline:
 | T0-01 | unit | `pytest backend/tests/test_t0_contract.py::test_fixtures_validate` | each JSON fixture validates against its model (`health`→`Health`, `state`→`StateResponse`, each `series` point→`SeriesPoint`, `alerts`→`Alert[]`, `decisions`→`Decision[]`, `verify`→`VerifyResult`, `incident`→`Incident`, `dependencies`→`Dependency[]`, `metrics`→`EvalMetrics`, `demo_run`→`DemoRun`, `run_record.example`→`RunRecord`) and each line of both `.jsonl` validates as `Snapshot` (41 lines each) |
 | T0-02 | unit | `pytest backend/tests/test_t0_contract.py::test_fixture_story` | alerts only use `R1_BACKING_DROP`…`R5_RESERVE_FROZEN`; decision `DEC-fuji-45201812-1` contains exactly the 8 actions listed in step 10, in that order; `incident.saved_usd == 1325000.0`; `state.totals` is `value_usd = 1325000`, `idle_usd = 1325000`, `withdrawable_usd = 0`, `at_risk_usd = 0`; `state.positions == []`; `verify.stored_hash == decisions[R1].record_hash`; `deployments.example.json` has the keys `assets`, `contracts.MockBridge`, `contracts.MockOracle`, `contracts.TreasuryVault`, `contracts.EvidenceRegistry`, `lending`, `roles` |
 | T0-03 | unit | `pytest backend/tests/test_t0_contract.py::test_record_hash_recomputes` | recomputing keccak256 of the canonical JSON of the R1 decision (without `record_hash`, `anchor_tx`, `anchor_block`) gives back `record_hash` |
-| T0-04 | unit | `pytest backend/tests/test_t0_api.py` | the fixture routers answer every route from 2.9 with 200; 404 for an unknown id; approve: 200 then 409 when replayed, 400 out of range; submit: 200 then 409, 422 for an empty `submitted_by`; the main app answers every GET route with fixtures |
 | T0-05 | unit | `pytest backend/tests/test_t0_settings.py::test_local_keys` | with `NETWORK=local` and no key: the address of `account("deployer")` is `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, that of `guardian` is `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC`, `bot_accounts()` returns 3 accounts; with `NETWORK=fuji` and no key, `private_key("guardian")` raises `RuntimeError` |
 | T0-06 | unit | `pytest backend/tests/test_t0_store.py` | append, read, `since_block`, `update_decision`, `upsert_incident`, `reset()` clears everything; JSONL writes to a temporary folder (`DATA_DIR` variable overridden) |
-| T0-07 | unit | `pytest backend/tests/test_t0_wiring.py` | `main.py` imports without error; `main.SOURCES` lists the 9 components as `real` or `fallback`; with fallbacks, `engine` has `responder.handle` among its subscribers and `responder` has `incidents.handle` |
+| T0-04 | unit | `pytest backend/tests/test_t0_wiring.py` | `main.py` imports; the router of every task module that exists is mounted (e.g. `/api/decisions` once T4 is merged), and only those |
 | T0-08 | manual | `make backend` then `curl -s localhost:8000/api/state` | returns the `state.json` fixture; `localhost:8000/docs` lists all routes from 2.9 |
 | T0-09 | manual | `make help` | lists at least `setup backend demo test test-t0` |
 | T0-10 | security | `pre-commit run gitleaks --all-files` | no secret found |
@@ -1216,11 +1205,11 @@ Every task follows the same outline:
 - [ ] `main` contains the skeleton; every task can run `make backend` and get fixtures on every route.
 - [ ] `.env.example`, `CLAUDE.md`, `docs/contract-requests.md` present.
 - [ ] The fixtures tell the story from step 10 and regenerate without error.
-- [ ] T0 created no file owned by another task (stand-ins only in `_stubs.py` and `api/_fixtures.py`).
+- [ ] T0 created no file owned by another task.
 
 #### Known pitfalls
 
-- Do not put business logic in the fallbacks: they must stay do-nothing stand-ins.
+- Keep T0 minimal: shared contract and helpers only, no task logic.
 - Anvil keys are public: never write them in a versioned file (gitleaks detects them as private keys).
 - `types.ts` must follow `models.py` field by field; a divergence silently breaks the front end. Any model change = regenerate fixtures + types in the same commit.
 - Pydantic serialises datetimes with `Z` only if they have a timezone: always create dates with `timezone.utc`.
@@ -1236,8 +1225,8 @@ Every task follows the same outline:
 You are working on task T0 of TASKS.md (repo root): the shared foundations.
 1. Read sections 1 and 2 of TASKS.md, then the T0 section in full.
 2. Create exactly the files listed under "Owned files" for T0, and nothing else.
-   The fallbacks contain no business logic; never create a file owned by another task.
-3. Start with tests T0-01 to T0-07 (backend/tests/test_t0_*.py), then the code.
+   Never create a file owned by another task.
+3. Start with the T0 tests (backend/tests/test_t0_*.py), then the code.
 4. make test-t0 must be green; also check T0-08 to T0-11.
 5. Push the branch t0-foundations and open a PR to main: once merged, every other task rebases on it.
 ```

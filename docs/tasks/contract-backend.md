@@ -102,7 +102,7 @@ A decision groups all new alerts of the same snapshot. `exit_cost_bps` = 0 in th
 - `IncidentManager(store)` (T5): `handle(decisions, alerts, snapshot) -> Incident | None`.
 - `get_executor()` (T4): singleton, dry-run when `DRY_RUN_ACTIONS=true`.
 
-Wiring (in `backend/main.py`, T0): `responder = Responder(store, get_executor())`, `engine.on_alerts(responder.handle)` then `responder.on_decisions(incidents.handle)`. While a task's module does not exist yet, `main.py` takes a do-nothing stand-in from `backend/_stubs.py` (classes) or `backend/api/_fixtures.py` (routes that serve the fixtures). As soon as a task adds its own file (for example `backend/responder.py`), `main.py` uses it with no edit: no file ever has two authors. If a task's module exists but fails to import, the error is raised, never hidden.
+Wiring (in `backend/main.py`, T0): `responder = Responder(store, get_executor())`, `engine.on_alerts(responder.handle)` then `responder.on_decisions(incidents.handle)`. `main.py` only mounts and wires the modules that exist: as soon as a task adds its file (for example `backend/responder.py`), it is used with no edit to `main.py`, so no file ever has two authors. A missing module is skipped (its routes answer 404 until then; the dashboard has its own fixture mode meanwhile). A module that exists but fails to import raises.
 
 Shared operating rules:
 

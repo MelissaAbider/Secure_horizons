@@ -82,8 +82,7 @@ Each file has **a single owning task**. You only modify your task's files.
 ├── abi/<Contrat>.json           T1 (exported by make abi)
 ├── scenario/                    T2 (except scenario/__init__.py, created by T0)
 ├── backend/
-│   ├── __init__.py main.py models.py settings.py chain.py store.py fixtures.py
-│   │   _stubs.py api/_fixtures.py                                                T0 (frozen)
+│   ├── __init__.py main.py models.py settings.py chain.py store.py fixtures.py   T0 (frozen)
 │   ├── collector.py engine.py rules.py config/rules.yaml api/state.py            T3
 │   ├── responder.py executor.py notify.py evidence.py cli.py
 │   │   config/playbook.yaml api/response.py                                      T4
