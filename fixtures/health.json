@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "network": "fuji",
+  "chain_id": 43113,
+  "block_number": 45201880,
+  "rpc_ok": true,
+  "engine_running": false,
+  "version": "0.1.0"
+}

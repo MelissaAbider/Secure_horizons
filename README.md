@@ -17,7 +17,7 @@ Any tool that reads `AGENTS.md` and `.agents/skills/` picks this up on clone. No
 
 ## Before coding
 
-1. Read `docs/product/STATUS.md`, then `CONTEXT.md` and `SCOPE.md`.
+1. Read `docs/product/STATUS.md`, then `CONTEXT.md` and `SCOPE.md`. For the MVP, pick your task in `TASKS.md` ("Tasks at a glance").
 2. Decide the open items (language, teller-window key, proof format) in `docs/product/DECISIONS.md`.
 3. Freeze thresholds in `docs/product/THRESHOLDS.md` before any measurement run.
 4. End every session by updating `STATUS.md`.

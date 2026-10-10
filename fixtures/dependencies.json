@@ -1,0 +1,113 @@
+[
+  {
+    "id": "rpc-fuji",
+    "name": "Avalanche Fuji RPC",
+    "kind": "rpc",
+    "provider": "RPC provider or public Avalanche node",
+    "criticality": "critical",
+    "supports": [
+      "monitoring",
+      "response"
+    ],
+    "fallback": "RPC_FALLBACK_URL",
+    "status": "ok"
+  },
+  {
+    "id": "aws-compute",
+    "name": "AWS EC2 (us-east-1)",
+    "kind": "cloud",
+    "provider": "Amazon Web Services",
+    "criticality": "critical",
+    "supports": [
+      "monitoring",
+      "response",
+      "dashboard"
+    ],
+    "fallback": "local run (make demo)",
+    "status": "ok"
+  },
+  {
+    "id": "aws-sns",
+    "name": "Amazon SNS alerts",
+    "kind": "alerting",
+    "provider": "Amazon Web Services",
+    "criticality": "important",
+    "supports": [
+      "alerting"
+    ],
+    "fallback": "webhook",
+    "status": "ok"
+  },
+  {
+    "id": "aws-s3",
+    "name": "Amazon S3 evidence store",
+    "kind": "cloud",
+    "provider": "Amazon Web Services",
+    "criticality": "important",
+    "supports": [
+      "evidence"
+    ],
+    "fallback": "local data/evidence + on-chain hash",
+    "status": "ok"
+  },
+  {
+    "id": "bedrock",
+    "name": "Amazon Bedrock (Claude)",
+    "kind": "ai_model",
+    "provider": "Amazon Web Services",
+    "criticality": "standard",
+    "supports": [
+      "report drafting"
+    ],
+    "fallback": "deterministic report template",
+    "status": "ok"
+  },
+  {
+    "id": "oracle",
+    "name": "Price oracle",
+    "kind": "oracle",
+    "provider": "MockOracle on the test network",
+    "criticality": "critical",
+    "supports": [
+      "exposure valuation"
+    ],
+    "fallback": null,
+    "status": "ok"
+  },
+  {
+    "id": "lend-eth",
+    "name": "Lending protocol (lend-eth)",
+    "kind": "protocol",
+    "provider": "MiniLend, simulated",
+    "criticality": "critical",
+    "supports": [
+      "treasury yield"
+    ],
+    "fallback": null,
+    "status": "degraded"
+  },
+  {
+    "id": "lend-avax",
+    "name": "Lending protocol (lend-avax)",
+    "kind": "protocol",
+    "provider": "MiniLend, simulated",
+    "criticality": "critical",
+    "supports": [
+      "treasury yield"
+    ],
+    "fallback": null,
+    "status": "ok"
+  },
+  {
+    "id": "rseth",
+    "name": "rsETH issuer and bridge",
+    "kind": "bridge",
+    "provider": "simulated bridge (MockBridge)",
+    "criticality": "important",
+    "supports": [
+      "collateral on lending markets"
+    ],
+    "fallback": null,
+    "status": "down"
+  }
+]
