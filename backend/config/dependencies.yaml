@@ -1,0 +1,73 @@
+# Third-party register (DORA Art. 28). Each entry = Dependency fields + `check` (internal, removed before validation).
+- id: rpc-fuji
+  name: Avalanche Fuji RPC
+  kind: rpc
+  provider: Avalanche / RPC provider
+  criticality: critical
+  supports: [chain reads, guardian transactions, evidence anchoring]
+  fallback: RPC_FALLBACK_URL
+  check: freshness
+- id: aws-compute
+  name: AWS EC2 (backend host)
+  kind: cloud
+  provider: Amazon Web Services
+  criticality: critical
+  supports: [monitoring engine, API, dashboard]
+  fallback: make demo on a local machine
+  check: none
+- id: aws-sns
+  name: AWS SNS (alert delivery)
+  kind: alerting
+  provider: Amazon Web Services
+  criticality: important
+  supports: [alert notifications]
+  fallback: webhook
+  check: none
+- id: aws-s3
+  name: AWS S3 (evidence storage)
+  kind: cloud
+  provider: Amazon Web Services
+  criticality: important
+  supports: [evidence files]
+  fallback: data/evidence + hash on-chain
+  check: none
+- id: bedrock
+  name: AWS Bedrock (Claude models)
+  kind: ai_model
+  provider: Amazon Web Services / Anthropic
+  criticality: standard
+  supports: [DORA report description draft]
+  fallback: deterministic template
+  check: llm
+- id: oracle
+  name: Price oracle
+  kind: oracle
+  provider: MockOracle (Chainlink-style)
+  criticality: critical
+  supports: [position valuation, exposure]
+  fallback: second oracle (planned)
+  check: oracle
+- id: lend-eth
+  name: Lending protocol, Ethereum deployment (simulated)
+  kind: protocol
+  provider: MiniLend
+  criticality: critical
+  supports: [treasury yield, WETH and USDC positions]
+  fallback: null
+  check: protocol
+- id: lend-avax
+  name: Lending protocol, Avalanche deployment (simulated)
+  kind: protocol
+  provider: MiniLend
+  criticality: critical
+  supports: [treasury yield, WETH and USDC positions]
+  fallback: null
+  check: protocol
+- id: rseth
+  name: rsETH bridge token
+  kind: bridge
+  provider: MockBridge (restaked ETH issuer)
+  criticality: important
+  supports: [collateral accepted by the lending deployments]
+  fallback: null
+  check: bridge
