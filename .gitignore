@@ -20,3 +20,15 @@ cache/
 __pycache__/
 .pytest_cache/
 broadcast/
+# runtime data (CR-003, applied by the T0 shim CR-004)
+data/runtime/
+data/evidence/
+data/runs/
+data/reports/
+data/notifications/
+data/demo_t4t5/
+data/eval/*
+!data/eval/metrics.json
+!data/eval/report.md
+deployments/local.json
+deployments/*.pending.json
