@@ -1,0 +1,19 @@
+version: 1
+min_exposure_usd: 1000
+matrix:                      # max severity of the group -> actions, in this order
+  critical:
+    - { type: NOTIFY,             mode: auto }
+    - { type: PAUSE_DEPOSITS,     mode: auto }
+    - { type: EMERGENCY_WITHDRAW, mode: auto,  per_position: true }
+    - { type: OPEN_INCIDENT,      mode: auto }
+    - { type: UNPAUSE_DEPOSITS,   mode: human }
+  high:
+    - { type: NOTIFY,             mode: auto }
+    - { type: PAUSE_DEPOSITS,     mode: auto }
+    - { type: EMERGENCY_WITHDRAW, mode: human, per_position: true }
+    - { type: OPEN_INCIDENT,      mode: auto }
+  warning:
+    - { type: NOTIFY, mode: auto }
+  info: []
+below_min_exposure:          # exposure < min_exposure_usd
+  notify_if_severity_at_least: high
