@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Horizons · Guided demo (T4 + T5)</title>
+  <link rel="stylesheet" href="/demo/static/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">🛡️</div>
+    <div>
+      <h1>Secure Horizons</h1>
+      <p>A circuit breaker for company treasuries invested in crypto lending</p>
+    </div>
+  </div>
+  <div class="top-right">
+    <span class="chip sim" title="Nothing real is moved: transactions are simulated and marked 0xdry…">SIMULATION · no real money, no real transaction</span>
+    <span class="chip">Block <b id="block">—</b></span>
+    <span class="chip" id="clock">—</span>
+  </div>
+</header>
+
+<section class="board" aria-label="Scoreboard">
+  <div class="score ours">
+    <div class="lbl">Our treasury (with Secure Horizons)</div>
+    <div class="row"><div><span class="num" id="ours-safe">—</span><span class="cap">safe</span></div>
+      <div><span class="num bad" id="ours-stuck">—</span><span class="cap">stuck</span></div></div>
+  </div>
+  <div class="score passive">
+    <div class="lbl">Same treasury, without the platform</div>
+    <div class="row"><div><span class="num" id="pas-safe">—</span><span class="cap">can still leave</span></div>
+      <div><span class="num bad" id="pas-stuck">—</span><span class="cap">stuck</span></div></div>
+  </div>
+  <div class="score backing">
+    <div class="lbl">rsETH backing <span class="q" data-tip="rsETH is a token that should be backed 1:1 by real ETH, like a banknote backed by gold. Below 100 %, some tokens are backed by nothing.">?</span></div>
+    <div class="gauge"><div id="backing-bar"></div></div>
+    <div class="num" id="backing">—</div>
+  </div>
+</section>
+
+<div class="layout">
+  <nav class="steps" aria-label="Demo steps">
+    <ol id="stepper"></ol>
+    <p class="note">Click a step or use <kbd>←</kbd> <kbd>→</kbd>.</p>
+  </nav>
+
+  <main id="stage" tabindex="-1"></main>
+
+  <aside class="plan" aria-label="T4 and T5 plan checklist">
+    <h2>What this demo proves</h2>
+    <p class="note">Each line is a requirement from the T4 / T5 task sheets. It turns green only when the live data or the HTTP answer actually shows it.</p>
+    <div id="plan"></div>
+  </aside>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/demo/static/app.js"></script>
+</body>
+</html>
