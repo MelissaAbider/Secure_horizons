@@ -1817,6 +1817,8 @@ Tu travailles sur la tâche T2 (scénario : seed, attaque, trafic normal, reset)
 
 ### T3 · Moteur de surveillance : collecteur, règles R1 à R5, API d'état
 
+**T3 branch hardening — version 3:** the rule formulas, evidence qualifications and replay expectations in the legacy version-2 sheet below are superseded for T3 by `docs/product/THRESHOLDS.md`, `backend/config/rules.yaml` and the `test_t3_*` regression tests. CR-004 in `docs/contract-requests.md` records the integration delta; other tasks and shared fixtures are not rewritten. R1 cannot establish real-chain forgery from the current Snapshot contract. Eight alerts (including global bridge pause), not seven, are expected when the unchanged synthetic attack snapshots are processed by version 3. Collector and live state API remain incomplete; mocked tests do not validate live detection.
+
 **Objectif.** Lire l'état de la chaîne à chaque nouveau bloc (un `Snapshot`), appliquer les cinq règles simples R1 à R5 de la section 2.7 sur une fenêtre glissante, émettre des `Alert` sans doublon, les passer aux abonnés (T4) et servir `GET /api/health`, `/api/state`, `/api/series`, `/api/alerts` à partir du store quand `USE_FIXTURES=false`. Un indicateur par règle, rien de plus dans le MVP.
 
 **Dépend de.**

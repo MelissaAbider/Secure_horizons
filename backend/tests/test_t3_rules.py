@@ -34,7 +34,7 @@ def replay(name: str):
 
 def test_rules_file_is_versioned():
     cfg = load_rules()
-    assert cfg["version"] == 2
+    assert cfg["version"] == 3
     assert cfg["window_snapshots"] == 20
     assert cfg["_version"] == rules_version()
     assert len(cfg["_version"]) == 71
@@ -49,6 +49,7 @@ def test_attack_replay_matches_kelpdao_causal_chain():
         (45201832, "R3_LIQUIDITY_DRAIN", "critical", "lend-eth", "WETH"),
         (45201836, "R4_EXITABILITY_DROP", "high", "lend-eth", "WETH"),
         (45201838, "R4_EXITABILITY_DROP", "critical", "lend-eth", "WETH"),
+        (45201878, "R5_CONTAINMENT", "critical", None, "rsETH"),
         (45201878, "R5_CONTAINMENT", "critical", "lend-eth", "rsETH"),
     ]
     r1 = alerts[0]
