@@ -1028,7 +1028,7 @@ Shared operating rules:
 
 ### 2.11 `make` commands (identical for everyone)
 
-The root `Makefile` (T0) contains `-include .env`, `export` of the variables from 2.1, `include mk/*.mk` and the cross-cutting targets. Each task defines its targets in `mk/tN.mk` and never redefines `NETWORK` (it comes from `.env` or the command line).
+The root `Makefile` (T0) contains `include mk/*.mk` and the cross-cutting targets. It does not load `.env`: the Python scripts read it themselves, and a variable given on the command line wins (`NETWORK=local make deploy`). Each task defines its targets in `mk/tN.mk` and never redefines `NETWORK` (it comes from `.env` or the command line).
 
 | Command | What it does | Defined by |
 |---|---|---|
@@ -1168,7 +1168,7 @@ Every task follows the same outline:
     - `verify.json` = MATCH, with the decision's real `record_hash`.
     The `snapshots_attack.jsonl` (no reaction) and `snapshots_normal.jsonl` series keep the same market figures; only the USDC and WETH reserves get `ltv_bps = 8000` and the bots' collateral from 2.2 (`total_collateral` USDC = 4,500,000 on `lend-eth`, 3,000,000 on `lend-avax`). `deployments.example.json` follows 2.3 exactly (`assets`, `contracts.MockBridge`, `contracts.MockOracle`…), `run_record.example.json` contains the vault's 4 positions, `demo_run.json` uses the parameters `forged_amount`, `chunk_weth`, `interval_s`, `bot_withdrawals`.
 
-11. **`Makefile`**: `-include .env` then `export` of the variables from 2.1, `include mk/*.mk`, `.PHONY`, `help` target (lists targets and their description with `##`), `setup` (`pip install -r requirements.txt`, `npm --prefix frontend install` if `frontend/package.json` exists, `forge install` in `contracts/` if `contracts/foundry.toml` exists), `backend` (a single worker), `demo` (in order: `chain` in the background, `deploy`, `seed`, backend with `ENGINE_ENABLED=true USE_FIXTURES=false DRY_RUN_ACTIONS=false`, `frontend`), `test` (runs `test-t0` to `test-t9` when they exist). `mk/t0.mk` defines `test-t0` = `pytest backend/tests/test_t0_*.py`. No target sets `NETWORK`: it comes from `.env` or the command line.
+11. **`Makefile`**: `include mk/*.mk` (it does not load `.env`: the Python scripts read it, and the command line wins), `.PHONY`, `help` target (lists targets and their description with `##`), `setup` (`pip install -r requirements.txt`, `npm --prefix frontend install` if `frontend/package.json` exists, `forge install` in `contracts/` if `contracts/foundry.toml` exists), `backend` (a single worker), `demo` (in order: `chain` in the background, `deploy`, `seed`, backend with `ENGINE_ENABLED=true USE_FIXTURES=false DRY_RUN_ACTIONS=false`, `frontend`), `test` (runs `test-t0` to `test-t9` when they exist). `mk/t0.mk` defines `test-t0` = `pytest backend/tests/test_t0_*.py`. No target sets `NETWORK`: it comes from `.env` or the command line.
 
 12. **`CLAUDE.md`** (short, for every Claude Code):
     - read `TASKS.md` sections 1, 2 and your task before any action;
@@ -3182,7 +3182,7 @@ You are working on task T7 (Evaluation and metrics) from the TASKS.md file at th
 **Goal.** Put the platform online on AWS (us-east-1) with a stable public URL that serves the dashboard and the API wired to Fuji, give T4/T5 the AWS resources (SNS topic, evidence bucket, Bedrock model) with a minimal IAM role, and keep `main` green with a CI (Python tests, Foundry tests, front build, secret scan). Nothing T8 does may leak a key: not in the repo, not in a Docker image, not in the front bundle.
 
 **Depends on.**
-- T0 → `requirements.txt`, `Makefile` (with `-include .env`, `export` of variables and `include mk/*.mk`), `.env.example`, `.gitignore`, `backend/` skeleton → available from the start. The `.gitignore` belongs to T0: it ignores `.env` and `.env.*` except `.env.example` (so `.env.fuji`, `.env.secrets`, `.env.canary`, `frontend/.env.local` are ignored); any other exception is requested in `docs/contract-requests.md`.
+- T0 → `requirements.txt`, `Makefile` (with `include mk/*.mk`), `.env.example`, `.gitignore`, `backend/` skeleton → available from the start. The `.gitignore` belongs to T0: it ignores `.env` and `.env.*` except `.env.example` (so `.env.fuji`, `.env.secrets`, `.env.canary`, `frontend/.env.local` are ignored); any other exception is requested in `docs/contract-requests.md`.
 - T1 → `deployments/fuji.json` and `abi/*.json` **committed** → meanwhile: "skeleton" deployment with `USE_FIXTURES=true`, `ENGINE_ENABLED=false` (the API serves fixtures, no contract required).
 - T3 → real `GET /api/health` route (real `rpc_ok`, `engine_running`, `block_number`) → meanwhile: `fixtures/health.json` (careful, it already says `network: fuji`, `rpc_ok: true`, see Known pitfalls).
 - T6 → `frontend/package.json` with `build` scripts (and ideally `typecheck`), API calls on relative path `/api/...` → meanwhile: a minimal fake front `infra/testdata/frontend-stub/` (owned by T8) passed to the build via `FRONTEND_DIR`.

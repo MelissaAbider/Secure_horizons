@@ -1,6 +1,7 @@
 """Deploys the scenario contracts on $NETWORK and writes deployments/<network>.json + abi/ (TASKS.md 2.3). Owner: T1.
 
 Run from the repo root: make deploy            (NETWORK from .env or the command line)
+                         make deploy RESUME=1   (finish a deployment the public RPC interrupted; idempotent)
                          make deploy FORCE=1    (fuji: overwrite an existing deployment; tell the team, addresses change)
                          make abi               (export the ABIs only)
 Keys come from backend/settings.py: on local, anvil's public test accounts; on fuji, the *_PK variables of .env.
@@ -13,6 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,12 +52,64 @@ def export_abis() -> None:
     print(f"ABIs exported to abi/ ({len(ABI_NAMES)} files)")
 
 
+def _send_until(done, build, label: str) -> None:
+    """Send build() with the deployer until done() is true. Re-checks the chain before every attempt,
+    so a transaction the public RPC lost is resent and one that went through is never sent twice."""
+    from backend import chain
+
+    for attempt in range(6):
+        if done():
+            return
+        try:
+            receipt = chain.send(build(), chain.account("deployer"))
+            print(f"  {label}: {chain.explorer_tx(receipt['tx_hash']) if settings.NETWORK == 'fuji' else receipt['tx_hash']}")
+        except Exception as exc:  # stale public RPC: wait and look again
+            print(f"  {label}: retry ({str(exc)[:70]})")
+            time.sleep(4)
+    if not done():
+        sys.exit(f"could not complete: {label}")
+
+
+def configure(a: dict) -> None:
+    """Idempotent configuration: prices, reserves, guardian hand-over. Finishes what an interrupted forge run left."""
+    from backend import chain
+
+    w3 = chain.w3()
+    load = lambda name: json.loads((CONTRACTS / "out" / f"{name}.sol" / f"{name}.json").read_text())["abi"]
+    oracle = w3.eth.contract(address=a["MockOracle"], abi=load("MockOracle"))
+
+    def price(sym: str) -> int:
+        try:
+            return oracle.functions.getPriceE8(a[sym]).call()
+        except Exception:
+            return 0
+
+    for sym, value in (("USDC", 10**8), ("WETH", 2500 * 10**8), ("rsETH", 2500 * 10**8)):
+        _send_until(lambda: price(sym) == value, lambda: oracle.functions.setPriceE8(a[sym], value), f"price {sym}")
+    guardian = address("protocol_guardian")
+    for market_id in ("lend-eth", "lend-avax"):
+        market = w3.eth.contract(address=a[market_id], abi=load("MiniLend"))
+        for sym, borrowable, ltv in (("USDC", True, 8000), ("WETH", True, 8000), ("rsETH", False, 7500)):
+            _send_until(lambda: a[sym] in market.functions.getAssets().call(),
+                        lambda: market.functions.listReserve(a[sym], borrowable, ltv), f"{market_id} list {sym}")
+        _send_until(lambda: market.functions.protocolGuardian().call() == guardian,
+                    lambda: market.functions.transferGuardian(guardian), f"{market_id} guardian")
+
+
 def deploy() -> None:
     target = ROOT / "deployments" / f"{settings.NETWORK}.json"
-    if settings.NETWORK == "fuji" and target.exists() and os.environ.get("FORCE") != "1":
+    resume = os.environ.get("RESUME") == "1"
+    if settings.NETWORK == "fuji" and target.exists() and os.environ.get("FORCE") != "1" and not resume:
         sys.exit("deployments/fuji.json already exists: run `make deploy FORCE=1` and tell the team (addresses change)")
     target.parent.mkdir(exist_ok=True)
     raw = target.with_suffix(".raw.json")
+    if resume:
+        if not raw.exists():
+            sys.exit(f"nothing to resume: {raw.name} not found")
+        print(f"resuming the {settings.NETWORK} deployment from {raw.name} ...")
+        configure(json.loads(raw.read_text()))
+        _write(target, raw)
+        return
     env = {**os.environ,
            "T1_DEPLOYER_PK": hex_key("deployer"),
            "T1_OWNER": address("owner"),
@@ -66,8 +120,13 @@ def deploy() -> None:
     if settings.NETWORK != "local":
         cmd.append("--slow")  # one transaction at a time on a public network
     print(f"deploying on {settings.NETWORK} ({settings.RPC_URL}) from {address('deployer')} ...")
-    subprocess.run(cmd, cwd=CONTRACTS, env=env, check=True, stdout=subprocess.DEVNULL)
+    if subprocess.run(cmd, cwd=CONTRACTS, env=env, stdout=subprocess.DEVNULL).returncode != 0:
+        sys.exit("forge stopped before the end (often the public RPC losing a transaction): run `make deploy RESUME=1`")
+    configure(json.loads(raw.read_text()))  # no-op when forge finished everything
+    _write(target, raw)
 
+
+def _write(target: Path, raw: Path) -> None:
     a = json.loads(raw.read_text())
     raw.unlink()
     bots = [Account.from_key(k).address for k in settings.bot_pks()]
