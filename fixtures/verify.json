@@ -1,0 +1,10 @@
+{
+  "decision_id": "DEC-fuji-45201812-1",
+  "match": true,
+  "stored_hash": "0x912081441fe68d1d1eb9e170d3c079ce37168f607ad72e5133e932e5e12d858e",
+  "recomputed_hash": "0x912081441fe68d1d1eb9e170d3c079ce37168f607ad72e5133e932e5e12d858e",
+  "anchored": true,
+  "anchor_tx": "0xa308b6d4e14574f8171bdcb63d8f9ac76252cd0f3370b5d7f10fc0cde4a314de",
+  "anchor_block": 45201814,
+  "diffs": []
+}

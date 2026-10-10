@@ -1,0 +1,98 @@
+{
+  "id": "INC-20261011-001",
+  "title": "Unbacked rsETH collateral on lend-eth",
+  "status": "contained",
+  "severity": "critical",
+  "opened_at": "2026-10-11T08:00:25Z",
+  "detected_at": "2026-10-11T08:00:25Z",
+  "contained_at": "2026-10-11T08:00:28Z",
+  "alert_ids": [
+    "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+  ],
+  "decision_ids": [
+    "DEC-fuji-45201812-1"
+  ],
+  "exposure_usd": 1325000.0,
+  "saved_usd": 1325000.0,
+  "at_risk_usd": 0.0,
+  "dora": {
+    "criteria": {
+      "critical_services_affected": true,
+      "clients_affected_pct": 100.0,
+      "clients_affected_count": 1200,
+      "transactions_affected_value_pct": 0.0,
+      "counterparts_affected_pct": 0.0,
+      "transactions_affected_count_pct": 0.0,
+      "relevant_clients_affected": false,
+      "duration_hours": 0.5,
+      "critical_service_downtime_hours": 0.5,
+      "member_states_affected": 2,
+      "reputational_impact": false,
+      "data_losses": false,
+      "malicious_unauthorised_access": false,
+      "economic_impact_eur": 0.0
+    },
+    "thresholds_met": [
+      "9(1)",
+      "9(4)"
+    ],
+    "is_major": true,
+    "legal_basis": "RTS (EU) 2024/1772 Art. 8(1)(b): critical services affected and two materiality thresholds of Art. 9 met.",
+    "aware_at": "2026-10-11T08:00:25Z",
+    "classified_at": "2026-10-11T08:02:25Z",
+    "deadlines": {
+      "initial_notification_due": "2026-10-11T12:02:25Z",
+      "intermediate_report_due": "2026-10-14T12:02:25Z",
+      "final_report_due": "2026-11-13T12:02:25Z"
+    },
+    "report_markdown": "# DORA initial notification (draft, human review required)\n\n- Financial entity: Example Treasury SAS (synthetic)\n- Incident reference: INC-20261011-001\n- Detected: 2026-10-11T08:00:25+00:00\n- Proposed classification: major (2026-10-11T08:02:25+00:00), RTS (EU) 2024/1772 Art. 8(1)(b): critical service affected, thresholds 9(1) clients and 9(4) geographical spread met\n- Affected service: on-chain treasury management (critical service)\n- Description: unbacked rsETH released by a third-party bridge became collateral on a lending protocol where the entity supplies liquidity. Automated controls paused new deposits and pulled every concerned position back to the vault (1,325,000 USD) before liquidity ran out.\n- Status: contained. No client funds lost. Deposits stay paused until the signers reopen them.\n- Next report due: intermediate report by 2026-10-14T12:02:25+00:00\n",
+    "ai_drafted_sections": [],
+    "submitted": false,
+    "submitted_by": null,
+    "submitted_at": null
+  },
+  "timeline": [
+    {
+      "at": "2026-10-11T08:00:24Z",
+      "block_number": 45201812,
+      "kind": "chain",
+      "text": "5,000 rsETH released without backing",
+      "ref": null
+    },
+    {
+      "at": "2026-10-11T08:00:25Z",
+      "block_number": 45201812,
+      "kind": "alert",
+      "text": "R1_BACKING_DROP (critical): rsETH backing fell to 19.4 %",
+      "ref": "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+    },
+    {
+      "at": "2026-10-11T08:00:26Z",
+      "block_number": 45201813,
+      "kind": "action",
+      "text": "Deposits paused; 250 WETH and 700,000 USDC pulled back to the vault",
+      "ref": "DEC-fuji-45201812-1"
+    },
+    {
+      "at": "2026-10-11T08:02:25Z",
+      "block_number": null,
+      "kind": "dora",
+      "text": "Proposed classification: major incident (draft, not sent)",
+      "ref": null
+    },
+    {
+      "at": "2026-10-11T08:01:24Z",
+      "block_number": 45201842,
+      "kind": "chain",
+      "text": "WETH liquidity on lend-eth reaches zero",
+      "ref": null
+    },
+    {
+      "at": "2026-10-11T08:02:36Z",
+      "block_number": 45201878,
+      "kind": "chain",
+      "text": "Protocol guardian freezes rsETH on lend-eth",
+      "ref": null
+    }
+  ]
+}

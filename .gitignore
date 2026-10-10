@@ -20,3 +20,17 @@ cache/
 __pycache__/
 .pytest_cache/
 broadcast/
+
+# runtime data (TASKS.md T0 step 13, contract request CR-003)
+data/runtime/
+data/evidence/
+data/runs/
+data/reports/
+data/anvil.log
+data/eval/*
+!data/eval/metrics.json
+!data/eval/report.md
+deployments/local.json
+deployments/*.pending.json
+frontend/.env*
+!frontend/.env.example

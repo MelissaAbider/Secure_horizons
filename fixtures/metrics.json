@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-10-11T08:00:00Z",
+  "rules_version": "sha256:6f1d2c0a9b8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a392817060f1e",
+  "synthetic": {
+    "runs_attack": 0,
+    "runs_normal": 0,
+    "detection_rate": 0.0,
+    "false_positive_rate": 0.0,
+    "ttd_blocks_p50": -1,
+    "ttd_blocks_p90": -1,
+    "saved_pct_mean": 0.0,
+    "baseline_saved_pct_mean": 0.0
+  },
+  "mainnet_replay": null,
+  "notes": [
+    "FIXTURE VALUES: T7 replaces them with measured metrics in data/eval/metrics.json."
+  ]
+}
