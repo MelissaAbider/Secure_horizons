@@ -1,9 +1,6 @@
 ---
 name: measure-honesty
 description: Block detection numbers when thresholds are unfrozen or edited after a run
-triggers:
-  - user
-  - model
 ---
 
 Before any detection, alert, replay, or metrics code. Reply in English.

@@ -1,18 +1,16 @@
-# secrets et overrides locaux
+# secrets and local overrides
 .env
 .env.*
 !.env.example
 *.pem
 *.key
 AGENTS.local.md
-.devin/config.local.json
-.devin/mcp_config.local.json
 
-# extraction locale du brief
+# local brief extraction
 _pdf_extract.txt
 _extract_pdf.py
 
-# dépendances et builds
+# dependencies and builds
 node_modules/
 dist/
 build/

@@ -1,6 +1,0 @@
-{
-  "permissions": {
-    "ask": ["Write(**/.env*)", "Write(**/*.pem)", "Write(**/*.key)"],
-    "deny": ["Exec(sudo)", "Read(**/.env)", "Read(**/*.pem)", "Read(**/*.key)"]
-  }
-}

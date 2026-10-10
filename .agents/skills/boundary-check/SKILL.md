@@ -1,9 +1,6 @@
 ---
 name: boundary-check
 description: Check that a change respects the vault, the sealed list, and no keys on the agent
-triggers:
-  - user
-  - model
 ---
 
 Boundary check before or after a sensitive change. Reply in English.

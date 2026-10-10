@@ -1,9 +1,6 @@
 ---
 name: orient
-description: Resume the current demo step in under a minute and start it unless a hard stop applies
-triggers:
-  - user
-  - model
+description: Resume the current demo step and start it unless a hard stop applies
 ---
 
 Get back on the demo, then build. Reply in English.

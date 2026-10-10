@@ -1,9 +1,6 @@
 ---
 name: session-close
 description: Close the session by updating STATUS so the next agent can resume without the chat
-triggers:
-  - user
-  - model
 ---
 
 The next agent has no chat history. Leave `docs/product/STATUS.md` able to resume alone. Reply in English. Be brief. Do not add follow-up tasks.

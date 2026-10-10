@@ -1,10 +1,6 @@
 ---
 name: feature-slice
 description: Implement the current demo step with the smallest change that passes
-argument-hint: "<request>"
-triggers:
-  - user
-  - model
 ---
 
 Build the current step. Reply in English. Do not wait for a plan approval.

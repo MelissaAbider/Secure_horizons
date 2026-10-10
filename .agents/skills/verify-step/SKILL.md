@@ -1,9 +1,6 @@
 ---
 name: verify-step
 description: Run the real check for the current demo step before calling it done
-triggers:
-  - user
-  - model
 ---
 
 Prove the current step. Reply in English. Do not claim success without a command result.

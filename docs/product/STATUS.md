@@ -38,6 +38,7 @@ Newest first. One line. No narrative.
 
 | Date | Who | Did | Left at |
 | --- | --- | --- | --- |
+| 2026-10-10 | setup | Moved skills to `.agents/skills` and removed `.devin` | No application code. Stack undecided. |
 | 2026-10-10 | setup | Loosened agent loop: build by default, hard-stop only on security | No application code. Stack undecided. |
 | 2026-10-10 | setup | Added orient and verify-step skills; one-task loop in AGENTS.md | No application code. Stack undecided. |
 | 2026-10-10 | setup | Added English agent context, skills, and this tracker | No application code. Stack undecided. |

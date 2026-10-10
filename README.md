@@ -10,12 +10,10 @@ French source brief: `projet-en-bref.pdf`. English working context: `docs/produc
 
 Share the repo. Do not export a chat.
 
-- `AGENTS.md` — short always-on rules
-- `.devin/rules/scope.md` — scope reminder on code and docs
-- `.devin/skills/` — `/orient`, `/feature-slice`, `/boundary-check`, `/measure-honesty`, `/verify-step`, `/session-close`
-- `.devin/config.json` — ask before writing a secret, deny reading `.env`
+- `AGENTS.md` — always-on rules for every coding agent
+- `.agents/skills/` — shared skills: `orient`, `feature-slice`, `boundary-check`, `measure-honesty`, `verify-step`, `session-close`
 
-Devin, and tools that read `AGENTS.md`, pick this up on clone. No global config to copy.
+Any tool that reads `AGENTS.md` and `.agents/skills/` picks this up on clone. No tool-specific config to copy.
 
 ## Before coding
 
