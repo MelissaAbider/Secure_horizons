@@ -26,6 +26,8 @@ Use `orient` only when the request conflicts with `Now`. Use `boundary-check` be
 
 - Run `python -m pytest backend/tests -q -p no:cacheprovider --basetemp=.pytest_cache/t3-validation` from the repo root. The workspace-local temporary directory avoids the Windows system-temp permission failure.
 - Version-3 T3 behavior and evidence limitations are in `docs/product/THRESHOLDS.md`; CR-004 tracks the unapproved cross-task integration delta. Do not rewrite other tasks or their fixtures to match T3 results.
+- T3 collection: `python -m backend.collector --once [--block N]`; monitoring: `python -m backend.engine --loop`. These are the equivalents of `make monitor-once [BLOCK=N]` and `make monitor` when GNU make is unavailable.
+- T3 live smoke is read-only and opt-in with `T3_LIVE=1`; it requires a configured RPC and deployed/seeded contracts. A skipped live check is not evidence of a successful deployment test.
 
 ## Speed
 

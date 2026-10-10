@@ -31,6 +31,8 @@ class EngineStatus:
     data_issues: list[str] = field(default_factory=list)
     handler_error: str | None = None
     backpressure: bool = False
+    window_start_block: int | None = None
+    store_generation: int | None = None
 
     @property
     def detection_ok(self) -> bool:
@@ -131,6 +133,8 @@ class Engine:
         self._latest = snapshot.model_copy(deep=True)
         STATUS.last_block = snapshot.block_number
         STATUS.last_update = self.clock()
+        STATUS.window_start_block = self.window[0].block_number if self.window else None
+        STATUS.store_generation = generation
         for issue in evaluation.issues:
             log.warning("Detection coverage: %s", issue)
         return new

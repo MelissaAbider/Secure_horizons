@@ -45,7 +45,7 @@ def test_attack_replay_matches_kelpdao_causal_chain():
     assert [(a.block_number, a.rule_id, a.severity, a.deployment_id, a.asset) for a in alerts] == [
         (45201812, "R1_BRIDGE_INVARIANT", "critical", None, "rsETH"),
         (45201814, "R2_COLLATERAL_SURGE", "critical", "lend-eth", "rsETH"),
-        (45201826, "R3_LIQUIDITY_DRAIN", "high", "lend-eth", "WETH"),
+        (45201818, "R3_LIQUIDITY_DRAIN", "high", "lend-eth", "WETH"),
         (45201832, "R3_LIQUIDITY_DRAIN", "critical", "lend-eth", "WETH"),
         (45201836, "R4_EXITABILITY_DROP", "high", "lend-eth", "WETH"),
         (45201838, "R4_EXITABILITY_DROP", "critical", "lend-eth", "WETH"),
@@ -53,6 +53,7 @@ def test_attack_replay_matches_kelpdao_causal_chain():
         (45201878, "R5_CONTAINMENT", "critical", "lend-eth", "rsETH"),
     ]
     r1 = alerts[0]
+    assert alerts[2].metrics["trigger"] == "liquidity drain after bridge anomaly"
     assert r1.metrics["conservation_gap"] == 5000.0
     assert r1.metrics["source_nonce"] == 307
     assert r1.metrics["destination_nonce"] == 308

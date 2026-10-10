@@ -44,6 +44,7 @@ def validate_config(cfg: dict) -> None:
     for name, low, high, maximum in (
         (RULE_IDS[1], "high_increase_pct", "critical_increase_pct", None),
         (RULE_IDS[2], "high_drop_pct", "critical_drop_pct", 100),
+        (RULE_IDS[2], "bridge_anomaly_drop_pct", "high_drop_pct", 100),
         (RULE_IDS[2], "warning_utilization_bps", "critical_utilization_bps", 10_000),
         (RULE_IDS[3], "critical_below_bps", "high_below_bps", 10_000),
     ):
@@ -183,6 +184,10 @@ def _synthetic(s: Snapshot) -> bool:
     return s.source == "fixture"
 
 
+def bridge_anomaly_in_window(window: list[Snapshot], asset: str) -> bool:
+    return any((t := _token(s, asset)) is not None and _bridge_mismatch(t) for s in window)
+
+
 def evaluate_r1(window: list[Snapshot], cfg: dict) -> list[Alert]:
     if not window or not cfg[RULE_IDS[0]]["enabled"]:
         return []
@@ -198,9 +203,13 @@ def evaluate_r1(window: list[Snapshot], cfg: dict) -> list[Alert]:
         facts.append(f"released counter exceeds source counter by {_fmt(_human(gap, t.decimals))} {t.symbol}")
     if t.bridge_destination_nonce > t.bridge_source_nonce:
         facts.append(f"destination nonce {t.bridge_destination_nonce} is ahead of source nonce {t.bridge_source_nonce}")
-    qualification = "Synthetic bridge invariant violation; not real-chain proof." if synthetic else "Unverified counter mismatch; canonical source-message evidence is unavailable."
     exposure, deployments = collateral_exposure(s, t.symbol)
-    result.append(_alert(s, cfg, RULE_IDS[0], "critical" if synthetic else "warning", None, t.symbol,
+    severity = "critical" if deployments else "high"
+    qualification = ("Synthetic bridge invariant violation." if synthetic
+                     else "Counter mismatch observed on-chain; canonical source-message proof is unavailable, so this is an unverified but actionable bridge integrity failure.")
+    if deployments:
+        qualification += f" Treasury positions in {', '.join(deployments)} accept this collateral."
+    result.append(_alert(s, cfg, RULE_IDS[0], severity, None, t.symbol,
                          f"{t.symbol} bridge counter mismatch", "; ".join(facts) + ". " + qualification,
                          {"source_locked": _human(source, t.decimals), "destination_released": _human(released, t.decimals),
                           "conservation_gap": _human(gap, t.decimals), "conservation_gap_base_units": str(gap),
@@ -215,8 +224,7 @@ def evaluate_r2(window: list[Snapshot], cfg: dict) -> list[Alert]:
     if len(window) < 3 or not rule["enabled"]:
         return []
     s, asset, result = window[-1], rule["asset"], []
-    t = _token(s, asset)
-    correlated = bool(t and _synthetic(s) and cfg[RULE_IDS[0]]["enabled"] and _bridge_mismatch(t))
+    correlated = bool(cfg[RULE_IDS[0]]["enabled"] and bridge_anomaly_in_window(window, asset))
     for deployment in _collateral_deployments(s, asset):
         r = _reserve(s, deployment, asset)
         history = [int(old.total_collateral) for snap in window[:-1]
@@ -233,10 +241,11 @@ def evaluate_r2(window: list[Snapshot], cfg: dict) -> list[Alert]:
         metrics = {"total_collateral": _human(now, r.decimals), "baseline_collateral": _human(baseline, r.decimals),
                    "baseline_base_units": str(baseline), "collateral_base_units": str(now),
                    "window_snapshots": len(window), "bridge_correlated": str(correlated).lower(),
-                   "evidence_status": "synthetic_correlation" if correlated else "uncorroborated"}
+                   "evidence_status": "bridge_correlated" if correlated else "uncorroborated"}
         if baseline:
             metrics["increase_pct"] = float(Decimal(delta) * 100 / Decimal(baseline))
-        qualification = "Concurrent synthetic bridge anomaly; fund provenance is not established." if correlated else "Uncorroborated inflow; a legitimate deposit can produce this signal."
+        qualification = ("Collateral inflow follows a bridge integrity anomaly in the same window; this matches the forged-release-then-deposit pattern. Fund provenance is not individually traced."
+                         if correlated else "Uncorroborated inflow; a legitimate deposit can produce this signal.")
         result.append(_alert(s, cfg, RULE_IDS[1], severity, deployment, asset, f"{asset} collateral increase on {deployment}",
                              f"Collateral increased from {_fmt(_human(baseline, r.decimals))} to {_fmt(_human(now, r.decimals))} {asset}. {qualification}",
                              metrics, deployment_exposure(s, deployment)))
@@ -248,6 +257,7 @@ def evaluate_r3(window: list[Snapshot], cfg: dict) -> list[Alert]:
     if not window or not rule["enabled"]:
         return []
     s, result = window[-1], []
+    anomaly = cfg[RULE_IDS[0]]["enabled"] and bridge_anomaly_in_window(window, cfg[RULE_IDS[1]]["asset"])
     for p in treasury_positions(s).values():
         r = _reserve(s, p.deployment_id, p.asset)
         if r is None or not r.borrowable:
@@ -260,6 +270,9 @@ def evaluate_r3(window: list[Snapshot], cfg: dict) -> list[Alert]:
         if baseline and (baseline - now) * 100 >= baseline * rule["high_drop_pct"]:
             rank = 3 if (baseline - now) * 100 >= baseline * rule["critical_drop_pct"] else 2
             reasons.append("relative liquidity drain")
+        elif anomaly and baseline and (baseline - now) * 100 >= baseline * rule["bridge_anomaly_drop_pct"]:
+            rank = 2
+            reasons.append("liquidity drain after bridge anomaly")
         if supplied and borrowed * 10_000 >= supplied * rule["warning_utilization_bps"]:
             rank = max(rank, 3 if borrowed * 10_000 >= supplied * rule["critical_utilization_bps"] else 1)
             reasons.append("persistent utilization pressure")
@@ -359,14 +372,16 @@ def evaluate_snapshot(window: list[Snapshot], cfg: dict) -> Evaluation:
             if before != after or {t.symbol for t in prev.tokens} != {t.symbol for t in s.tokens}:
                 raise ValueError("Snapshot inventory changed without an explicit monitor reset")
     s = window[-1]
-    t = _token(s, cfg[RULE_IDS[1]]["asset"])
+    asset = cfg[RULE_IDS[1]]["asset"]
+    t = _token(s, asset)
     if cfg[RULE_IDS[0]]["enabled"]:
         if t is None or not _bridge_complete(t):
             report.issues.append("Bridge counters incomplete; R1 cannot be evaluated")
             report.unavailable_rules.add(RULE_IDS[0])
         if not _synthetic(s):
-            report.issues.append("Canonical cross-chain evidence unavailable: Snapshot has no route, message, source finality or independent source verification; live R1 cannot confirm fraud")
-            report.unavailable_rules.add(RULE_IDS[0])
+            report.issues.append("Canonical cross-chain proof unavailable: counter mismatches are actionable but unverified against the source chain")
+        if t is not None and _bridge_complete(t) and not _bridge_mismatch(t) and bridge_anomaly_in_window(window, asset):
+            report.issues.append("Bridge counters returned to consistency after an observed mismatch; the earlier anomaly remains latched until signers reset the monitor")
     if cfg[RULE_IDS[4]]["enabled"] and (t is None or t.bridge_paused is None):
         report.issues.append("Bridge pause state unavailable")
         report.unavailable_rules.add(RULE_IDS[4])
@@ -388,6 +403,8 @@ class AlertLatch:
     def __init__(self) -> None:
         self._active: dict[tuple[str, str | None, str | None], str] = {}
 
+    STICKY_RULES = frozenset({RULE_IDS[0]})
+
     def filter(self, candidates: list[Alert], unavailable_rules: set[str] | None = None) -> list[Alert]:
         current = {}
         for alert in candidates:
@@ -395,7 +412,7 @@ class AlertLatch:
             if key not in current or SEVERITY_RANK[alert.severity] > SEVERITY_RANK[current[key].severity]:
                 current[key] = alert
         for key in set(self._active) - set(current):
-            if key[0] not in (unavailable_rules or set()):
+            if key[0] not in (unavailable_rules or set()) and key[0] not in self.STICKY_RULES:
                 del self._active[key]
         emitted = []
         for key, alert in current.items():

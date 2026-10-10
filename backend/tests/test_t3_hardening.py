@@ -41,14 +41,15 @@ def collateral_window(healthy, collateral):
     return [healthy, middle, last]
 
 
-def test_live_nonce_mismatch_is_not_proof_of_fraud(healthy):
+def test_live_nonce_mismatch_is_actionable_but_marked_unverified(healthy):
     healthy.source = "live"
     token(healthy).bridge_destination_nonce += 1
     result = alerts(healthy, "R1_BRIDGE_INVARIANT")
     assert len(result) == 1
-    assert result[0].severity == "warning"
+    assert result[0].severity == "critical"
     assert result[0].metrics["evidence_status"] == "unverified"
     assert "without canonical source backing" not in result[0].explanation
+    assert "unverified" in result[0].explanation
 
 
 def test_live_consistent_counters_still_have_unknown_source_evidence(healthy):
