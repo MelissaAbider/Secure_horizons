@@ -10,8 +10,8 @@ chain: ## local anvil chain, one block per second
 t1-build: ## compile the contracts
 	cd contracts && $(FORGE) build
 
-deploy: t1-build ## deploy on $NETWORK, write deployments/$NETWORK.json and abi/ (fuji: FORCE=1 to overwrite)
-	FORCE=$(FORCE) $(PYTHON) contracts/script/deploy.py
+deploy: t1-build ## deploy on $NETWORK, write deployments/$NETWORK.json and abi/ (RESUME=1 to finish an interrupted run, FORCE=1 to overwrite fuji)
+	FORCE=$(FORCE) RESUME=$(RESUME) $(PYTHON) contracts/script/deploy.py
 
 abi: t1-build ## export the ABIs to abi/
 	$(PYTHON) contracts/script/deploy.py --abi-only

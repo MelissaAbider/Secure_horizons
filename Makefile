@@ -1,7 +1,6 @@
 # Root Makefile (TASKS.md 2.11). Owner: T0.
-# Each task adds its own targets in mk/tN.mk. NETWORK comes from .env or the command line, never from a makefile.
--include .env
-export
+# Each task adds its own targets in mk/tN.mk. The Python scripts read .env themselves (python-dotenv), and a variable
+# set on the command line wins over .env: NETWORK=local make deploy. Never set NETWORK in a makefile.
 
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 .DEFAULT_GOAL := help

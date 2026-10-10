@@ -39,7 +39,7 @@ CORS open (`*`).
 
 ### 2.11 `make` commands (identical for everyone)
 
-The root `Makefile` (T0) contains `-include .env`, `export` of the variables from 2.1, `include mk/*.mk` and the cross-cutting targets. Each task defines its targets in `mk/tN.mk` and never redefines `NETWORK` (it comes from `.env` or the command line).
+The root `Makefile` (T0) contains `include mk/*.mk` and the cross-cutting targets. It does not load `.env`: the Python scripts read it themselves, and a variable given on the command line wins (`NETWORK=local make deploy`). Each task defines its targets in `mk/tN.mk` and never redefines `NETWORK` (it comes from `.env` or the command line).
 
 | Command | What it does | Defined by |
 |---|---|---|
