@@ -12,10 +12,10 @@ Rules:
 
 ## Now
 
-- Phase: setup
-- Current task: none — team must pick the stack
-- Blocker: open decisions in `docs/product/SCOPE.md`
-- Next: choose language, teller-key owner, and proof format; record them in `docs/product/DECISIONS.md`
+- Phase: T3 surveillance
+- Current task: implement the KelpDAO-specific R1–R5 contract in `TASKS.md` section 2.7
+- Blocker: T0 fixtures and T1 bridge counters are not yet present in this branch
+- Next: implement `backend/rules.py` and tests from fixtures as soon as T0 lands; keep collector integration skipped until T1/T2 land
 
 ## Demo path
 
@@ -38,6 +38,7 @@ Newest first. One line. No narrative.
 
 | Date | Who | Did | Left at |
 | --- | --- | --- | --- |
+| 2026-10-10 | T3 | Replaced generic surveillance rules with KelpDAO bridge-to-Aave causal rules in TASKS | Implementation waiting for T0 fixtures and T1 bridge counters. |
 | 2026-10-10 | setup | Moved skills to `.agents/skills` and removed `.devin` | No application code. Stack undecided. |
 | 2026-10-10 | setup | Loosened agent loop: build by default, hard-stop only on security | No application code. Stack undecided. |
 | 2026-10-10 | setup | Added orient and verify-step skills; one-task loop in AGENTS.md | No application code. Stack undecided. |
