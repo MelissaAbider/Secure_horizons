@@ -2,6 +2,8 @@
 
 Status: NOT FROZEN.
 
+MVP: the thresholds in use are the five rules R1–R5 of `TASKS.md` 2.7, stored in `backend/config/rules.yaml` (owned by T3). Freezing them means recording the sha256 of that file in this section, and anchoring it on Fuji (T7), before the first measurement run.
+
 Do not start a measurement run, and do not announce a detection number, until this section is filled and marked FROZEN. After that, do not edit the values. A new threshold set is a new dated file, not an in-place edit.
 
 ## Freeze before tests

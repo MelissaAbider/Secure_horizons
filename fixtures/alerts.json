@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH",
+    "rule_id": "R1_BACKING_DROP",
+    "severity": "critical",
+    "network": "fuji",
+    "deployment_id": null,
+    "asset": "rsETH",
+    "block_number": 45201812,
+    "block_time": "2026-10-11T08:00:24Z",
+    "detected_at": "2026-10-11T08:00:25Z",
+    "title": "rsETH backing below threshold",
+    "explanation": "rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).",
+    "metrics": {
+      "backing_ratio_bps": 1935,
+      "backing": 1200.0,
+      "total_supply": 6200.0,
+      "threshold_bps": 9900,
+      "exposed_deployments": "lend-eth,lend-avax"
+    },
+    "exposure_usd": 1325000.0,
+    "rules_version": "sha256:6f1d2c0a9b8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a392817060f1e"
+  }
+]

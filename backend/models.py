@@ -1,5 +1,5 @@
-"""Shared data models (TASKS.md section 2.6). PROVISIONAL: written on branch Adam-(T4,-T5)
-while the T0 skeleton is missing. The T0 owner should start from this file, not write a second one.
+"""Shared data models (TASKS.md section 2.6). Owner: T0. FROZEN: change only through TASKS.md 2.12
+(write the request in docs/contract-requests.md). Started from the T4 shim (CR-001) and completed by T0.
 
 Conventions (TASKS.md 2.5):
 - Token amounts: strings in base units ("150000000000000000000" = 150 WETH). Never a float on-chain amount.
@@ -11,7 +11,7 @@ Conventions (TASKS.md 2.5):
 - Ids: alert ALT-<network>-<block>-<rule_id>-<deployment_id or global>-<asset or all>;
   decision DEC-<network>-<block>-<n>; incident INC-<yyyymmdd>-<nnn>; run RUN-<yyyymmddHHMMSS>-<kind>-<seed>.
 
-Not yet here (fields defined outside 2.6): Health, DemoRun, RunRecord, EvalMetrics.
+frontend/src/types.ts mirrors this file field by field: change both in the same commit.
 """
 from __future__ import annotations
 
@@ -253,3 +253,55 @@ class StateResponse(BaseModel):
     reserves: list[ReserveSnapshot] = Field(default_factory=list)
     tokens: list[TokenSnapshot] = Field(default_factory=list)
     totals: dict[str, float] = Field(default_factory=dict)  # value_usd, withdrawable_usd, idle_usd, at_risk_usd
+
+
+# ---------- API health (T3), demo runs (T2), evaluation (T7) ----------
+
+class Health(BaseModel):
+    status: Literal["ok", "degraded"]
+    network: Network
+    chain_id: int
+    block_number: int
+    rpc_ok: bool
+    engine_running: bool
+    version: str
+
+
+class DemoRun(BaseModel):
+    run_id: str  # RUN-<yyyymmddHHMMSS>-<kind>-<seed>
+    kind: Literal["attack", "normal", "reset", "seed"]
+    variant: Optional[str] = None  # default | slow | usdc
+    seed: Optional[int] = None
+    status: Literal["running", "done", "failed"]
+    started_at: datetime
+    finished_at: Optional[datetime] = None
+    params: dict[str, ParamValue] = Field(default_factory=dict)
+    log: list[str] = Field(default_factory=list)
+
+
+class RunRecord(BaseModel):
+    """Ground truth written by every scenario run (T2) to data/runs/<run_id>.json, read by T7."""
+
+    run_id: str
+    network: Network
+    label: Literal["attack", "normal"]
+    variant: str
+    seed: int
+    params: dict[str, ParamValue] = Field(default_factory=dict)
+    start_block: int
+    end_block: int
+    attack_start_block: Optional[int] = None  # block of the forgedRelease tx
+    phase_blocks: dict[str, int] = Field(default_factory=dict)  # forged_mint, collateral_deposit, first_borrow, liquidity_zero, protocol_freeze
+    treasury_supplied_at_start: dict[str, str] = Field(default_factory=dict)  # "<deployment_id>:<asset>" -> base units
+
+
+class EvalMetrics(BaseModel):
+    """Written by T7 to data/eval/metrics.json, served by GET /api/metrics."""
+
+    generated_at: datetime
+    rules_version: str
+    # runs_attack, runs_normal, detection_rate (0..1), false_positive_rate (0..1),
+    # ttd_blocks_p50, ttd_blocks_p90 (-1 when nothing is detected), saved_pct_mean (0..100), baseline_saved_pct_mean (0..100)
+    synthetic: dict[str, ParamValue] = Field(default_factory=dict)
+    mainnet_replay: Optional[dict[str, ParamValue]] = None  # phase 2
+    notes: list[str] = Field(default_factory=list)

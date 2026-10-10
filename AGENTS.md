@@ -4,6 +4,8 @@ Ship the Sunday demo. Steps 1–8 are in `docs/product/STATUS.md`. Default is to
 
 Read `STATUS.md` first. Write English only. The French PDF is a source, not a template.
 
+The MVP is split into tasks T0–T9 in `TASKS.md`. If you were given a task, build that task from its sheet (section 3), touch only the files it owns, and keep its row in `STATUS.md` up to date.
+
 ## Loop
 
 1. Read `Now`. If it is empty, take the earliest `not started` step and set it `in progress` in your first edit.

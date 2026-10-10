@@ -1,0 +1,29 @@
+{
+  "run_id": "RUN-20261011080000-attack-42",
+  "network": "fuji",
+  "label": "attack",
+  "variant": "default",
+  "seed": 42,
+  "params": {
+    "forged_amount": 5000,
+    "chunk_weth": 100,
+    "interval_s": 8,
+    "bot_withdrawals": 2
+  },
+  "start_block": 45201800,
+  "end_block": 45201880,
+  "attack_start_block": 45201812,
+  "phase_blocks": {
+    "forged_mint": 45201812,
+    "collateral_deposit": 45201816,
+    "first_borrow": 45201818,
+    "liquidity_zero": 45201838,
+    "protocol_freeze": 45201878
+  },
+  "treasury_supplied_at_start": {
+    "lend-eth:USDC": "400000000000",
+    "lend-eth:WETH": "150000000000000000000",
+    "lend-avax:USDC": "300000000000",
+    "lend-avax:WETH": "100000000000000000000"
+  }
+}
