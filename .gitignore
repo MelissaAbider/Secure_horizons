@@ -1,0 +1,24 @@
+# secrets et overrides locaux
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+AGENTS.local.md
+.devin/config.local.json
+.devin/mcp_config.local.json
+
+# extraction locale du brief
+_pdf_extract.txt
+_extract_pdf.py
+
+# dépendances et builds
+node_modules/
+dist/
+build/
+out/
+cache/
+.venv/
+__pycache__/
+.pytest_cache/
+broadcast/
