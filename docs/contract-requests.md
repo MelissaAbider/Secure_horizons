@@ -17,3 +17,11 @@ Template: task, requested change, reason, impacted tasks, status.
 - **Reason:** T4 reads `CONFIG_DIR`, `DATA_DIR`, `DRY_RUN_ACTIONS` and the AWS variables.
 - **Impacted:** T0 (complete it per T0 step 4), all Python tasks.
 - **Status:** open
+
+## CR-003 · `.gitignore` entries for runtime data
+
+- **Task:** T4 (branch `Adam-(T4,-T5)`)
+- **Change:** add the T0 step 13 entries, at least `data/runtime/`, `data/evidence/`, `data/runs/`, `data/reports/`, `deployments/local.json`.
+- **Reason:** `make decision-demo` and `make verify` write `data/evidence/*.json` and `anchors.json`; they must not be committed.
+- **Impacted:** T0, T2, T4, T5.
+- **Status:** open
