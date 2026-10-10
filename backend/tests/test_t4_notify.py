@@ -28,3 +28,24 @@ def test_payload(evidence_tmp):
     assert payload["decision_id"] == "DEC-fuji-45201812-1"
     assert len(payload["alerts"]) == 1
     assert payload["text"] == payload["content"]
+
+
+def test_discord_payload(evidence_tmp):
+    """Discord-formatted message: one red embed, the 8 actions, the evidence hash, no mentions, within limits."""
+    (d,), alerts, _, _ = handle_r1_critical()
+    p = notify.build_discord_payload(d, alerts)
+    assert p["content"].startswith("🚨 **[CRITICAL] DEC-fuji-45201812-1**") and len(p["content"]) <= 2000
+    (embed,) = p["embeds"]
+    assert embed["color"] == 0xE53935
+    assert embed["title"] == alerts[0].title and alerts[0].explanation in embed["description"]
+    actions = next(f["value"] for f in embed["fields"] if f["name"] == "Actions")
+    assert actions.count("\n") == 7 and "400,000 USDC" in actions and "150 WETH" in actions
+    assert all(len(f["value"]) <= 1024 for f in embed["fields"]) and len(embed["fields"]) <= 25
+    assert any(d.record_hash in f["value"] for f in embed["fields"])
+    assert p["allowed_mentions"] == {"parse": []}
+
+
+def test_discord_detection():
+    assert notify.is_discord_webhook("https://discord.com/api/webhooks/1/abc")
+    assert not notify.is_discord_webhook("https://hooks.slack.com/services/x")
+    assert not notify.is_discord_webhook("https://discord.com.evil.example/api/webhooks/1/abc")
