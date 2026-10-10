@@ -32,5 +32,6 @@ data/eval/*
 !data/eval/report.md
 deployments/local.json
 deployments/*.pending.json
+deployments/history/local-*
 frontend/.env*
 !frontend/.env.example
