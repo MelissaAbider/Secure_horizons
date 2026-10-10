@@ -133,7 +133,12 @@
       "total_supply": "50000000000000",
       "backing": null,
       "backing_ratio_bps": null,
-      "price_usd": 1.0
+      "price_usd": 1.0,
+      "bridge_source_locked": null,
+      "bridge_destination_released": null,
+      "bridge_source_nonce": null,
+      "bridge_destination_nonce": null,
+      "bridge_paused": null
     },
     {
       "symbol": "WETH",
@@ -142,7 +147,12 @@
       "total_supply": "20000000000000000000000",
       "backing": null,
       "backing_ratio_bps": null,
-      "price_usd": 2500.0
+      "price_usd": 2500.0,
+      "bridge_source_locked": null,
+      "bridge_destination_released": null,
+      "bridge_source_nonce": null,
+      "bridge_destination_nonce": null,
+      "bridge_paused": null
     },
     {
       "symbol": "rsETH",
@@ -151,7 +161,12 @@
       "total_supply": "6200000000000000000000",
       "backing": "1200000000000000000000",
       "backing_ratio_bps": 1935,
-      "price_usd": 2500.0
+      "price_usd": 2500.0,
+      "bridge_source_locked": "1200000000000000000000",
+      "bridge_destination_released": "6200000000000000000000",
+      "bridge_source_nonce": 307,
+      "bridge_destination_nonce": 308,
+      "bridge_paused": true
     }
   ],
   "totals": {

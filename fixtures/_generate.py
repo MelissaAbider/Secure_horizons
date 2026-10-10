@@ -8,6 +8,7 @@ All numbers are synthetic and follow TASKS.md 2.2 (initial state), 2.7 (rules R1
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -57,7 +58,8 @@ ADDR = {  # the addresses anvil gives a fresh deployment in T1's order (TASKS.md
     "EvidenceRegistry": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
 }
 VAULT = ADDR["TreasuryVault"]
-RULES_V = "sha256:" + "6f1d2c0a9b8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a392817060f1e"  # placeholder, real value = sha256(rules.yaml)
+RULES_PATH = Path(__file__).resolve().parents[1] / "backend" / "config" / "rules.yaml"
+RULES_V = "sha256:" + hashlib.sha256(RULES_PATH.read_bytes()).hexdigest()
 PLAYBOOK_V = "sha256:" + "0a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e9f"  # placeholder
 BOT_USDC_COLLATERAL = {"lend-eth": 4_500_000.0, "lend-avax": 3_000_000.0}  # TASKS.md 2.2
 POSITIONS = [("lend-eth", "USDC", 400_000.0), ("lend-eth", "WETH", 150.0), ("lend-avax", "USDC", 300_000.0), ("lend-avax", "WETH", 100.0)]
@@ -120,7 +122,7 @@ def world(block: int, *, respond: bool, normal: bool = False) -> Snapshot:
     else:
         if block >= FORGED:
             rs_supply += 5000  # forged release: no backing
-        if block >= 45_201_816:
+        if block >= 45_201_814:
             rs_coll["lend-eth"] += 5000
         if respond and block >= REACT:
             for key, amount in treasury.items():
@@ -149,7 +151,10 @@ def world(block: int, *, respond: bool, normal: bool = False) -> Snapshot:
         TokenSnapshot(symbol="USDC", address=ADDR["USDC"], decimals=6, total_supply=units(50_000_000, "USDC"), price_usd=1.0),
         TokenSnapshot(symbol="WETH", address=ADDR["WETH"], decimals=18, total_supply=units(20_000, "WETH"), price_usd=2500.0),
         TokenSnapshot(symbol="rsETH", address=ADDR["rsETH"], decimals=18, total_supply=units(rs_supply, "rsETH"),
-                      backing=units(rs_backing, "WETH"), backing_ratio_bps=int(rs_backing / rs_supply * 10_000), price_usd=2500.0),
+                      backing=units(rs_backing, "WETH"), backing_ratio_bps=int(rs_backing / rs_supply * 10_000), price_usd=2500.0,
+                      bridge_source_locked=units(rs_backing, "rsETH"), bridge_destination_released=units(rs_supply, "rsETH"),
+                      bridge_source_nonce=307, bridge_destination_nonce=308 if not normal and block >= FORGED else 307,
+                      bridge_paused=not normal and block >= FREEZE),
     ]
     vault = VaultStatus(address=VAULT, deposits_paused=paused, idle_balances={s: units(v, s) for s, v in idle.items()})
     return Snapshot(network=NET, chain_id=CHAIN, block_number=block, block_time=t(block), source="fixture",
@@ -180,12 +185,12 @@ def main() -> None:
 
     at_alert = world(FORGED, respond=True)  # identical to the no-reaction world at this block
     r1 = Alert(
-        id=f"ALT-{NET}-{FORGED}-R1_BACKING_DROP-global-rsETH", rule_id="R1_BACKING_DROP", severity="critical", network=NET,
+        id=f"ALT-{NET}-{FORGED}-R1_BRIDGE_INVARIANT-global-rsETH", rule_id="R1_BRIDGE_INVARIANT", severity="critical", network=NET,
         deployment_id=None, asset="rsETH", block_number=FORGED, block_time=t(FORGED), detected_at=t(FORGED) + timedelta(seconds=1),
-        title="rsETH backing below threshold",
-        explanation="rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).",
-        metrics={"backing_ratio_bps": 1935, "backing": 1200.0, "total_supply": 6200.0, "threshold_bps": 9900,
-                 "exposed_deployments": "lend-eth,lend-avax"},
+        title="rsETH bridge invariant broken",
+        explanation="The rsETH bridge released 5,000 tokens without canonical source backing; destination nonce 308 is ahead of source nonce 307.",
+        metrics={"source_locked": 1200.0, "destination_released": 6200.0, "conservation_gap": 5000.0,
+                 "source_nonce": 307, "destination_nonce": 308, "exposed_deployments": "lend-eth,lend-avax"},
         exposure_usd=1_325_000.0, rules_version=RULES_V,
     )
     dump("alerts.json", [r1.model_dump(mode="json")])

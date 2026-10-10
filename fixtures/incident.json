@@ -7,7 +7,7 @@
   "detected_at": "2026-10-11T08:00:25Z",
   "contained_at": "2026-10-11T08:00:28Z",
   "alert_ids": [
-    "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+    "ALT-fuji-45201812-R1_BRIDGE_INVARIANT-global-rsETH"
   ],
   "decision_ids": [
     "DEC-fuji-45201812-1"
@@ -64,7 +64,7 @@
       "block_number": 45201812,
       "kind": "alert",
       "text": "R1_BACKING_DROP (critical): rsETH backing fell to 19.4 %",
-      "ref": "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+      "ref": "ALT-fuji-45201812-R1_BRIDGE_INVARIANT-global-rsETH"
     },
     {
       "at": "2026-10-11T08:00:26Z",
