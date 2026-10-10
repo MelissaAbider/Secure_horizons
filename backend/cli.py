@@ -98,17 +98,30 @@ def cmd_demo() -> int:
     """Dry-run replay of the R1 critical alert at block 45201812 -> data/evidence/DEC-fuji-45201812-1.json.
 
     For the jury demo while the engine (T3) is not wired: no transaction, no AWS.
+    The clock is the scenario clock (block time + 2 s), like the alert, so T5 dates the incident consistently.
     """
     if not settings.DRY_RUN_ACTIONS:
         print("demo runs in dry-run only: set DRY_RUN_ACTIONS=true")
         return 1
     settings.ALERT_WEBHOOK_URL = settings.SNS_TOPIC_ARN = settings.EVIDENCE_BUCKET = ""
+    from datetime import timedelta
+
+    from backend import responder
     from backend.executor import DryRunExecutor
-    from backend.responder import Responder
     from backend.tests.test_t4_fixtures import FORGED_BLOCK, FakeStore, load_attack, r1_alert
 
     snap = load_attack(FORGED_BLOCK)
-    decisions = Responder(FakeStore(), DryRunExecutor()).handle([r1_alert(snap)], snap)
+    alert = r1_alert(snap).model_copy(update={  # T3 wording (TASKS.md 2.7)
+        "title": "rsETH backing below threshold",
+        "explanation": "rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).",
+        "metrics": {"backing_ratio_bps": 1935, "backing": 1200.0, "total_supply": 6200.0, "threshold_bps": 9900,
+                    "exposed_deployments": "lend-eth,lend-avax"}})
+    wall_clock = responder._now
+    responder._now = lambda: snap.block_time + timedelta(seconds=2)
+    try:
+        decisions = responder.Responder(FakeStore(), DryRunExecutor()).handle([alert], snap)
+    finally:
+        responder._now = wall_clock
     if not decisions:
         print("no decision")
         return 1
