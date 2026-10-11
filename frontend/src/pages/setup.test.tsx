@@ -36,7 +36,7 @@ vi.mock('../lib/wallet', () => ({
 }))
 // the live panels poll the backend: covered by their own checks, stubbed here
 vi.mock('../components/LiveDemo', () => ({ LiveDemo: () => <div data-testid="live-demo" /> }))
-vi.mock('../components/AgentAutopilot', () => ({ AgentAutopilot: () => <div data-testid="agent-autopilot" /> }))
+vi.mock('../components/AgentAutopilot', () => ({ AgentAutopilot: () => <div data-testid="agent-autopilot" />, AgentModeChoice: () => <div data-testid="agent-mode" /> }))
 vi.mock('../components/SafePanel', () => ({ SafePanel: () => <div data-testid="safe-panel" /> }))
 
 describe('Setup page', () => {
