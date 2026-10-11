@@ -55,15 +55,28 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 | Task | Name | Status | Demo steps covered | Check |
 | --- | --- | --- | --- | --- |
 | T0 | Repo foundations and shared contract | in progress | all (skeleton) | `make test-t0` |
-| T1 | On-chain contracts (local and Fuji) | done (bridge counters CR-003; Fuji redeploy with them in progress) | 1 (simplified vault), 5 | `make test-t1` |
-| T2 | Scenario: seed, attack, normal traffic, reset | done on local; Fuji seed + attack in progress | 5 | `make test-t2` |
-| T3 | Monitoring: collector, rules R1–R5 (v3, CR-003/CR-004), state API | done on fixtures and local chain (R1 critical at the forged release block); Fuji live run in progress | 5, 7 | `make test-t3` |
+| T1 | On-chain contracts (local and Fuji) | done (bridge counters CR-003, redeployed on Fuji 2026-10-11, `deployments/fuji.json`) | 1 (simplified vault), 5 | `make test-t1` |
+| T2 | Scenario: seed, attack, normal traffic, reset | done (local tests; seed + default attack played on Fuji, see Fuji run) | 5 | `make test-t2` |
+| T3 | Monitoring: collector, rules R1–R5 (v3, CR-003/CR-004), state API | done on fixtures, local chain and Fuji live run (R1 critical 3 blocks after the forged release) | 5, 7 | `make test-t3` |
 | T4 | Response and evidence | in progress | 6, 7, 8 | `make test-t4` |
 | T5 | Incident and DORA draft | not started | 8 | `make test-t5` |
 | T6 | Dashboard | not started | all (screens) | `make test-t6` |
 | T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
 | T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
 | T9 | Jury deliverables | not started | pitch | `make test-t9` |
+
+### Fuji run (2026-10-11, default attack, seed 0, T3 engine live on Alchemy RPC, polling every ~12 s)
+
+| Block | Scenario step | T3 alert |
+|---|---|---|
+| 59,286,742 | forged release of 5,000 rsETH ([tx](https://testnet.snowtrace.io/tx/0x7450a25e918dac01c7c9cace352f563fb5f7e82895ee1fb02b2e86eb8d33f8dd)) | — |
+| 59,286,745 | | `R1_BRIDGE_INVARIANT` critical, exposure $1,325,000 |
+| 59,286,754 | 5,000 rsETH posted as collateral on lend-eth ([tx](https://testnet.snowtrace.io/tx/0xa0ada7b31b4d824c1ac9a72994a71a227c656e77d05d26743b6426bd9b71570f)) | `R2_COLLATERAL_SURGE` critical at 59,286,755 |
+| 59,286,759 | first borrow of 100 WETH ([tx](https://testnet.snowtrace.io/tx/0x58fd7289c7a9fff89430e9e041276fbef847b3e887106ff892ea103dcdf98b17)) | `R3_LIQUIDITY_DRAIN` high at 59,286,762, critical at 59,286,778 |
+| 59,286,788 | lend-eth WETH drained (600 WETH borrowed, lender stuck) | `R4_EXITABILITY_DROP` high at 59,286,787, critical at 59,286,792 |
+| 59,286,825 | protocol guardian freezes rsETH ([tx](https://testnet.snowtrace.io/tx/0xf9a64c784fea8d92c13f5013a78199c62464492316c2a97339eb991c35e02980)) | `R5_CONTAINMENT` critical at 59,286,829 |
+
+No response was executed in this run (T4 not wired yet): the vault positions stayed in place, so this measures detection only.
 
 ## Session log
 
