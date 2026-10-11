@@ -28,6 +28,6 @@ demo: ## local end to end: anvil, deploy, seed, backend with the engine on, dash
 	NETWORK=local ENGINE_ENABLED=true USE_FIXTURES=false DRY_RUN_ACTIONS=false $(PYTHON) -m uvicorn backend.main:app --port 8000 & $(MAKE) frontend
 
 test: ## run the tests of every task that has a test-tN target
-	@for t in test-t0 test-t1 test-t2 test-t3 test-t4 test-t5 test-t6 test-t7 test-t8 test-t9; do \
+	@for t in test-t0 test-t1 test-t2 test-t3 test-t4 test-t5 test-t6 test-t7 test-t8 test-t9 test-t10; do \
 		if $(MAKE) -n $$t >/dev/null 2>&1; then echo "== $$t"; $(MAKE) --no-print-directory $$t || exit 1; fi; \
 	done

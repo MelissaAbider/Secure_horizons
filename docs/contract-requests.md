@@ -43,3 +43,11 @@ Template: task, requested change, reason, impacted tasks, status.
 - **Missing evidence contract:** real bridge verification needs route identity (source/destination chain IDs and contracts), message/packet identity, payload amount/token/recipient, canonical source transaction or independently verified complete source-log coverage, source/destination block hashes, finality and observation timestamps, independent provider provenance, and pending/verified/mismatch/unavailable states. Global amount totals or route-unspecified nonce inequalities cannot substitute for these observations. No independent verifier is implemented in the current collector.
 - **Coverage integration:** T3 provides `Evaluation.issues`, `Evaluation.unavailable_rules`, `Engine.last_evaluation`, `STATUS.data_issues`, and `STATUS.detection_ok`. T3 health/state routes now surface unknown/degraded coverage using `X-Monitoring-Status` and `X-Monitoring-Issues` headers, degraded health and at-least-warning state risk instead of inferring safety from an empty alert list. Shared JSON response schemas are unchanged. No new rule ID silently invokes a financial response for an RPC outage.
 - **Status:** local T3 implementation and regression tests; cross-task interface acceptance and real-chain validation pending. Do not treat fixture-mode critical bridge alerts as production evidence.
+
+## CR-006 · T10 environment variables
+
+- **Task:** T10 (branch `t10-sealed-list`)
+- **Change:** three variables in `.env.example`: `OPERATOR_PK`, `SAFE_OWNER_PKS` (the asset manager's key) and `SAFE_THRESHOLD=1`. They are read by `sealed/safe.py`, not by `backend/settings.py`. On `local` they fall back to anvil accounts 9 (operator) and 10 (asset manager), using the same public mnemonic as `settings._anvil_key`.
+- **Reason:** new roles for the sealed list (`docs/tasks/T10.md`, Keys).
+- **Impacted:** T0 (`.env.example`). No change to `backend/settings.py` or `backend/chain.py`.
+- **Status:** applied in the T10 pull request; T0 to confirm.

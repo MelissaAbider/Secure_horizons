@@ -26,7 +26,9 @@ export interface SetupState {
   threshold: number
   signers: number
   connected: boolean
-  protocols: string[]
+  owner: string // the wallet that owns the Safe
+  sealed: boolean // the owner signed a Merkle root for the ticked integrations
+  protocols: string[] // integration ids, e.g. 'lend-eth:WETH'
   rules: Rules
   instructions: string
   agentSaved: boolean
@@ -35,12 +37,12 @@ export interface SetupState {
   liveSince: string | null
 }
 
-export const DEFAULT_INSTRUCTIONS = 'Capital preservation first.\nAim for 5 to 7% a year on stablecoins.\nPrefer protocols older than two years.\nAt most three moves a day.\nNever more than 30% on Aave.'
+export const DEFAULT_INSTRUCTIONS = 'Capital preservation first.\nAim for 5 to 7% a year on stablecoins.\nPrefer protocols older than two years.\nAt most three moves a day.'
 
 export function defaultSetup(): SetupState {
   return {
-    safe: '', network: 'fuji', threshold: 3, signers: 5, connected: false,
-    protocols: ['aave-usdc', 'benqi-usdc'],
+    safe: '', network: 'fuji', threshold: 1, signers: 1, connected: false, owner: '', sealed: false,
+    protocols: ['lend-eth:WETH', 'lend-avax:USDC'],
     rules: { maxPerProtocolPct: 40, maxLossPct: 0.5, humanAboveUsd: 100000, circuitBreaker: true, protocolCaps: {} },
     instructions: DEFAULT_INSTRUCTIONS, agentSaved: false,
     channels: { discord: true, telegram: false, slack: false, email: true },
@@ -66,7 +68,7 @@ export function shortAddr(a: string): string { return a.length > 12 ? `${a.slice
 
 /** Steps done, in order. */
 export function stepsDone(s: SetupState): boolean[] {
-  return [s.connected, s.connected && s.protocols.length > 0, s.agentSaved, s.live]
+  return [s.connected, s.connected && s.sealed, s.agentSaved, s.live]
 }
 
 export interface RuleHint { line: string; protocolId: string; pct: number }

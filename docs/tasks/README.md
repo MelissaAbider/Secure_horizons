@@ -6,6 +6,7 @@ Short version of `TASKS.md`, split so you (and your agent) only read what you ne
 |---|---|---|
 | `context.md` | what we build, the single scenario, architecture, stack, who owns which file, collaboration rules | first, once |
 | `T0.md` … `T9.md` | one task each: goal, what you build, what must work at the end, key specs, deliverables, acceptance tests, mocks | you work on or ask about that task |
+| `T10.md` | sealed list: Safe, teller-window module, Merkle root, keys, commands, demo story, boundary check | you touch the Safe, the module or the list |
 | `contract-chain.md` | env variables and keys (2.1), contracts summary and initial numbers (2.2), deployments file (2.3), Python chain helpers (2.4) | contracts, scenario, anything touching the chain |
 | `contract-backend.md` | data conventions (2.5), models (2.6), rules R1–R5 (2.7), response matrix (2.8), store and wiring (2.10) | backend work: monitoring, response, incidents |
 | `contract-api.md` | HTTP routes and errors (2.9), make commands (2.11), contract changes (2.12), fixtures (2.13) | API, dashboard, tests, commands |

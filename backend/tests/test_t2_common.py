@@ -65,6 +65,7 @@ def test_reset_runs_under_maintenance(data_dir, tmp_path, monkeypatch):
         seen["manage_maintenance"] = manage_maintenance
 
     monkeypatch.setattr(reset, "run_seed", fake_seed)
+    monkeypatch.setattr(reset, "refund_safe", lambda emit: None)  # no chain in this test
     reset.run_reset(quiet(), deploy_cmd=["sh", "-c", f"echo '{{\"deployed_at_block\": 2}}' > {deployment}"])
     assert seen == {"flag": True, "manage_maintenance": False}
     assert not common.maintenance_flag_path().exists()
