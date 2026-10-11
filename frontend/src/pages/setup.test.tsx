@@ -19,6 +19,7 @@ vi.mock('../lib/safeApi', () => ({
   safeApi: {
     status: vi.fn(async () => current),
     connect: vi.fn(async () => { current = { ...base, connected: true, owner: OWNER, safe: SAFE, module_enabled: false, seal_status: 'none' }; return current }),
+    disconnect: vi.fn(async () => { current = base; return current }),
     prepare: vi.fn(async (action: string) => ({ safe_tx_hash: `0x${action}`, typed_data: { action }, summary: action, action })),
     submit: vi.fn(async (hash: string) => {
       current = hash === '0xseal'
@@ -31,6 +32,7 @@ vi.mock('../lib/safeApi', () => ({
 vi.mock('../lib/wallet', () => ({
   hasWallet: () => true,
   connectWallet: vi.fn(async () => OWNER),
+  disconnectWallet: vi.fn(async () => undefined),
   signTypedData: vi.fn(async (_owner: string, typed: { action: string }) => { signed.push(typed.action); return '0xsig' }),
   walletError: (e: unknown) => String(e),
 }))
@@ -57,6 +59,13 @@ describe('Setup page', () => {
     expect(screen.getByTestId('guard-status')).toHaveTextContent('Watching Avalanche Fuji')
     expect(screen.getByTestId('live-demo')).toBeInTheDocument()
     expect(screen.getByTestId('safe-panel')).toBeInTheDocument()
+
+    // disconnect: the dashboard forgets this wallet and starts over for the next address
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    await userEvent.click(screen.getByTestId('disconnect-guard'))
+    await waitFor(() => expect(screen.getByTestId('setup-count')).toHaveTextContent('0 of 4 steps done'))
+    expect(screen.queryByTestId('live-demo')).toBeNull()
+    expect(screen.getByTestId('connect-safe')).toHaveTextContent('Connect Rabby')
   })
   it('helpers', () => {
     expect(isAddress(OWNER)).toBe(true)

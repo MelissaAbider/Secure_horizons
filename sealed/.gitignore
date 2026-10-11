@@ -2,3 +2,5 @@
 deployments/local.json
 # the dashboard writes the connected owner's Safe here
 deployments/fuji.json
+# every Safe the dashboard created, one file per owner (restored when the wallet reconnects)
+deployments/*-safes/

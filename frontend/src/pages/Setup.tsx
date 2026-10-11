@@ -12,7 +12,7 @@ import {
   PROTOCOLS, defaultSetup, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
   type SetupState,
 } from '../lib/setup'
-import { connectWallet, hasWallet, signTypedData, walletError } from '../lib/wallet'
+import { connectWallet, disconnectWallet, hasWallet, signTypedData, walletError } from '../lib/wallet'
 
 const STEPS = ['Connect your Safe', 'Choose your protocols', 'Set your agent', 'Start monitoring']
 const NEXT = ['connect your Safe.', 'choose your protocols.', 'set your agent.', 'start monitoring.']
@@ -47,7 +47,7 @@ export function Setup() {
   const count = done.filter(Boolean).length
   const firstOpen = done.findIndex((d) => !d)
   const [open, setOpen] = useState<number>(firstOpen === -1 ? -1 : firstOpen)
-  const [busy, setBusy] = useState<'connect' | 'module' | 'seal'>()
+  const [busy, setBusy] = useState<'connect' | 'module' | 'seal' | 'disconnect'>()
   const [err, setErr] = useState('')
   const hints = ruleHints(s.instructions, s.protocols).filter((h) => s.rules.protocolCaps[h.protocolId] !== h.pct)
   const safe = usePolling(() => safeApi.status(), 5000)
@@ -89,6 +89,19 @@ export function Setup() {
     goNext(0)
   })
   // the owner signs the Merkle root of the ticked integrations; the platform relays it to the module
+  // forget this wallet: the dashboard starts over, the next Connect creates (or restores) the Safe of the new address
+  async function disconnect() {
+    if (!window.confirm('Disconnect this wallet? Its Safe stays on-chain and comes back if the same wallet connects again.')) return
+    setErr(''); setBusy('disconnect')
+    try {
+      await safeApi.disconnect()
+      await disconnectWallet()
+      try { localStorage.removeItem('sh.liveRun') } catch { /* storage unavailable */ }
+      setS(defaultSetup()); setOpen(0)
+      await safe.refresh()
+    } catch (e) { setErr(e instanceof ApiError ? e.detail : walletError(e)) }
+    finally { setBusy(undefined) }
+  }
   const seal = () => withWallet('seal', async () => {
     const owner = await connectWallet(sd?.chain_id ?? 43113)
     if (owner.toLowerCase() !== (sd?.owner ?? '').toLowerCase()) throw new Error(`Switch your wallet to the Safe owner ${shortAddr(sd?.owner ?? '')}.`)
@@ -166,6 +179,8 @@ export function Setup() {
                                   {explorer ? <a href={`${explorer}/address/${sd.safe}`} target="_blank" rel="noreferrer" className="font-mono text-signal-violet hover:underline">{shortAddr(sd.safe ?? '')} ↗</a> : <span className="font-mono">{shortAddr(sd.safe ?? '')}</span>}</div>
                                 <div className="mt-1 flex justify-between gap-3"><span className="text-fog-400">Owner (your wallet)</span><span className="font-mono">{shortAddr(sd.owner ?? '')}</span></div>
                                 <div className="mt-1 flex justify-between gap-3"><span className="text-fog-400">Guard module</span><span>{sd.module_enabled ? 'on' : 'waiting for your signature'}</span></div>
+                                <button data-testid="disconnect" onClick={() => void disconnect()} disabled={!!busy}
+                                  className="mt-2 text-[13px] font-medium text-rose-glow hover:underline disabled:opacity-40">{busy === 'disconnect' ? 'Disconnecting…' : 'Disconnect this wallet'}</button>
                               </div>
                             )}
                             {!hasWallet() && <p role="alert" className="text-[14px] text-rose-glow">No browser wallet found: install Rabby and turn on testnets.</p>}
@@ -323,15 +338,17 @@ export function Setup() {
             </div>
 
 
-            {!s.live && (
-              <div className="mt-auto pt-7">
-                <button onClick={nextAction} className={`${BTN_LIGHT} w-full py-4`}>{nextLabel} <Arrow /></button>
-              </div>
-            )}
+            <div className="mt-auto grid gap-3 pt-7">
+              {!s.live && <button onClick={nextAction} className={`${BTN_LIGHT} w-full py-4`}>{nextLabel} <Arrow /></button>}
+              {sd?.connected && (
+                <button data-testid="disconnect-guard" onClick={() => void disconnect()} disabled={!!busy}
+                  className="text-[14px] font-medium text-fog-400 hover:text-rose-glow disabled:opacity-40">{busy === 'disconnect' ? 'Disconnecting…' : `Disconnect ${shortAddr(sd.owner ?? '')}`}</button>
+              )}
+            </div>
           </aside>
         </div>
 
-        {s.live && <SafePanel safe={safe} ticked={s.protocols} />}
+        {s.live && <SafePanel safe={safe} ticked={s.protocols} onDisconnect={() => void disconnect()} />}
         {s.live && <AgentAutopilot instructions={s.instructions} />}
         {s.live && <LiveDemo />}
       </div>
