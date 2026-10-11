@@ -26,6 +26,15 @@ Template: task, requested change, reason, impacted tasks, status.
 - **Impacted:** T0 fixtures/types, T1 MockBridge, T2 scenario phases, T3 rules, T4–T7 labels and tests.
 - **Status:** implemented on T3 branch; requires team contract approval
 
+## CR-005 · T3 third surveillance layer: R7 LLM agent and layer consensus
+
+- **Task:** T3 only. No change to `backend/models.py`, fixtures, T1/T2 contracts or T4 response code.
+- **Change:** `backend/agent_monitor.py` (R7_AGENT_LLM, Bedrock Converse through boto3, asynchronous in the live loop), `backend/config/agent_prompt.md` (frozen, hashed into `Alert.rules_version` as `<rules hash>+prompt:<12 hex>`), `backend/ml_monitor.py` + `backend/config/ml_monitor.json` (R6_ML_ANOMALY, Elliptic Envelope over live Snapshot state/delta features, normal baseline only), `backend/consensus.py` (rules authoritative; R6/R7 capped at `high`; a lone non-deterministic alert is forwarded as `warning`; two layers agreeing on the same scope keep `high`). New alert ids downstream may see: `R6_ML_ANOMALY` and `R7_AGENT_LLM`.
+- **For T4:** alerts with `rule_id` starting with `R6_`/`R7_` never carry `critical`; `metrics.layer` is `"llm"` for R7. The existing playbook needs no change: `warning`/`high` paths apply. T4 must not escalate on these ids alone.
+- **For T6:** new header `X-Monitoring-Layers` = `{"alerting": [...], "agreement": none|single|partial|full, "agent_available": bool, "ml_available": bool}` on `/api/state` and `/api/health`.
+- **For T8:** needs `BEDROCK_MODEL_ID` (already in settings) and an IAM role with `bedrock:InvokeModel`/`Converse` only. Empty id = layer disabled, reported as unavailable, never as safe.
+- **Status:** implemented on T3 branch. Real Bedrock authentication and Claude Haiku 4.5 invocation were verified; the live loop does not wait for Bedrock and keeps one bounded request in flight. R6/R7 evaluation thresholds remain development policy because THRESHOLDS.md is not frozen.
+
 ## CR-004 · T3 evidence qualification and hardened rule semantics
 
 - **Task:** T3 only; no changes to shared models, T1/T2 contracts/scenarios, T4 response code or fixtures in this hardening.

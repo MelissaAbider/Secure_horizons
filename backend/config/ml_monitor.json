@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "model": "EllipticEnvelope",
+  "baseline_file": "fixtures/snapshots_normal.jsonl",
+  "window_snapshots": 20,
+  "min_baseline_samples": 30,
+  "contamination": 0.01,
+  "support_fraction": 0.9,
+  "score_quantile": 0.995,
+  "max_severity": "high",
+  "status": "development_policy_not_frozen_for_evaluation"
+}
