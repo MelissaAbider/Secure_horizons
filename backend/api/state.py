@@ -74,9 +74,14 @@ def _coverage(latest, report, cfg):
 
 
 def _headers(response: Response, issues: list[str], mode="observed") -> None:
+    from backend.engine import STATUS
     response.headers["X-Monitoring-Status"] = "degraded" if issues else mode
     response.headers["X-Monitoring-Issues"] = json.dumps(issues, ensure_ascii=True)
-    response.headers["Access-Control-Expose-Headers"] = "X-Monitoring-Status, X-Monitoring-Issues"
+    # Three surveillance layers (rules / ml / llm): which ones alert now and how far they agree.
+    response.headers["X-Monitoring-Layers"] = json.dumps({"alerting": STATUS.layers_alerting, "agreement": STATUS.layer_agreement,
+                                                           "agent_available": STATUS.agent_available,
+                                                           "ml_available": STATUS.ml_available}, ensure_ascii=True)
+    response.headers["Access-Control-Expose-Headers"] = "X-Monitoring-Status, X-Monitoring-Issues, X-Monitoring-Layers"
 
 
 def _effective_positions(s: Snapshot):

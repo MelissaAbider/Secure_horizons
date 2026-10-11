@@ -1,6 +1,7 @@
 """T2 shared helpers and reset (TASKS.md T2, tests T2-06 to T2-09, T2-12, T2-13). Pure, no chain."""
 import io
 import json
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -66,13 +67,14 @@ def test_reset_runs_under_maintenance(data_dir, tmp_path, monkeypatch):
 
     monkeypatch.setattr(reset, "run_seed", fake_seed)
     monkeypatch.setattr(reset, "refund_safe", lambda emit: None)  # no chain in this test
-    reset.run_reset(quiet(), deploy_cmd=["sh", "-c", f"echo '{{\"deployed_at_block\": 2}}' > {deployment}"])
+    write_deployment = "from pathlib import Path; import sys; Path(sys.argv[1]).write_text('{\"deployed_at_block\": 2}')"
+    reset.run_reset(quiet(), deploy_cmd=[sys.executable, "-c", write_deployment, str(deployment)])
     assert seen == {"flag": True, "manage_maintenance": False}
     assert not common.maintenance_flag_path().exists()
 
     with pytest.raises(ScenarioError):
-        reset.run_reset(quiet(), deploy_cmd=["false"])
+        reset.run_reset(quiet(), deploy_cmd=[sys.executable, "-c", "raise SystemExit(1)"])
     assert not common.maintenance_flag_path().exists()
 
     with pytest.raises(ScenarioError):  # deployment command succeeded but did not rewrite the file
-        reset.run_reset(quiet(), deploy_cmd=["true"])
+        reset.run_reset(quiet(), deploy_cmd=[sys.executable, "-c", "pass"])

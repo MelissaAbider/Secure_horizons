@@ -11,7 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-from backend import rules, settings
+from backend import consensus, rules, settings
+from backend.agent_monitor import AgentMonitor
+from backend.ml_monitor import MLMonitor
 from backend.models import Alert, Snapshot
 
 log = logging.getLogger("backend.engine")
@@ -33,6 +35,10 @@ class EngineStatus:
     backpressure: bool = False
     window_start_block: int | None = None
     store_generation: int | None = None
+    layers_alerting: list[str] = field(default_factory=list)
+    layer_agreement: str = "none"
+    agent_available: bool = False
+    ml_available: bool = False
 
     @property
     def detection_ok(self) -> bool:
@@ -48,11 +54,20 @@ def maintenance_flag_path() -> Path:
 
 
 class Engine:
-    def __init__(self, store, cfg: dict | None = None, clock: Callable[[], datetime] | None = None):
+    def __init__(self, store, cfg: dict | None = None, clock: Callable[[], datetime] | None = None,
+                 agent: AgentMonitor | None = None, ml: MLMonitor | None = None,
+                 extra_layers: list[Callable[[list[Snapshot]], tuple[list[Alert], list[str]]]] | None = None):
         self.store = store
         self.cfg = deepcopy(cfg) if cfg is not None else rules.load_rules()
         rules.validate_config(self.cfg)
         self.clock = clock or (lambda: datetime.now(timezone.utc))
+        # Independent surveillance layers consulted after the rules on the same window: R7 LLM agent and any
+        # other callable(window) -> (alerts, issues), e.g. the R6 ML corroborator. Their failures never block ingestion.
+        self._explicit_agent, self._explicit_ml = agent is not None, ml is not None
+        self.agent = agent if agent is not None else AgentMonitor(self.cfg)
+        self.ml = ml if ml is not None else MLMonitor()
+        self.extra_layers = list(extra_layers or [])
+        self.last_consensus = consensus.ConsensusResult()
         self.window: deque[Snapshot] = deque(maxlen=self.cfg["window_snapshots"])
         self.latch = rules.AlertLatch()
         self.handlers: list[Callable[[list[Alert], Snapshot], None]] = []
@@ -63,6 +78,8 @@ class Engine:
         self._epoch = 0
         self._maintenance = False
         self._stopped = False
+        self._agent_task: asyncio.Task | None = None
+        self._agent_context: dict[int, tuple[list[Alert], Snapshot, int]] = {}
         self.last_evaluation = rules.Evaluation()
 
     def on_alerts(self, handler: Callable[[list[Alert], Snapshot], None]) -> None:
@@ -74,6 +91,7 @@ class Engine:
         self._last_block = None
         self._latest = None
         self._identity = None
+        self._agent_context.clear()
         self._epoch += 1
         self.last_evaluation = rules.Evaluation()
 
@@ -89,7 +107,7 @@ class Engine:
         if age < -self.cfg["max_future_skew_s"]:
             raise ValueError("Live snapshot timestamp is in the future")
 
-    def ingest(self, snapshot: Snapshot) -> list[Alert]:
+    def ingest(self, snapshot: Snapshot, include_agent: bool = True, include_ml: bool = True) -> list[Alert]:
         try:
             rules.validate_snapshot(snapshot)
             self._check_freshness(snapshot)
@@ -110,8 +128,20 @@ class Engine:
             STATUS.last_error = "Invalid, stale or inconsistent snapshot; detection not updated"
             raise
         next_latch = rules.AlertLatch() if reset else deepcopy(self.latch)
+        candidates, layer_issues = list(evaluation.alerts), []
+        if not maintenance:
+            layers = ([self.agent.evaluate] if include_agent else []) + ([self.ml.evaluate] if include_ml else []) + self.extra_layers
+            for layer in layers:
+                try:
+                    alerts, issues = layer(prospective)
+                except Exception as exc:
+                    alerts, issues = [], [f"Surveillance layer failed ({type(exc).__name__}); verdict unavailable"]
+                candidates.extend(alerts)
+                layer_issues.extend(issues)
+
+        resolved = consensus.resolve(candidates) if not maintenance else consensus.ConsensusResult()
         new = [] if maintenance else [a.model_copy(update={"detected_at": self.clock()})
-                                     for a in next_latch.filter(evaluation.alerts, evaluation.unavailable_rules)]
+                                     for a in next_latch.filter(resolved.forwarded, evaluation.unavailable_rules)]
         try:
             self.store.add_snapshot(snapshot)
             if new:
@@ -126,7 +156,16 @@ class Engine:
         self._generation, self._identity = generation, identity
         self._maintenance = STATUS.maintenance = maintenance
         self.last_evaluation = evaluation
-        STATUS.data_issues = list(evaluation.issues)
+        self.last_consensus = resolved
+        if not include_agent and not maintenance:
+            self._agent_context[snapshot.block_number] = (candidates, snapshot.model_copy(deep=True), self._epoch)
+            while len(self._agent_context) > self.cfg["window_snapshots"]:
+                del self._agent_context[min(self._agent_context)]
+        STATUS.data_issues = list(evaluation.issues) + layer_issues
+        STATUS.layers_alerting = sorted(resolved.layers_alerting)
+        STATUS.layer_agreement = resolved.agreement
+        STATUS.agent_available = self.agent.status.available
+        STATUS.ml_available = self.ml.status.available
         if not maintenance:
             self.window.append(snapshot.model_copy(deep=True))
         self._last_block = snapshot.block_number
@@ -148,7 +187,8 @@ class Engine:
                 log.error("Alert handler failed (%s); alerts remain stored", type(exc).__name__)
 
     def process(self, snapshot: Snapshot) -> list[Alert]:
-        new = self.ingest(snapshot)
+        # Replays/tests are deterministic by default and never call external/live layers unless explicitly injected.
+        new = self.ingest(snapshot, include_agent=self._explicit_agent, include_ml=self._explicit_ml)
         if new:
             self._handle(new, snapshot)
         return new
@@ -173,6 +213,45 @@ class Engine:
     def _build_snapshot(self, head, client):
         from backend.collector import build_snapshot
         return build_snapshot(head, client)
+
+    def _accept_agent_result(self, block: int, result: tuple[list[Alert], list[str]]) -> tuple[list[Alert], Snapshot | None]:
+        """Merge a late R7 verdict with rule/ML candidates from the exact observed block, persist and latch it."""
+        context = self._agent_context.pop(block, None)
+        if context is None:
+            return [], None
+        base, snapshot, epoch = context
+        alerts, issues = result
+        if epoch != self._epoch or self.in_maintenance() or getattr(self.store, "generation", 0) != self._generation:
+            return [], None
+        resolved = consensus.resolve([*base, *alerts])
+        next_latch = deepcopy(self.latch)
+        new = [a.model_copy(update={"detected_at": self.clock()}) for a in next_latch.filter(resolved.forwarded)]
+        if new:
+            self.store.add_alerts(new)
+        self.latch = next_latch
+        self.last_consensus = resolved
+        STATUS.layers_alerting = sorted(resolved.layers_alerting)
+        STATUS.layer_agreement = resolved.agreement
+        STATUS.agent_available = self.agent.status.available
+        STATUS.data_issues = [i for i in STATUS.data_issues if not i.startswith("R7 agent")] + list(issues)
+        return new, snapshot
+
+    async def _poll_agent(self) -> tuple[list[Alert], Snapshot | None]:
+        if self._agent_task is None or not self._agent_task.done():
+            return [], None
+        block, result = await self._agent_task
+        self._agent_task = None
+        return self._accept_agent_result(block, result)
+
+    def _schedule_agent(self, window: list[Snapshot]) -> None:
+        if not self.agent.status.enabled or self._agent_task is not None:
+            return
+        block = window[-1].block_number
+
+        async def run():
+            return block, await asyncio.to_thread(self.agent.evaluate, window)
+
+        self._agent_task = asyncio.create_task(run())
 
     async def _dispatcher(self) -> None:
         while True:
@@ -201,6 +280,11 @@ class Engine:
         try:
             while not self._stopped:
                 try:
+                    agent_new, agent_snapshot = await self._poll_agent()
+                    if agent_new and agent_snapshot is not None:
+                        STATUS.backpressure = self._queue.full()
+                        await self._queue.put((self._epoch, self._generation, agent_new, agent_snapshot))
+                        STATUS.backpressure = False
                     if client is None:
                         client = self._make_client(settings.RPC_FALLBACK_URL if fallback else settings.RPC_URL)
                     key = await asyncio.to_thread(self._deployment_key)
@@ -218,7 +302,8 @@ class Engine:
                         if (snapshot.source != "live" or snapshot.chain_id != settings.CHAIN_ID
                                 or snapshot.network != settings.NETWORK or snapshot.block_number != head):
                             raise ValueError("Collector snapshot identity mismatch")
-                        new = await asyncio.to_thread(self.ingest, snapshot)
+                        new = await asyncio.to_thread(self.ingest, snapshot, False)
+                        self._schedule_agent([s.model_copy(deep=True) for s in self.window])
                         if new:
                             STATUS.backpressure = self._queue.full()
                             await self._queue.put((self._epoch, self._generation, new, snapshot.model_copy(deep=True)))
@@ -226,6 +311,10 @@ class Engine:
                             STATUS.pending_handlers = self._queue.qsize()
                     elif self._latest is not None:
                         self._check_freshness(self._latest)
+                    # If blocks arrived while Bedrock was busy, analyze the latest observed window next; never queue an
+                    # unbounded backlog of stale LLM calls.
+                    if self.window:
+                        self._schedule_agent([s.model_copy(deep=True) for s in self.window])
                     STATUS.rpc_ok = True
                     STATUS.consecutive_errors = 0
                     STATUS.last_error = None
@@ -252,6 +341,10 @@ class Engine:
                 await asyncio.sleep(settings.POLL_INTERVAL_S)
         finally:
             self._epoch += 1
+            if self._agent_task is not None:
+                self._agent_task.cancel()
+                self._agent_task = None
+            self.agent.close()
             await self._queue.put(None)
             await dispatcher
             STATUS.running = False

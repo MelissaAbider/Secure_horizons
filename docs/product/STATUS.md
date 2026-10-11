@@ -101,6 +101,7 @@ Newest first. One line. No narrative.
 
 | Date | Who | Did | Left at |
 | --- | --- | --- | --- |
+| 2026-10-11 | T3 | Synced latest main/T10 into T3; three live layers remain wired (R1-R5, R6 Elliptic, asynchronous R7 Claude); restored ENGINE_ENABLED guard and made T2 reset test cross-platform | Checks: `144 passed, 1 skipped` T3; `185 passed, 21 skipped` full backend after the portability fix. R6/R7 thresholds remain development policy, not frozen evaluation metrics. |
 | 2026-10-11 | T3 | ML round 3: 34 v2 features (multi-scale, surge memory, concentration) + search over 240 one-class configs selected on normal-only cost; Elliptic Envelope on v2 flows wins: KelpDAO recall 0.76, precision 0.86, 0 pre-attack FP, +29 blocks, 0.87% held-out FP | Ceiling (not selectable, uses attack): OC-SVM recall 0.99 but 28% FP on normal days. Not wired into T3, not committed. |
 | 2026-10-11 | T3 | ML round 2: scenario features per asset/phase on real Aave events; LOF fitted on normal only detects KelpDAO at +29 blocks, recall 0.59, precision 0.80, 0 pre-attack FP, 1.8 FP per normal file | Cross-incident supervised models rejected (round 1: ROC 0.54–0.80, no transfer). Results in data/external/ml/kelpdao/results.md. Not wired into T3, not committed. |
 | 2026-10-11 | T3 | Cleaned ML data: train 3,406 windows / 328 pos over 7 incidents, test = KelpDAO 1,683 / 80 pos, 5 LOIO folds, integrity report | Round-1 benchmark: 6 models, none usable (report in data/external/ml/results/report.md). |
