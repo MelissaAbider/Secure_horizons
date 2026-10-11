@@ -39,8 +39,8 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 | Task | Name | Status | Demo steps covered | Check |
 | --- | --- | --- | --- | --- |
 | T0 | Repo foundations and shared contract | in progress | all (skeleton) | `make test-t0` |
-| T1 | On-chain contracts (local and Fuji) | not started | 1 (simplified vault), 5 | `make test-t1` |
-| T2 | Scenario: seed, attack, normal traffic, reset | not started | 5 | `make test-t2` |
+| T1 | On-chain contracts (local and Fuji) | done (deployed on Fuji, `deployments/fuji.json`) | 1 (simplified vault), 5 | `make test-t1` |
+| T2 | Scenario: seed, attack, normal traffic, reset | in progress (local done, Fuji seed + attack to play) | 5 | `make test-t2` |
 | T3 | Monitoring: collector, rules R1–R5, state API | not started | 5, 7 | `make test-t3` |
 | T4 | Response and evidence | in progress | 6, 7, 8 | `make test-t4` |
 | T5 | Incident and DORA draft | not started | 8 | `make test-t5` |

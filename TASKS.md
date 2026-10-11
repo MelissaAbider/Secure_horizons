@@ -1676,7 +1676,7 @@ _RUNS: dict[str, DemoRun]; _LOCK = threading.Lock()
 
 **8. `mk/t2.mk`**
 ```make
-# NETWORK is NEVER defined here: it comes from .env (included and exported by the root Makefile) or from the command line.
+# NETWORK is NEVER defined here: the Python scripts read it from .env, and the command line wins (NETWORK=local make seed).
 PYTHON ?= python3
 SEED ?= 0
 VARIANT ?= default
@@ -1717,7 +1717,7 @@ Single command: `make test-t2`. The `*_chain.py` files start with `pytestmark = 
 | T2-30 | chain | `test_t2_attack_chain.py::test_default_attack_end_state` | `run_attack(default)` | `backingRatioBps() == 1935`; lend-eth WETH available 0, supplied 1800e18, borrowed 1800e18, util 10000; attacker 600e18 WETH borrowed and in balance; rsETH collateral 5900e18; rsETH frozen lend-eth, not lend-avax; lend-avax WETH available 450e18 |
 | T2-31 | chain | `::test_attack_run_record` | same | `data/runs/<run_id>.json` exists; label attack, variant default, seed 0; 5 phase keys; `forged_mint < collateral_deposit < first_borrow < liquidity_zero < protocol_freeze`; `attack_start_block == forged_mint`; `start_block < forged_mint`; `end_block ≥ protocol_freeze`; `treasury_supplied_at_start` = exactly the 4 keys `lend-eth:WETH` `"150000000000000000000"`, `lend-eth:USDC` `"400000000000"`, `lend-avax:WETH` `"100000000000000000000"`, `lend-avax:USDC` `"300000000000"`; `params` contains `forged_amount`, `chunk_weth`, `interval_s`, `bot_withdrawals` |
 | T2-32 | chain | `::test_attack_json_cli` | `subprocess.run([sys.executable,"-m","scenario.attack","--json","--interval-s","0","--warmup-s","0","--freeze-delay-s","0"])` | exit 0; every line is JSON; counts: `borrow` 6, `bot_withdraw` 2 `ok`, 1 `blocked`, then `liquidity_zero`, `protocol_freeze`, `done` |
-| T2-33 | chain | `::test_attack_after_treasury_exit` | owner `vault.emergencyWithdraw(lend-eth, WETH)` before the attack | attacker borrows 450e18; 2nd bot withdrawal `blocked`; vault idle WETH 150e18; available 0 |
+| T2-33 | chain | `::test_attack_after_treasury_exit` | owner `vault.emergencyWithdraw(lend-eth, WETH)` before the attack | attacker borrows 550e18 (650 available, 1st bot withdrawal of 100 ok); 2nd bot withdrawal `blocked`; vault idle WETH 150e18; available 0 |
 | T2-34 | chain | `::test_usdc_variant` | variant `usdc` | lend-eth USDC available 0; lend-eth WETH available 800e18 unchanged |
 | T2-40 | chain | `test_t2_normal_chain.py::test_normal_safe` | `run_normal(ticks=60, seed=7, tick_s=0)` | for each block of `[start_block; end_block]`, `getReservesData(block_identifier=b)`: util ≤ 8500 on USDC/WETH; 0 `Released` events with `backed == false`; `backingRatioBps() == 10000`; rsETH supply 1400e18 |
 | T2-41 | chain | `::test_normal_run_record` | same | `data/runs/<run_id>.json` written by the end of the call (blocking); label normal, `attack_start_block is None`, `phase_blocks == {}`, 4 keys in `treasury_supplied_at_start`; emitted steps include `bridge_deposit` and `large_deposit` (status ok) |
