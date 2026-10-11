@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError } from '../api'
 import { useDashboardData } from '../DataContext'
 import { usePolling } from '../hooks/usePolling'
@@ -36,6 +36,7 @@ const BTN_LIGHT = 'inline-flex items-center justify-center gap-2 rounded-2xl bor
 
 function loadRunId(): string | undefined { try { return localStorage.getItem(RUN_KEY) ?? undefined } catch { return undefined } }
 function saveRunId(id: string): void { try { localStorage.setItem(RUN_KEY, id) } catch { /* storage unavailable */ } }
+function clearRunId(): void { try { localStorage.removeItem(RUN_KEY) } catch { /* storage unavailable */ } }
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <div className="font-mono text-[12px] font-medium uppercase tracking-[0.24em] text-fog-400">{children}</div>
@@ -125,7 +126,15 @@ export function LiveDemo() {
   const discordActions = usePolling(() => api.discordActions(), 3000)
 
   const lost = run.error instanceof ApiError && run.error.status === 404  // backend restarted since that run
+  useEffect(() => {
+    if (lost) { clearRunId(); setRunId(undefined); setFirst(undefined) }
+  }, [lost])
   const current = lost ? undefined : run.data ?? first
+  useEffect(() => {
+    if (current?.kind === 'reset' && current.status === 'done') {
+      clearRunId(); setRunId(undefined); setFirst(undefined)
+    }
+  }, [current?.kind, current?.status])
   const running = current?.status === 'running'
   const explorer = config.data?.network === 'fuji' ? config.data.explorer_url : undefined
   const attack = current?.kind === 'attack' ? current : undefined
@@ -189,7 +198,7 @@ export function LiveDemo() {
           <button data-testid="launch-attack" disabled={running} onClick={() => void start(() => api.demoAttack(0, 'default'))} className={BTN}>
             {running && attack ? 'Attack in progress…' : 'Launch the attack on Fuji'} <span aria-hidden>→</span>
           </button>
-          <button data-testid="reset-demo" disabled={running} onClick={reset} className={BTN_LIGHT}>Reset the test network</button>
+          <button data-testid="reset-demo" disabled={running} onClick={reset} className={BTN_LIGHT}>Reset test network</button>
         </div>
       </div>
 

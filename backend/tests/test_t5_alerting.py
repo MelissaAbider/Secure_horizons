@@ -78,15 +78,18 @@ def test_incident_dora_and_discord_flow(env):
     assert len(sent) == 1 and sent[0].text.endswith("(DORA draft attached)")
 
 
-def test_warnings_are_not_sent_and_high_sends_without_opening_incident(env):
-    alerting, posts, _ = env
+def test_warnings_are_not_sent_and_high_opens_one_incident_summary(env):
+    alerting, posts, data = env
     snap = snapshots()[45201826]
     assert alerting.handle([later("R2_COLLATERAL_SURGE", "warning", 45201826, "lend-eth", "rsETH", 1)], snap) is None
     assert posts == []
-    assert alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snap) is None
-    assert len(posts) == 1 and posts[0]["file"] is None and alerting.store.incidents() == []
-    assert alerting.deliveries[-1].status == "sent" and alerting.deliveries[-1].incident_id is None
-    assert alerting.deliveries[-1].attachment is None
+    incident = alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snap)
+    assert incident.severity == "high" and len(posts) == 1 and len(alerting.store.incidents()) == 1
+    assert posts[0]["file"][1].startswith(b"%PDF") and (data / "reports" / f"{incident.id}.pdf").exists()
+    alerting.handle([later("R3_LIQUIDITY_DRAIN", "critical", 45201828, "lend-eth", "WETH", 375_000)], snap)
+    updated = alerting.handle([later("R7_AGENT_LLM", "high", 45201830, "lend-eth", "WETH", 375_000)], snap)
+    assert updated.severity == "critical" and len(posts) == 1
+    assert {a.split("-")[3] for a in updated.alert_ids} == {"R3_LIQUIDITY_DRAIN", "R7_AGENT_LLM"}
 
 
 def test_no_webhook_still_writes_the_dora_draft(env, monkeypatch):

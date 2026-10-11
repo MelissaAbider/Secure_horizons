@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from typing import Optional, Sequence
@@ -44,18 +45,22 @@ def refund_safe(emit: Emitter) -> None:
     emit("safe", f"Safe {state['safe']} credited with test tokens; its list must be sealed again", status="info")
 
 
-def run_reset(emit: Emitter, deploy_cmd: Sequence[str] = ("make", "deploy", "FORCE=1")) -> None:
+def run_reset(emit: Emitter, deploy_cmd: Optional[Sequence[str]] = None) -> None:
+    command = list(deploy_cmd) if deploy_cmd is not None else [sys.executable, str(settings.ROOT / "contracts" / "script" / "deploy.py")]
+    env = os.environ.copy()
+    if deploy_cmd is None:
+        env["FORCE"] = "1"
     with maintenance(emit):
         if settings.NETWORK == "fuji":
             emit("deploy", "redeploying on fuji: costs gas, about 2 minutes, every address changes", status="info")
         before = _fingerprint()
-        proc = subprocess.Popen(list(deploy_cmd), cwd=settings.ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                text=True)
+        proc = subprocess.Popen(command, cwd=settings.ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace")
         for line in proc.stdout:
             if line.strip():
                 emit("deploy", line.rstrip(), status="info")
         if proc.wait() != 0:
-            raise ScenarioError(f"{' '.join(deploy_cmd)} exited with {proc.returncode}")
+            raise ScenarioError(f"{' '.join(command)} exited with {proc.returncode}")
         if _fingerprint() in (None, before):
             raise ScenarioError(f"{settings.DEPLOYMENTS_FILE.name} was not rewritten by the deployment")
         run_seed(emit, manage_maintenance=False)

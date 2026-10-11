@@ -82,11 +82,10 @@ class Alerting:
             return None
         incident = self.store.get_incident(self.incident_id) if self.incident_id else None
         opened = False
-        if incident is None and any(a.severity == "critical" for a in alerts):
+        if incident is None:
+            first = max(alerts, key=lambda a: (RANK[a.severity], a.exposure_usd))
             self.alerts, self.classified_at, opened = [], _now(), True
-            incident = self._new_incident(alerts[0])
-        elif incident is None:
-            self._send_high(alerts, snapshot)
+            incident = self._new_incident(first)
         if incident is not None:
             self.alerts += alerts
             incident = self._update(incident, snapshot)
@@ -113,7 +112,7 @@ class Alerting:
         day = first.detected_at.strftime("%Y%m%d")
         n = 1 + sum(1 for i in self.store.incidents() if i.id.startswith(f"INC-{day}-"))
         now = _now()
-        incident = Incident(id=f"INC-{day}-{n:03d}", title=first.title, status="open", severity="critical",
+        incident = Incident(id=f"INC-{day}-{n:03d}", title=first.title, status="open", severity=first.severity,
                             opened_at=now, detected_at=first.detected_at, contained_at=None, alert_ids=[],
                             decision_ids=[], exposure_usd=0.0, saved_usd=0.0, at_risk_usd=0.0, dora=None, timeline=[])
         self.incident_id = incident.id
@@ -128,8 +127,9 @@ class Alerting:
             TimelineEvent(at=a.detected_at, block_number=a.block_number, kind="alert",
                           text=f"{a.rule_id} {a.severity}: {a.title}", ref=a.id)
             for a in alerts if a.id not in known]
+        severity = max((a.severity for a in alerts), key=lambda value: RANK[value])
         incident = incident.model_copy(update={
-            "alert_ids": list(dict.fromkeys(a.id for a in alerts)), "exposure_usd": exposure,
+            "alert_ids": list(dict.fromkeys(a.id for a in alerts)), "severity": severity, "exposure_usd": exposure,
             "at_risk_usd": exposure - incident.saved_usd, "timeline": timeline})
         profile = self.profile or dora.load_profile()
         facts = dora.IncidentFacts(exposure_usd=exposure, total_treasury_usd=_treasury_usd(snapshot),
@@ -153,7 +153,7 @@ class Alerting:
         return incident
 
     def _description(self, incident: Incident, snapshot: Snapshot) -> str:
-        first = next(a for a in self.alerts if a.severity == "critical")
+        first = self.alerts[0]
         value, withdrawable = notify._vault_position_values(snapshot, notify.scope(self.alerts))
         told = ("the operations team was alerted on Discord" if settings.ALERT_WEBHOOK_URL
                 else "the alert is shown on the monitoring dashboard")
@@ -167,26 +167,6 @@ class Alerting:
                 + (f" Subsequent signals: {later}." if later else ""))
 
     # ---------- Discord ----------
-
-    def _send_high(self, alerts: list[Alert], snapshot: Snapshot) -> bool:
-        def record(status: str, http_status: Optional[int] = None) -> bool:
-            self.deliveries = (self.deliveries + [NotificationDelivery(
-                at=_now(), channel="discord", status=status, rule_ids=[a.rule_id for a in alerts],
-                incident_id=None, attachment=None, http_status=http_status)])[-200:]
-            return status == "sent"
-
-        url = settings.ALERT_WEBHOOK_URL
-        if not url or not notify.is_discord_webhook(url):
-            return record("not_configured")
-        try:
-            status = self.post(url, notify.build_alert_payload(alerts, snapshot), None)
-        except Exception as exc:
-            log.warning("Discord high alert failed (%s)", type(exc).__name__)
-            return record("failed")
-        if status >= 300:
-            log.warning("Discord webhook answered HTTP %s", status)
-            return record("failed", status)
-        return record("sent", status)
 
     def _send(self, alerts: list[Alert], snapshot: Snapshot, incident: Incident) -> bool:
         name = f"{incident.id}-DORA-draft.pdf"
