@@ -119,7 +119,7 @@ def deploy() -> None:
     cmd = [forge(), "script", "script/Deploy.s.sol:Deploy", "--rpc-url", settings.RPC_URL, "--broadcast"]
     if settings.NETWORK != "local":
         cmd.append("--slow")  # one transaction at a time on a public network
-    print(f"deploying on {settings.NETWORK} ({settings.RPC_URL}) from {address('deployer')} ...")
+    print(f"deploying on {settings.NETWORK} ({settings.RPC_URL.split('/')[2]}) from {address('deployer')} ...")
     if subprocess.run(cmd, cwd=CONTRACTS, env=env, stdout=subprocess.DEVNULL).returncode != 0:
         sys.exit("forge stopped before the end (often the public RPC losing a transaction): run `make deploy RESUME=1`")
     configure(json.loads(raw.read_text()))  # no-op when forge finished everything

@@ -168,7 +168,7 @@ def preflight(role_names: tuple[str, ...] = (), bot_indexes: tuple[int, ...] = (
         raise PreflightError(f"{settings.DEPLOYMENTS_FILE} not found: run make deploy (NETWORK={settings.NETWORK})")
     w3 = chain.w3()
     if w3.eth.chain_id != settings.CHAIN_ID:
-        raise PreflightError(f"RPC chain id {w3.eth.chain_id} != CHAIN_ID {settings.CHAIN_ID} ({settings.RPC_URL})")
+        raise PreflightError(f"RPC chain id {w3.eth.chain_id} != CHAIN_ID {settings.CHAIN_ID} (RPC host {settings.RPC_URL.split('/')[2]})")
     bots = chain.bot_accounts()
     if len(bots) < 3:
         raise PreflightError("3 bot keys required (BOT_PKS in .env)")
