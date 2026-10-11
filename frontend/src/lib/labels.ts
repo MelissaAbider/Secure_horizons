@@ -1,5 +1,5 @@
 export const APP_NAME = 'Treasury Guard'
-export const APP_VERSION = 'v8'
+export const APP_VERSION = 'v9'
 
 export const RULE_LABELS: Record<string, string> = {
   R1_BACKING_DROP: 'Bridged token backing drop',

@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Area, AreaChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { api, isNoSnapshotYet } from '../api'
+import { AgentChat } from '../components/AgentChat'
 import { Counter, Magnetic, Tilt } from '../components/motionBits'
 import { ShieldField } from '../components/ShieldField'
 import { SeverityBadge, ToneBar, Waiting } from '../components/ui'
@@ -273,6 +274,10 @@ export function OverviewView({ s, alerts = [], decisions = [], series = [] }: {
           <div className="mx-auto mt-10 hidden h-[3px] w-full max-w-[1240px] overflow-hidden rounded-full bg-ink-700 px-0 lg:block">
             <div className="a-progress h-full origin-left scale-x-0 bg-signal-violet" />
           </div>
+        </div>
+        {/* Live agent: ask it, it proposes, the guard decides */}
+        <div id="ask-agent" className="mx-auto max-w-[1240px] px-5 pb-24 sm:px-8">
+          <AgentChat />
         </div>
       </section>
 

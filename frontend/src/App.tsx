@@ -1,6 +1,7 @@
 import { BrowserRouter, HashRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { DashboardDataProvider } from './DataContext'
+import { AgentPage } from './pages/AgentPage'
 import { Alerts } from './pages/Alerts'
 import { Charts } from './pages/Charts'
 import { Demo } from './pages/Demo'
@@ -25,6 +26,7 @@ export function AppRoutes() {
           <Route path="/metrics" element={<Metrics />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/setup" element={<Setup />} />
+          <Route path="/agent" element={<AgentPage />} />
           <Route path="*" element={<Overview />} />
         </Routes>
       </Layout>

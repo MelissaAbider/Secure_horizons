@@ -1,4 +1,4 @@
-"""FastAPI entry point (TASKS.md 2.9, 2.10). Owner: T0. Run: make backend (one worker: the store is in memory).
+﻿"""FastAPI entry point (TASKS.md 2.9, 2.10). Owner: T0. Run: make backend (one worker: the store is in memory).
 
 Mounts the router of each task and wires engine -> responder -> incidents, for the modules that exist.
 A task plugs in by adding its own file; nobody edits this one. A missing module is skipped; a module that
@@ -48,7 +48,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Secure Horizons treasury monitor", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-for name in ("state", "response", "incidents", "demo", "metrics"):  # owners: T3, T4, T5, T2, T7
+for name in ("state", "response", "incidents", "demo", "metrics", "agent"):  # owners: T3, T4, T5, T2, T7
     router_module = _optional(f"backend.api.{name}")
     if router_module:
         app.include_router(router_module.router, prefix="/api")

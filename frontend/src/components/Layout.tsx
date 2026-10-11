@@ -9,7 +9,6 @@ import { Banner } from './ui'
 
 // The home page is one long scroll story: these jump to its chapters.
 const SECTIONS = [
-  { id: 'agent', label: 'Agent' },
   { id: 'attack', label: 'Attack' },
   { id: 'proof', label: 'Proof' },
 ]
@@ -65,6 +64,9 @@ export function Layout({ children }: { children: ReactNode }) {
             <span data-testid="app-version" className="rounded-full bg-ink-800 px-1.5 font-mono text-[10px] text-fog-400">{APP_VERSION}</span>
           </NavLink>
           <nav className="mx-auto hidden items-center gap-1 md:flex">
+            <NavLink to="/agent" className={({ isActive }) => `flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] transition hover:bg-ink-800 ${isActive ? 'bg-ink-800 text-fog-100' : 'text-fog-300'}`}>
+              <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-green-500" />Ask agent
+            </NavLink>
             {SECTIONS.map((s) => (
               <button key={s.id} onClick={() => go(s.id)} className="rounded-full px-4 py-2 text-[14px] text-fog-300 transition hover:bg-ink-800 hover:text-fog-100">{s.label}</button>
             ))}
