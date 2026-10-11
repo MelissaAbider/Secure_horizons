@@ -120,8 +120,8 @@ class MLMonitor:
             return [], ["R6 ML disabled"]
         if not window:
             return [], ["R6 ML: no snapshot"]
-        if not self.allow_non_live and window[-1].source != "live":
-            return [], ["R6 ML live adapter skipped for fixture/replay input"]
+        if not self.allow_non_live and (window[-1].source != "live" or not settings.ENGINE_ENABLED):
+            return [], ["R6 ML live adapter inactive (requires live input and ENGINE_ENABLED=true)"]
         if self._model is None and self.status.last_error is None:
             self._fit()
         if not self.status.available or self._model is None or self.status.threshold is None:
