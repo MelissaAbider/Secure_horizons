@@ -14,7 +14,7 @@ from typing import Callable, Optional
 
 from backend import dora, notify, settings
 from backend.dora_pdf import render_pdf
-from backend.models import Alert, DoraAssessment, Incident, Snapshot, TimelineEvent
+from backend.models import Alert, DoraAssessment, Incident, NotificationDelivery, Snapshot, TimelineEvent
 
 log = logging.getLogger("backend.alerting")
 NOTIFY_MIN = "high"  # warnings stay on the dashboard, high and critical go to Discord
@@ -59,6 +59,7 @@ class Alerting:
         self.alerts: list[Alert] = []
         self.classified_at: Optional[datetime] = None
         self.deployment_key = None
+        self.deliveries: list[NotificationDelivery] = []  # every Discord attempt, newest last
         self._lock = threading.Lock()
 
     # ---------- engine subscriber ----------
@@ -164,25 +165,44 @@ class Alerting:
     # ---------- Discord ----------
 
     def _send(self, alerts: list[Alert], snapshot: Snapshot, incident: Optional[Incident], attach: bool) -> bool:
+        name = f"{incident.id}-DORA-draft.pdf" if attach and incident is not None else None
+
+        def record(status: str, http_status: Optional[int] = None) -> bool:
+            self.deliveries = (self.deliveries + [NotificationDelivery(
+                at=_now(), channel="discord", status=status, rule_ids=[a.rule_id for a in alerts],
+                incident_id=incident.id if incident else None, attachment=name, http_status=http_status)])[-200:]
+            return status == "sent"
+
         url = settings.ALERT_WEBHOOK_URL
         if not url:
-            return False
+            return record("not_configured")
         if not notify.is_discord_webhook(url):
             log.warning("ALERT_WEBHOOK_URL is not a discord.com webhook: message not sent")
-            return False
+            return record("not_configured")
         payload = notify.build_alert_payload(alerts, snapshot, incident)
-        file = None
-        if attach and incident is not None:
-            file = (f"{incident.id}-DORA-draft.pdf", (settings.DATA_DIR / "reports" / f"{incident.id}.pdf").read_bytes())
+        file = (name, (settings.DATA_DIR / "reports" / f"{incident.id}.pdf").read_bytes()) if name else None
         try:
             status = self.post(url, payload, file)
         except Exception as exc:
             log.warning("Discord webhook failed (%s)", type(exc).__name__)
-            return False
+            return record("failed")
         if status >= 300:
             log.warning("Discord webhook answered HTTP %s", status)
-            return False
-        return True
+            return record("failed", status)
+        return record("sent", status)
+
+
+_instance: Optional[Alerting] = None
+
+
+def get_alerting() -> Alerting:
+    """The one subscriber shared by the engine (backend/main.py) and the API (backend/api/incidents.py)."""
+    global _instance
+    if _instance is None:
+        from backend.store import store
+
+        _instance = Alerting(store)
+    return _instance
 
 
 def main() -> None:
@@ -193,7 +213,7 @@ def main() -> None:
     from backend.store import store
 
     logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    engine, alerting = Engine(store), Alerting(store)
+    engine, alerting = Engine(store), get_alerting()
 
     def show(alerts: list[Alert], snapshot: Snapshot) -> None:
         for a in alerts:

@@ -102,3 +102,44 @@ def test_failed_webhook_is_not_recorded_as_sent(env):
     alerting.post = lambda url, payload, file: 500
     incident = alerting.handle([r1()], snapshots()[45201812])
     assert not [e for e in incident.timeline if e.kind == "action"]
+
+
+def test_deliveries_record_every_attempt(env, monkeypatch):
+    alerting, _, _ = env
+    snap = snapshots()[45201812]
+    alerting.handle([r1()], snap)
+    alerting.post = lambda url, payload, file: 500
+    alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snap)
+    monkeypatch.setattr(settings, "ALERT_WEBHOOK_URL", "")
+    alerting.handle([later("R4_EXITABILITY_DROP", "high", 45201836, "lend-eth", "WETH", 375_000)], snap)
+    got = [(d.status, d.http_status, d.rule_ids, d.attachment is not None) for d in alerting.deliveries]
+    assert got == [("sent", 204, ["R1_BRIDGE_INVARIANT"], True), ("failed", 500, ["R3_LIQUIDITY_DRAIN"], False),
+                   ("not_configured", None, ["R4_EXITABILITY_DROP"], False)]
+
+
+def test_incident_routes_and_pdf_download(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from backend import alerting as alerting_module
+    from backend.main import app
+    from backend.store import store
+
+    monkeypatch.setattr(settings, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(settings, "USE_FIXTURES", False)
+    monkeypatch.setattr(settings, "ALERT_WEBHOOK_URL", WEBHOOK)
+    shared = Alerting(store, post=lambda url, payload, file: 204)
+    monkeypatch.setattr(alerting_module, "_instance", shared)
+    store.reset()
+    try:
+        incident = shared.handle([r1()], snapshots()[45201812])
+        client = TestClient(app)
+        assert [i["id"] for i in client.get("/api/incidents").json()] == [incident.id]
+        pdf = client.get(f"/api/incidents/{incident.id}/report.pdf")
+        assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf" and pdf.content.startswith(b"%PDF")
+        assert "DORA initial notification" in client.get(f"/api/incidents/{incident.id}/report.md").text
+        assert client.get("/api/incidents/INC-nope/report.pdf").status_code == 404
+        assert client.get("/api/notifications").json()[0]["status"] == "sent"
+        config = client.get("/api/notifications/config").json()
+        assert config["discord_configured"] is True and WEBHOOK not in str(config)
+    finally:
+        store.reset()

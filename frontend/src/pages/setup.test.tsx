@@ -4,6 +4,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { ruleHints, isAddress, stepsDone, defaultSetup } from '../lib/setup'
 import { Setup } from './Setup'
 
+// the live panel polls the backend: covered by its own checks, stubbed here
+vi.mock('../components/LiveDemo', () => ({ LiveDemo: () => <div data-testid="live-demo" /> }))
+
 const SAFE = '0x' + 'a1'.repeat(20)
 
 describe('Setup page', () => {
@@ -21,10 +24,12 @@ describe('Setup page', () => {
     expect(screen.getByTestId('rule-hint')).toHaveTextContent('Never more than 30% on Aave')
     await userEvent.click(screen.getByTestId('make-rule'))
     expect(screen.queryByTestId('rule-hint')).toBeNull()
+    expect(screen.queryByTestId('live-demo')).toBeNull()
     await userEvent.click(screen.getByTestId('save-agent'))
     await userEvent.click(screen.getByTestId('go-live'))
     expect(screen.getByTestId('setup-count')).toHaveTextContent('4 of 4 steps done')
     expect(screen.getByTestId('guard-status')).toHaveTextContent('Watching Avalanche Fuji')
+    expect(screen.getByTestId('live-demo')).toBeInTheDocument()
     await userEvent.click(screen.getByTestId('restart-setup'))
     expect(screen.getByTestId('setup-count')).toHaveTextContent('0 of 4 steps done')
     expect(screen.getByTestId('safe-input')).toHaveValue('')

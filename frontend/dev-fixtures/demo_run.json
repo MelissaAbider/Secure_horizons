@@ -19,5 +19,6 @@
     "[45201838] liquidity_zero: lend-eth WETH drained",
     "[45201878] protocol_freeze: rsETH frozen on lend-eth",
     "done"
-  ]
+  ],
+  "steps": []
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { LiveDemo } from '../components/LiveDemo'
 import { getOperator } from '../DataContext'
 import {
   PROTOCOLS, defaultSetup, fingerprint, isAddress, loadSetup, policyJson, ruleHints, saveSetup, shortAddr, stepsDone,
@@ -247,9 +248,9 @@ export function Setup() {
 
                         {i === 3 && (
                           <div className="space-y-4">
-                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules and can pause and pull back on its own.</p>
+                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules, alerts your team on Discord and drafts the DORA notification. Pulling funds back on its own is phase 2.</p>
                             <ul className="grid gap-2 sm:grid-cols-2">
-                              {['Backing of bridged tokens', 'Market liquidity drop', 'Market utilization', 'Our withdrawable share', 'Market frozen or paused'].map((r, k) => (
+                              {['Forged bridge release', 'rsETH collateral surge', 'Market liquidity drain', 'Our withdrawable share', 'Bridge or market contained'].map((r, k) => (
                                 <li key={r} className="flex items-center gap-3 rounded-xl border border-ink-700 bg-white px-4 py-3 text-[14px]">
                                   <span className="font-mono text-[11px] text-signal-violet">R{k + 1}</span>{r}
                                 </li>
@@ -306,7 +307,7 @@ export function Setup() {
             <div className="mt-6">
               <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Alerts go to</div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {(['telegram', 'slack', 'email'] as const).map((c) => (
+                {(['discord', 'telegram', 'slack', 'email'] as const).map((c) => (
                   <button key={c} onClick={() => update({ channels: { ...s.channels, [c]: !s.channels[c] } })}
                     className={`rounded-full border px-4 py-2 text-[14px] capitalize transition ${s.channels[c] ? 'border-fog-100 bg-fog-100 text-ink-950' : 'border-ink-700 bg-white text-fog-300'}`}>{c}</button>
                 ))}
@@ -331,6 +332,8 @@ export function Setup() {
             </div>
           </aside>
         </div>
+
+        {s.live && <LiveDemo />}
 
         <p className="mt-8 text-center font-mono text-[11px] uppercase tracking-[0.16em] text-fog-500">Preview · setup is saved in this browser · the agent itself is phase 2</p>
       </div>

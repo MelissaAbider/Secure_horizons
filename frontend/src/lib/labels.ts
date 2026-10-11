@@ -2,11 +2,11 @@ export const APP_NAME = 'Treasury Guard'
 export const APP_VERSION = 'v8'
 
 export const RULE_LABELS: Record<string, string> = {
-  R1_BACKING_DROP: 'Bridged token backing drop',
-  R2_LIQUIDITY_DROP: 'Market liquidity drop',
-  R3_UTILIZATION_HIGH: 'Market utilization high',
-  R4_POSITION_STUCK: 'Our position is stuck',
-  R5_RESERVE_FROZEN: 'Reserve frozen or paused',
+  R1_BRIDGE_INVARIANT: 'Forged bridge release',
+  R2_COLLATERAL_SURGE: 'rsETH collateral surge',
+  R3_LIQUIDITY_DRAIN: 'Market liquidity drain',
+  R4_EXITABILITY_DROP: 'Our position is stuck',
+  R5_CONTAINMENT: 'Bridge or market contained',
 }
 export function ruleLabel(id: string): string { return RULE_LABELS[id] ?? id }
 export function ruleShort(id: string): string { return id.split('_')[0] }

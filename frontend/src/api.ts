@@ -1,6 +1,6 @@
 import type {
   Alert, Decision, DemoRun, DemoVariant, Dependency, EvalMetrics, Health, Incident,
-  SeriesPoint, StateResponse, VerifyResult,
+  NotificationDelivery, SeriesPoint, StateResponse, VerifyResult,
 } from './types'
 import { ApiError } from './apiError'
 import { fixtureDb } from './fixtureDb'
@@ -30,6 +30,8 @@ async function postJson<T>(path: string, body?: unknown): Promise<T> {
     : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   return (await request(path, init)).json() as Promise<T>
 }
+
+export interface NotificationsConfig { discord_configured: boolean; network: string; explorer_url: string }
 
 export const api = {
   health(): Promise<Health> { return isFixtureMode() ? fixtureDb.health() : getJson('/api/health') },
@@ -68,6 +70,14 @@ export const api = {
     return isFixtureMode() ? fixtureDb.demoAttack(seed, variant) : postJson('/api/demo/attack', { seed, variant })
   },
   demoReset(): Promise<DemoRun> { return isFixtureMode() ? fixtureDb.demoReset() : postJson('/api/demo/reset') },
+  /** Discord attempts made by the alerting module, newest first (none in fixture mode). */
+  notifications(): Promise<NotificationDelivery[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/notifications') },
+  notificationsConfig(): Promise<NotificationsConfig> {
+    return isFixtureMode()
+      ? Promise.resolve({ discord_configured: false, network: 'fuji', explorer_url: 'https://testnet.snowtrace.io' })
+      : getJson('/api/notifications/config')
+  },
+  incidentPdfUrl(id: string): string { return `${API_URL}/api/incidents/${encodeURIComponent(id)}/report.pdf` },
   demoRun(runId: string): Promise<DemoRun> {
     return isFixtureMode() ? fixtureDb.demoRun(runId) : getJson(`/api/demo/runs/${encodeURIComponent(runId)}`)
   },

@@ -30,7 +30,7 @@ export interface SetupState {
   rules: Rules
   instructions: string
   agentSaved: boolean
-  channels: { telegram: boolean; slack: boolean; email: boolean }
+  channels: { discord: boolean; telegram: boolean; slack: boolean; email: boolean }
   live: boolean
   liveSince: string | null
 }
@@ -43,7 +43,7 @@ export function defaultSetup(): SetupState {
     protocols: ['aave-usdc', 'benqi-usdc'],
     rules: { maxPerProtocolPct: 40, maxLossPct: 0.5, humanAboveUsd: 100000, circuitBreaker: true, protocolCaps: {} },
     instructions: DEFAULT_INSTRUCTIONS, agentSaved: false,
-    channels: { telegram: true, slack: false, email: true },
+    channels: { discord: true, telegram: false, slack: false, email: true },
     live: false, liveSince: null,
   }
 }
@@ -99,7 +99,7 @@ export function policyJson(s: SetupState) {
       human_signature_above_usd: s.rules.humanAboveUsd,
       circuit_breaker: s.rules.circuitBreaker,
     },
-    detection_rules: ['R1_BACKING_DROP', 'R2_LIQUIDITY_DROP', 'R3_UTILIZATION_HIGH', 'R4_POSITION_STUCK', 'R5_RESERVE_FROZEN'],
+    detection_rules: ['R1_BRIDGE_INVARIANT', 'R2_COLLATERAL_SURGE', 'R3_LIQUIDITY_DRAIN', 'R4_EXITABILITY_DROP', 'R5_CONTAINMENT'],
     strategy_instructions: s.instructions,
     channels: Object.entries(s.channels).filter(([, on]) => on).map(([k]) => k),
   }
