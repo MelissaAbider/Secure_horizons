@@ -51,3 +51,11 @@ Template: task, requested change, reason, impacted tasks, status.
 - **Reason:** `requirements.txt`, `conftest.py` and `.env.example` belong to T0; there is no `requirements.txt` on `main` yet.
 - **Impacted:** T0, T8 (Docker image needs fpdf2; SMTP secrets go to SSM, never in the image).
 - **Status:** open
+
+## CR-006 · Agent routes and replay in the T0 shim
+
+- **Task:** agent (branch `Adam-(T4,-T5)`)
+- **Change:** `backend/main.py` includes `backend/api/agent.py` (`POST /api/agent/propose`, `GET /api/agent/proposals`) and a shim-only `POST /api/demo/replay` (dry-run only: R1 at block 45201812 then the reacted series). `requirements.txt` added (runtime only, plus `eth-hash[pycryptodome]` for keccak and `python-dotenv`).
+- **Reason:** run the agent on an EC2 VM with Bedrock and populate the API without a chain.
+- **Impacted:** T0 (keep or move these routes), T8 (VM setup).
+- **Status:** applied on the branch, informational
