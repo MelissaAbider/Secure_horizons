@@ -96,8 +96,6 @@ export function AgentAutopilot({ instructions }: { instructions: string }) {
             Claude reads the markets, the Safe and the alerts through MCP tools, then proposes moves. The platform re-reads the chain and the signed rules: inside the list and the caps it executes, above {formatUsd(Number(st?.rules?.human_signature_above_usd ?? 100000))} a human signs, anything else is refused. The agent holds no key.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {st && <Pill tone={st.model_configured ? 'ok' : 'warn'}>{st.model_configured ? `Bedrock · ${st.region}` : 'no model: fallback planner'}</Pill>}
-            {st && <Pill tone={st.dry_run ? 'warn' : 'ok'}>{st.dry_run ? 'dry run: nothing sent' : 'live on Fuji'}</Pill>}
             {st?.loop && <Pill tone="violet">auto · every {formatEvery(st.interval_s ?? INTERVAL_S)}</Pill>}
             {st?.running && <Pill>thinking…</Pill>}
           </div>
@@ -144,13 +142,10 @@ const MODES: { id: AgentMode; title: string; text: string }[] = [
 /** Step 3 of the setup: who drives the money, and the MCP tools the agent may call. */
 export function AgentModeChoice({ mode, onChange }: { mode: AgentMode; onChange: (m: AgentMode) => void }) {
   const tools = usePolling(() => api.agentTools(), 60000)
-  const status = usePolling(() => api.agentStatus(), 15000)
-  const st = status.data
   return (
     <div className="space-y-3" data-testid="agent-mode">
       <div className="flex items-center justify-between">
         <span className="font-semibold">Who manages the money</span>
-        {st && <Pill tone={st.model_configured ? 'ok' : 'warn'}>{st.model_configured ? `Claude on Bedrock · ${st.region}` : 'fallback planner (no model)'}</Pill>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {MODES.map((m) => (
