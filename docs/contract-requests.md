@@ -26,6 +26,15 @@ Template: task, requested change, reason, impacted tasks, status.
 - **Impacted:** T0 fixtures/types, T1 MockBridge, T2 scenario phases, T3 rules, T4–T7 labels and tests.
 - **Status:** implemented on T3 branch; requires team contract approval
 
+## CR-006 · Alert feedback ledger and offline challenger dataset
+
+- **Task:** T3 feedback/MLOps extension. No change to vault, rules, caps, signers or response actions.
+- **Change:** append-only hash-chained `alert_feedback.jsonl`; automatic immutable observation for every emitted alert; human review API with labels `confirmed_attack`, `legitimate_activity`, `insufficient_evidence`, `duplicate`, `wrong_scope`, `uncertain`; revisions append rather than overwrite; integrity endpoint and reviewed-only challenger export.
+- **API:** `GET /api/feedback`, `GET /api/feedback/integrity`, `POST /api/alerts/{alert_id}/feedback`, `GET /api/feedback/export`.
+- **Security boundary:** reviewer is an asserted identity until T8 provides authentication. Feedback never modifies, retrains or promotes the active model and has no fund-moving side effect. Export purpose is `offline_challenger_training_only`.
+- **For T6:** display observation, review history, current label, hashes and integrity. A review form must expose the six labels and reason code; do not collapse to ambiguous yes/no.
+- **Status:** implemented on `feature/t3-alert-feedback-learning`; authentication and automated challenger training intentionally deferred.
+
 ## CR-005 · T3 third surveillance layer: R7 LLM agent and layer consensus
 
 - **Task:** T3 only. No change to `backend/models.py`, fixtures, T1/T2 contracts or T4 response code.

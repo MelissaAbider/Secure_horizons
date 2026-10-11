@@ -39,6 +39,9 @@ if responder and incidents:
 _alerting = _optional("backend.alerting")
 if engine and _alerting and not responder:  # detection-only mode: Discord + DORA draft, no fund movement
     engine.on_alerts(_alerting.get_alerting().handle)
+_feedback = _optional("backend.feedback")
+if engine and _feedback:
+    engine.on_alerts(_feedback.feedback_ledger.handle)
 
 
 @asynccontextmanager
@@ -51,7 +54,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Secure Horizons treasury monitor", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-for name in ("state", "response", "incidents", "demo", "metrics", "safe"):  # owners: T3, T4, T5, T2, T7, T10
+for name in ("state", "response", "incidents", "demo", "metrics", "safe", "feedback"):  # owners: T3, T4, T5, T2, T7, T10
     router_module = _optional(f"backend.api.{name}")
     if router_module:
         app.include_router(router_module.router, prefix="/api")
