@@ -1,0 +1,329 @@
+[
+  {
+    "id": "kelpdao_2026",
+    "name": "KelpDAO rsETH bridge -> Aave",
+    "category": "bridge_to_lending",
+    "chain": "ethereum-mainnet",
+    "attack_block": 24908285,
+    "attack_tx": "0x",
+    "contracts": {
+      "aave_pool": "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "bridge_adapter": "0x85d456b2dff1fd8245387c0bfb64dfb700e98ef3"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "https://sqd.dev/learn/kelpdao-rseth-exploit/"
+  },
+  {
+    "id": "nomad_2022",
+    "name": "Nomad Bridge",
+    "category": "bridge_message_validation",
+    "chain": "ethereum-mainnet",
+    "attack_block": 15259101,
+    "attack_tx": "0x53fd92771d2084a9bf39a6477015ef53b7f116c79d98a21be723d06d79024cad",
+    "contracts": {
+      "replica": "0x5d94309e5a0090b165fa4181519701637b6daeba",
+      "bridge_router": "0x88a69b4e698a4b090df6cf5bd7b2d47325ad30a3",
+      "erc20_bridge": "0x88a69b4e698a4b090df6cf5bd7b2d47325ad30a3"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "https://github.com/SunWeb3Sec/DeFiHackLabs (20220802)"
+  },
+  {
+    "id": "ronin_2022",
+    "name": "Ronin Bridge",
+    "category": "bridge_key_compromise",
+    "chain": "ethereum-mainnet",
+    "attack_block": 14442835,
+    "attack_tx": "0xc28fad5e8d5e0ce6a2eaf67b6687be5d58113e16be590824d6cfa1a94467d0b7",
+    "contracts": {
+      "bridge": "0x1a2a1c938ce3ec39b6d47113c7955baa9dd454f2"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20220329"
+  },
+  {
+    "id": "polynetwork_2021",
+    "name": "Poly Network",
+    "category": "bridge_message_validation",
+    "chain": "ethereum-mainnet",
+    "attack_block": 12996659,
+    "attack_tx": "0xb1f70464bd95b774c6ce60fc706eb5f9e35cb5f06e6cfe7c17dcda46ffd59581",
+    "contracts": {
+      "lock_proxy": "0x250e76987d838a75310c34bf422ea9f1ac4cc906",
+      "eth_cross_chain_manager": "0x838bf9e95cb12dd76a54c9f9d2e3082eaf928270"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20210811"
+  },
+  {
+    "id": "multichain_2022",
+    "name": "Multichain (Anyswap) router",
+    "category": "bridge_token_validation",
+    "chain": "ethereum-mainnet",
+    "attack_block": 14037237,
+    "attack_tx": "0xe50ed602bd916fc304d53c4fed236698b71691a95774ff0aeeb74b699c6227f7",
+    "contracts": {
+      "router": "0x6b7a87899490ece95443e979ca9485cbe7e71522"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20220118"
+  },
+  {
+    "id": "harmony_2022",
+    "name": "Harmony Horizon Bridge",
+    "category": "bridge_key_compromise",
+    "chain": "ethereum-mainnet",
+    "attack_block": 15012646,
+    "attack_tx": "0x27981c7289c372e601c9475e5b5466310be18ed10b59d1ac840145f6e7804c97",
+    "contracts": {
+      "bridge": "0x715cdda5e9ad30a0ced14940f9997ee611496de6",
+      "eth_manager": "0x2dccdb493827e15a5dc8f8b72147e6c4a5620857"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20220624"
+  },
+  {
+    "id": "euler_2023",
+    "name": "Euler Finance (lending, donate-to-reserves)",
+    "category": "lending_exploit_control",
+    "chain": "ethereum-mainnet",
+    "attack_block": 16817996,
+    "attack_tx": "0xc310a0affe2169d1f6feec1c63dbc7f7c62a887fa48795d327d4d2da2d6b111d",
+    "contracts": {
+      "euler": "0x27182842e098f60e3d576794a5bffb0777e025d3"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20230313"
+  },
+  {
+    "id": "cream_2021",
+    "name": "Cream Finance (lending, oracle manipulation)",
+    "category": "lending_exploit_control",
+    "chain": "ethereum-mainnet",
+    "attack_block": 13499798,
+    "attack_tx": "0x0fe2542079644e107cbf13690eb9c2c65963ccb79089ff96bfaf8dced2331c92",
+    "contracts": {
+      "comptroller": "0x3d5bc3c8d13dcb8bf317092d84783c2697ae9258",
+      "cr_yusd": "0x4baa77013ccd6705ab0522853cb0e9d453579dd4",
+      "cr_usdc": "0x44fbebd2f576670a6c33f6fc0b00aa8c5753b322",
+      "cr_eth": "0xd06527d5e56a3495252a528c4987003b712860ee",
+      "cr_dai": "0x92b767185fb3b04f881e3ac8e5b0662a027a1d9f",
+      "cr_wbtc": "0x197070723ce0d3810a0e47f06e935c30a480d4fc",
+      "cr_token_4b5b": "0x4b5bfd52124784745c1071dcb244c6688d2533d3",
+      "cr_token_df5e": "0xdf5e0e81dff6faf3a7e52ba697820c5e32d806a8"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 20211027"
+  },
+  {
+    "id": "orbit_2024",
+    "name": "Orbit Chain bridge",
+    "category": "bridge_key_compromise",
+    "chain": "ethereum-mainnet",
+    "attack_block": 18908049,
+    "attack_tx": "0xe0bada18fdc56dec125c31b1636490f85ba66016318060a066ed7050ff7271f9",
+    "contracts": {
+      "vault": "0x1bf68a9d1eaee7826b3593c20a0ca93293cb489a"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2024-01/OrbitChain_exp.sol"
+  },
+  {
+    "id": "radiant_2024",
+    "name": "Radiant Capital (lending, Arbitrum)",
+    "category": "lending_exploit_control",
+    "chain": "arbitrum-one",
+    "attack_block": 166405686,
+    "attack_tx": "0x1ce7e9a9e3b6dd3293c9067221ac3260858ce119ecb7ca860eac28b2474c7c9b",
+    "contracts": {
+      "lending_pool": "0xf4b1486dd74d07706052a33d31d7c0aafd0659e1"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2024-01/RadiantCapital_exp.sol"
+  },
+  {
+    "id": "sonne_2024",
+    "name": "Sonne Finance (lending, Optimism)",
+    "category": "lending_exploit_control",
+    "chain": "optimism-mainnet",
+    "attack_block": 120062493,
+    "attack_tx": "0x45c0ccfd3ca1b4a937feebcb0f5a166c409c9e403070808835d41da40732db96",
+    "contracts": {
+      "comptroller": "0x60cf091cd3f50420d50fd7f707414d0df4751c58"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2024-05/Sonne_exp.sol"
+  },
+  {
+    "id": "uwulend_2024",
+    "name": "UwuLend (lending, oracle)",
+    "category": "lending_exploit_control",
+    "chain": "ethereum-mainnet",
+    "attack_block": 20061319,
+    "attack_tx": "0x242a0fb4fde9de0dc2fd42e8db743cbc197ffa2bf6a036ba0bba303df296408b",
+    "contracts": {
+      "lending_pool": "0x2409af0251dcb89ee3dee572629291f9b087c668"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2024-06/UwuLend_First_exp.sol"
+  },
+  {
+    "id": "hundred_gnosis_2022",
+    "name": "Hundred Finance (Gnosis, reentrancy)",
+    "category": "lending_exploit_control",
+    "chain": "gnosis-mainnet",
+    "attack_block": 21120319,
+    "attack_tx": "0x534b84f657883ddc1b66a314e8b392feb35024afdec61dfe8e7c510cfac1a098",
+    "contracts": {
+      "comptroller": "0x0f390559f258eb8591c8e31cf0905e97cf36ace2"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2022-03/HundredFinance_exp.sol"
+  },
+  {
+    "id": "bonqdao_2023",
+    "name": "BonqDAO (lending, oracle, Polygon)",
+    "category": "lending_exploit_control",
+    "chain": "polygon-mainnet",
+    "attack_block": 38792977,
+    "attack_tx": "0x31957ecc43774d19f54d9968e95c69c882468b46860f921668f2c55fadd51b19",
+    "contracts": {
+      "trove_factory": "0x4248fd3e2c055a02117eb13de4276170003ca295"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2023-02/BonqDAO_exp.sol"
+  },
+  {
+    "id": "beanstalk_2022",
+    "name": "Beanstalk (governance flash loan)",
+    "category": "governance_flashloan",
+    "chain": "ethereum-mainnet",
+    "attack_block": 14595905,
+    "attack_tx": "0x68cdec0ac76454c3b0f7af0b8a3895db00adf6daaf3b50a99716858c4fa54c6f",
+    "contracts": {
+      "diamond": "0xc1e088fc1323b20bcbee9bd1b9fc9546db5624c5"
+    },
+    "window_before": 1500,
+    "window_after": 1500,
+    "normal_offsets": [
+      -200000,
+      -150000,
+      -100000,
+      -50000,
+      -25000
+    ],
+    "source": "DeFiHackLabs 2022-04/Beanstalk_exp.sol"
+  }
+]

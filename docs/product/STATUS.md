@@ -54,6 +54,10 @@ Newest first. One line. No narrative.
 
 | Date | Who | Did | Left at |
 | --- | --- | --- | --- |
+| 2026-10-11 | T3 | ML round 3: 34 v2 features (multi-scale, surge memory, concentration) + search over 240 one-class configs selected on normal-only cost; Elliptic Envelope on v2 flows wins: KelpDAO recall 0.76, precision 0.86, 0 pre-attack FP, +29 blocks, 0.87% held-out FP | Ceiling (not selectable, uses attack): OC-SVM recall 0.99 but 28% FP on normal days. Not wired into T3, not committed. |
+| 2026-10-11 | T3 | ML round 2: scenario features per asset/phase on real Aave events; LOF fitted on normal only detects KelpDAO at +29 blocks, recall 0.59, precision 0.80, 0 pre-attack FP, 1.8 FP per normal file | Cross-incident supervised models rejected (round 1: ROC 0.54–0.80, no transfer). Results in data/external/ml/kelpdao/results.md. Not wired into T3, not committed. |
+| 2026-10-11 | T3 | Cleaned ML data: train 3,406 windows / 328 pos over 7 incidents, test = KelpDAO 1,683 / 80 pos, 5 LOIO folds, integrity report | Round-1 benchmark: 6 models, none usable (report in data/external/ml/results/report.md). |
+| 2026-10-11 | T3 | Collected real incident data for ML: 15 incidents via SQD (no key), XChainWatcher 2.2 GB, DeFiHackLabs index; built 11,675 labeled windows (597 positive, 12 incidents) | Dataset frozen in data/external (gitignored); scripts in evaluation/data_sources. Not committed. |
 | 2026-10-10 | T3 | KelpDAO deep review: R1 critical+sticky when exposed, R2 window correlation, R3 post-anomaly drain threshold; 139 tests pass | Local, uncommitted; rules version 4 documented in THRESHOLDS.md. |
 | 2026-10-10 | T3 | Completed collector, four state routes, monitor targets and mocked full-path coverage; 109 T3 tests pass | Local, uncommitted; deployed smoke opt-in and not run. No other task changed. |
 | 2026-10-10 | T3 | Hardened evidence handling, exact thresholds, persistent containment, input checks and engine dispatch; 89 tests pass | Local only; live proof/collector/API and CR-004 integration remain pending. |
