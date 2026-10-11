@@ -1,0 +1,114 @@
+{
+  "network": "fuji",
+  "chain_id": 43113,
+  "explorer": "https://testnet.snowtrace.io",
+  "deployed_at_block": 59287512,
+  "safe": "0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177",
+  "safe_version": "1.4.1",
+  "safe_singleton": "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762",
+  "safe_factory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+  "owners": [
+    "0xb8f7390d0ccC69bF7D549a521df0531E965a3f6E",
+    "0xd0205b26914bcaED54EdFF69E551F2E4e99604bb",
+    "0xFd30E3f2d8a3214Cc1b0463bEDE347D4f13B39E0"
+  ],
+  "threshold": 2,
+  "module": "0xA1F109f7861b69BFEeaDf91Be75a14aD533B00Bd",
+  "operator": "0xF84561612785d4b01d893326812e3f8a967329B5",
+  "root": "0x7a0856dc8c1df6ed4a6e57f3eb5c1e2e11955c2fe01a659b93c327e35e09a88a",
+  "txs": {
+    "create_safe": "0x5f99899ab35fe7b378f6540fe34255dcde60f40d708ff0b166c77b2b09d1682a",
+    "deploy_module": "0x08c2e41f4a1b5dfd2d55b3e94807d07c1131c68728d912d13c8af095b9ed11e1",
+    "enable_module": "0x3943dd46a304e779f40929831aefeea86d6ff8201441b6331ddbb1daf801ec6f",
+    "mint_usdc": "0x4d7f0931b8ec9d1464f676cddcec4b60551496b0030522031492ba966d881dc1"
+  },
+  "sealed": {
+    "protocols": [
+      "lend-avax",
+      "lend-eth"
+    ],
+    "root": "0x7a0856dc8c1df6ed4a6e57f3eb5c1e2e11955c2fe01a659b93c327e35e09a88a",
+    "leaves": [
+      {
+        "label": "Approve USDC for lend-avax",
+        "target": "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+        "signature": "approve(address,uint256)",
+        "args": [
+          "0x137A83c615822Da989C099bE6747dfddD907A721",
+          "*"
+        ],
+        "pin_mask": 1,
+        "leaf": "0xb468e72378e3c4f71c9688f5387b6f0e310b2940993e372e493a1452447f0e7d"
+      },
+      {
+        "label": "Deposit USDC on lend-avax",
+        "target": "0x137A83c615822Da989C099bE6747dfddD907A721",
+        "signature": "supply(address,uint256,address)",
+        "args": [
+          "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+          "*",
+          "0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177"
+        ],
+        "pin_mask": 5,
+        "leaf": "0xafdfd0e4fbe8b65712e8ecc2b02ccaa97cd7fb5f2e5c926345e7a371b21f4ec2"
+      },
+      {
+        "label": "Withdraw USDC from lend-avax to the Safe",
+        "target": "0x137A83c615822Da989C099bE6747dfddD907A721",
+        "signature": "withdraw(address,uint256,address)",
+        "args": [
+          "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+          "*",
+          "0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177"
+        ],
+        "pin_mask": 5,
+        "leaf": "0xa65443419cdb84516d9f1a7fc33cf9d2b95c1afc64763ea3da5b5906091207ad"
+      },
+      {
+        "label": "Approve USDC for lend-eth",
+        "target": "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+        "signature": "approve(address,uint256)",
+        "args": [
+          "0xc22fbA59faC78A8CBcAf548d364628A7dE06b48F",
+          "*"
+        ],
+        "pin_mask": 1,
+        "leaf": "0x27a3c11da5ce65d7f5916f42b6a56b5b836ac24c689bf0e885b982640926c6a2"
+      },
+      {
+        "label": "Deposit USDC on lend-eth",
+        "target": "0xc22fbA59faC78A8CBcAf548d364628A7dE06b48F",
+        "signature": "supply(address,uint256,address)",
+        "args": [
+          "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+          "*",
+          "0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177"
+        ],
+        "pin_mask": 5,
+        "leaf": "0x6aa92b439496e05d1ad4fbdcce7c177d4442bed4cc47157ed5560174db705bc2"
+      },
+      {
+        "label": "Withdraw USDC from lend-eth to the Safe",
+        "target": "0xc22fbA59faC78A8CBcAf548d364628A7dE06b48F",
+        "signature": "withdraw(address,uint256,address)",
+        "args": [
+          "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e",
+          "*",
+          "0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177"
+        ],
+        "pin_mask": 5,
+        "leaf": "0xb3638cac3c7839868ef16331c4e22b4f14e1474e46e53d2f36e4f434e2cb0324"
+      }
+    ],
+    "safe_tx_hash": "0x2c3aff89b33cb693d95548985c1df5b23de1daa4fb6f06feeca5b88136386a10",
+    "signers": [
+      "0xb8f7390d0ccC69bF7D549a521df0531E965a3f6E",
+      "0xd0205b26914bcaED54EdFF69E551F2E4e99604bb"
+    ],
+    "tx_hash": "0x022a36983835ca29bdeeb523e120b02903e1485af3a2c61beb49c793eba091da",
+    "block": 59288258
+  },
+  "assets": {
+    "USDC": "0x2d7eC9E6a7957D610B58db4aE7b75f902F17444e"
+  }
+}

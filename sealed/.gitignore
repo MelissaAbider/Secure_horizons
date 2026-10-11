@@ -1,0 +1,2 @@
+# a local anvil deployment changes at every restart; the fuji one is committed
+deployments/local.json

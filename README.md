@@ -22,6 +22,10 @@ Any tool that reads `AGENTS.md` and `.agents/skills/` picks this up on clone. No
 3. Freeze thresholds in `docs/product/THRESHOLDS.md` before any measurement run.
 4. End every session by updating `STATUS.md`.
 
+## Sealed list (T10)
+
+A real Safe 1.4.1 holds the funds. The owners tick protocols, the platform turns them into a Merkle list of allowed operations, and the owners sign its root. The `SealedListModule` teller window runs an operation only if it proves membership in that root. The agent proposes data and holds no key: `make seal-deploy`, `make seal PROTOCOLS=lend-avax`, `make seal-show`, `make seal-demo`, `make test-t10`. Details: `docs/tasks/T10.md`. Fuji addresses and the published list: `sealed/deployments/fuji.json`.
+
 ## Do not
 
 No key for the agent. No mainnet. No instruction turned into a right. No threshold edited after the tests. No French product docs.
