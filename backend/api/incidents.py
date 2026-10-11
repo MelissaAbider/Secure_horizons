@@ -64,6 +64,9 @@ def notifications():
 
 @router.get("/notifications/config")
 def notifications_config() -> dict:
-    """Whether a Discord webhook is configured. The URL itself is a secret and never returned."""
-    return {"discord_configured": bool(settings.ALERT_WEBHOOK_URL), "network": settings.NETWORK,
+    """Whether a Discord webhook (or the bot that sends the withdraw buttons) is configured. Secrets are never returned."""
+    from backend import discord_actions
+
+    return {"discord_configured": bool(settings.ALERT_WEBHOOK_URL) or discord_actions.bot_configured(),
+            "network": settings.NETWORK,
             "explorer_url": settings.EXPLORER_URL}

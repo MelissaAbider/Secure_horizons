@@ -4,7 +4,7 @@ import { useDashboardData } from '../DataContext'
 import { usePolling } from '../hooks/usePolling'
 import { formatUsd, formatUtc, severityClass, shortHash } from '../lib/format'
 import { ruleLabel } from '../lib/labels'
-import type { DemoRun, DemoStep } from '../types'
+import type { DemoRun, DemoStep, DiscordAction } from '../types'
 import { ChannelLogo } from './ChannelLogo'
 import { Pill } from './ui'
 
@@ -67,6 +67,29 @@ function stepTone(s: DemoStep): 'ok' | 'warn' | 'bad' | 'neutral' {
   return s.status === 'ok' ? 'ok' : s.status === 'blocked' ? 'warn' : s.status === 'failed' ? 'bad' : 'neutral'
 }
 
+const ACTION_TONE: Record<DiscordAction['status'], 'ok' | 'warn' | 'bad' | 'neutral'> = {
+  executed: 'ok', simulated: 'ok', partial: 'warn', pending: 'neutral', failed: 'bad', refused: 'bad',
+}
+
+function DiscordActionRow({ action, explorer }: { action: DiscordAction; explorer?: string }) {
+  return (
+    <li className="rounded-xl border border-ink-700 p-3 text-[13px]" data-testid="discord-action">
+      <div className="flex items-center justify-between gap-3">
+        <b>{action.label}</b>
+        <Pill tone={ACTION_TONE[action.status]}>{action.status === 'pending' ? 'in progress…' : action.status}</Pill>
+      </div>
+      <div className="mt-1 text-fog-400">{formatUtc(action.at)} · clicked by {action.user}{action.reason ? ` · ${action.reason}` : ''}</div>
+      {action.results.map((r) => (
+        <div key={r.integration} className="mt-1 flex flex-wrap items-center gap-2">
+          <span className="font-mono">{r.integration}</span><span>{r.verdict}</span>
+          {r.txs.map((t) => <TxLink key={t} explorer={explorer} hash={t} />)}
+          {r.detail && <span className="text-fog-400">{r.detail}</span>}
+        </div>
+      ))}
+    </li>
+  )
+}
+
 export function LiveDemo() {
   const { health, state, alerts } = useDashboardData()
   const config = usePolling(() => api.notificationsConfig(), 15000)
@@ -76,6 +99,7 @@ export function LiveDemo() {
   const run = usePolling(async () => (runId ? api.demoRun(runId) : undefined), 2000, [runId])
   const incidents = usePolling(() => api.incidents(), 3000)
   const deliveries = usePolling(() => api.notifications(), 3000)
+  const discordActions = usePolling(() => api.discordActions(), 3000)
 
   const lost = run.error instanceof ApiError && run.error.status === 404  // backend restarted since that run
   const current = lost ? undefined : run.data ?? first
@@ -92,6 +116,7 @@ export function LiveDemo() {
     : (incidents.data ?? []).find((i) => Date.parse(i.opened_at) >= startedAt)
   // one summary alert per incident, sent as soon as the fraud is detected
   const summary = startedAt === undefined ? undefined : (deliveries.data ?? []).find((d) => Date.parse(d.at) >= startedAt && d.incident_id)
+  const clicks = startedAt === undefined ? [] : (discordActions.data ?? []).filter((a) => Date.parse(a.at) >= startedAt)
   const failure = current?.status === 'failed' ? [...current.steps].reverse().find((s) => s.status === 'failed') : undefined
   const h = health.data
 
@@ -243,6 +268,14 @@ export function LiveDemo() {
                       {formatUtc(summary.at)}{incident && ` · exposure ${formatUsd(incident.exposure_usd)}`}{summary.attachment && ` · ${summary.attachment} attached`}
                     </div>
                   </div>
+                </div>
+              )}
+              {clicks.length > 0 && (
+                <div className="mt-4" data-testid="discord-actions">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Actions taken from Discord</div>
+                  <ul className="mt-2 space-y-2">
+                    {clicks.map((a) => <DiscordActionRow key={a.id} action={a} explorer={explorer} />)}
+                  </ul>
                 </div>
               )}
             </div>

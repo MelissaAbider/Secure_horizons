@@ -1,5 +1,5 @@
 import type {
-  Alert, Decision, DemoRun, DemoVariant, Dependency, EvalMetrics, Health, Incident,
+  Alert, Decision, DemoRun, DemoVariant, Dependency, DiscordAction, EvalMetrics, Health, Incident,
   NotificationDelivery, SeriesPoint, StateResponse, VerifyResult,
 } from './types'
 import { ApiError } from './apiError'
@@ -77,6 +77,8 @@ export const api = {
       ? Promise.resolve({ discord_configured: false, network: 'fuji', explorer_url: 'https://testnet.snowtrace.io' })
       : getJson('/api/notifications/config')
   },
+  /** Clicks on the withdraw buttons of the Discord alert, newest first (none in fixture mode). */
+  discordActions(): Promise<DiscordAction[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/discord/actions') },
   incidentPdfUrl(id: string): string { return `${API_URL}/api/incidents/${encodeURIComponent(id)}/report.pdf` },
   demoRun(runId: string): Promise<DemoRun> {
     return isFixtureMode() ? fixtureDb.demoRun(runId) : getJson(`/api/demo/runs/${encodeURIComponent(runId)}`)

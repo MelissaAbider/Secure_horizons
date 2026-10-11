@@ -305,6 +305,19 @@ export interface EvalMetrics {
   notes: string[];
 }
 
+/** A click on a withdraw button of the Discord fraud alert (backend/discord_actions.py). */
+export interface DiscordAction {
+  id: string;
+  at: string;
+  user: string;
+  label: string;
+  integrations: string[];
+  status: 'pending' | 'simulated' | 'executed' | 'partial' | 'failed' | 'refused';
+  results: { integration: string; verdict: string; detail: string | null; txs: string[] }[];
+  finished_at: string | null;
+  reason?: string;
+}
+
 export interface NotificationDelivery {
   at: string;
   channel: 'discord';

@@ -13,7 +13,7 @@ import threading
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
-from backend import dora, notify, settings
+from backend import discord_actions, dora, notify, settings
 from backend.dora_pdf import render_pdf
 from backend.models import Alert, DoraAssessment, Incident, NotificationDelivery, Snapshot, TimelineEvent
 
@@ -52,9 +52,11 @@ def _third_parties(alerts: list[Alert]) -> list[str]:
 class Alerting:
     """Engine subscriber. One open incident at a time; a new deployment (make reset) or a store reset starts over."""
 
-    def __init__(self, store, post: Callable = notify.post_webhook, profile: Optional[dict] = None):
+    def __init__(self, store, post: Callable = notify.post_webhook, profile: Optional[dict] = None,
+                 post_bot: Callable = discord_actions.post_bot):
         self.store = store
         self.post = post
+        self.post_bot = post_bot
         self.profile = profile
         self.incident_id: Optional[str] = None
         self.alerts: list[Alert] = []
@@ -174,15 +176,19 @@ class Alerting:
             return status == "sent"
 
         url = settings.ALERT_WEBHOOK_URL
-        if not url:
+        bot = discord_actions.bot_configured()  # a bot message carries the withdraw buttons; a webhook cannot
+        if not url and not bot:
             return record("not_configured")
-        if not notify.is_discord_webhook(url):
+        if not bot and not notify.is_discord_webhook(url):
             log.warning("ALERT_WEBHOOK_URL is not a discord.com webhook: message not sent")
             return record("not_configured")
         payload = notify.build_alert_payload(alerts, snapshot, incident)
         file = (name, (settings.DATA_DIR / "reports" / f"{incident.id}.pdf").read_bytes())
         try:
-            status = self.post(url, payload, file)
+            if bot:
+                status = self.post_bot(discord_actions.with_buttons(payload, alerts), file)
+            else:
+                status = self.post(url, payload, file)
         except Exception as exc:
             log.warning("Discord webhook failed (%s)", type(exc).__name__)
             return record("failed")
