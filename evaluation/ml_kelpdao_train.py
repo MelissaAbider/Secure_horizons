@@ -93,7 +93,7 @@ def main():
               "| model | held-out normal false alerts (per file, mean) | attack ROC-AUC | attack PR-AUC | recall | precision | pre-attack false alerts | latency (blocks) |",
               "|---|---|---|---|---|---|---|---|"]
     for name, factory in unsupervised_models().items():
-        fold_fp, fold_rates = [], []
+        fold_fp = []
         for held in normal_files:
             Xn = df.loc[(df.file != "attack") & (df.file != held), features].values
             Xh = df.loc[df.file == held, features].values
@@ -154,8 +154,6 @@ def main():
     best = max(results["unsupervised"], key=lambda n: (results["unsupervised"][n]["recall"], -results["unsupervised"][n]["heldout_normal_false_alerts_mean"]))
     Xn = df.loc[df.file != "attack", features].values
     sc = RobustScaler().fit(Xn)
-    med = np.median(sc.transform(Xn), axis=0)
-    mad = np.median(np.abs(sc.transform(Xn) - med), axis=0) + 1e-9
     fb = results["unsupervised"][best]["first_detection_block"]
     if fb is not None:
         row = attack[attack.window_end == fb].iloc[0]

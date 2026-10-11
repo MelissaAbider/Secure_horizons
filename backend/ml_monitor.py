@@ -44,13 +44,11 @@ def snapshot_features(window: list[Snapshot]) -> tuple[list[float], dict[str, fl
     current = window[-1]
     prior = window[0] if len(window) > 1 else current
     token_now = {t.symbol: t for t in current.tokens}
-    token_before = {t.symbol: t for t in prior.tokens}
     reserve_now = {(r.deployment_id, r.asset): r for r in current.reserves}
     reserve_before = {(r.deployment_id, r.asset): r for r in prior.reserves}
     position_now = {(p.deployment_id, p.asset): p for p in current.positions}
 
     rs = token_now.get("rsETH")
-    rs0 = token_before.get("rsETH")
     released_gap = nonce_gap = bridge_paused = 0.0
     if rs:
         if rs.bridge_source_locked is not None and rs.bridge_destination_released is not None:

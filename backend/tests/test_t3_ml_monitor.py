@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from backend.ml_monitor import MLMonitor, RULE_ID, snapshot_features
 from backend.tests.test_t3_rules import load_series

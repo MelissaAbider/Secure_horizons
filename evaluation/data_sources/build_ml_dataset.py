@@ -187,7 +187,6 @@ def windows(blocks: dict[int, dict], start: int, end: int, step: int, size: int,
 
 def main(step: int = 10, size: int = 20, horizon: int = 600) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((INC / "manifest.json").read_text()) if (INC / "manifest.json").exists() else []
     all_rows, card = [], []
     for folder in sorted(p for p in INC.iterdir() if p.is_dir()):
         spec_path = folder / "manifest.json"

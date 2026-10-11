@@ -5,10 +5,10 @@ import time
 import pytest
 
 from backend import consensus, rules, settings
-from backend.agent_monitor import AgentMonitor, RULE_ID, parse_verdict, prompt_hash
+from backend.agent_monitor import AgentMonitor, RULE_ID, prompt_hash
 from backend.engine import Engine, STATUS
 from backend.models import Alert
-from backend.tests.test_t3_hardening import advance, reserve, token
+from backend.tests.test_t3_hardening import advance, token
 from backend.tests.test_t3_rules import MemStore, load_series
 
 

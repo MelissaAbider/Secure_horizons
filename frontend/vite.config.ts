@@ -1,15 +1,10 @@
 /// <reference types="vitest/config" />
-import fs from 'node:fs'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 
-// Real fixtures belong to T0 (../fixtures). When they are not there yet,
-// fall back to the stand-in copies in ./dev-fixtures (dev and tests only).
-const realFixtures = path.resolve(__dirname, '../fixtures')
-const fixturesDir = fs.existsSync(path.join(realFixtures, 'state.json'))
-  ? realFixtures
-  : path.resolve(__dirname, 'dev-fixtures')
+// Fixture mode (VITE_USE_FIXTURES=true) and tests read the shared API fixtures generated from backend/models.py.
+const fixturesDir = path.resolve(__dirname, '../fixtures')
 
 export default defineConfig(({ mode }) => {
   // Only EXPLORER_URL is read from the root .env: that file holds private keys.
