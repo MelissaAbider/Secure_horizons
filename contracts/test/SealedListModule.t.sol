@@ -12,8 +12,9 @@ import {MiniLend, IPriceOracle} from "../src/MiniLend.sol";
 import {IERC20} from "../src/ERC20.sol";
 import {SealedListModule} from "../src/SealedListModule.sol";
 
-/// @notice T10: a real Safe 1.4.1 (2 of 3 owners) with the teller-window module. The owners seal a list for
-/// lend-avax USDC (approve, deposit, withdraw back to the Safe). The operator can run those and nothing else.
+/// @notice T10: a real Safe 1.4.1 owned by the asset manager alone (one signature) with the teller-window module.
+/// The manager seals a list for lend-avax USDC (approve, deposit, withdraw back to the Safe). The operator can run
+/// those and nothing else.
 contract SealedListModuleTest is Test {
     uint256 constant PIN_FIRST = 1; // approve(spender, *)
     uint256 constant PIN_ASSET_AND_RECIPIENT = 5; // supply(asset, *, onBehalfOf) / withdraw(asset, *, to)
@@ -25,8 +26,8 @@ contract SealedListModuleTest is Test {
     Safe safe;
     SealedListModule module;
 
-    address[] owners;
-    uint256[] ownerKeys; // sorted by owner address, as the Safe expects signatures
+    address manager; // the asset manager: the Safe's only owner, threshold 1
+    uint256 managerKey;
     address operator = makeAddr("operator");
     address stranger = makeAddr("stranger");
 
@@ -38,16 +39,18 @@ contract SealedListModuleTest is Test {
         lendAvax.listReserve(address(usdc), true, 8000);
         lendEth.listReserve(address(usdc), true, 8000);
 
-        _owners();
+        (manager, managerKey) = makeAddrAndKey("assetManager");
+        address[] memory owners = new address[](1);
+        owners[0] = manager;
         SafeProxyFactory factory = new SafeProxyFactory();
         bytes memory setup =
-            abi.encodeCall(Safe.setup, (owners, 2, address(0), "", address(0), address(0), 0, payable(address(0))));
+            abi.encodeCall(Safe.setup, (owners, 1, address(0), "", address(0), address(0), 0, payable(address(0))));
         safe = Safe(payable(address(factory.createProxyWithNonce(address(new SafeL2()), setup, 1))));
         module = new SealedListModule(address(safe), operator);
-        assertTrue(_safeTx(address(safe), abi.encodeWithSignature("enableModule(address)", address(module)), 2));
+        assertTrue(_safeTx(address(safe), abi.encodeWithSignature("enableModule(address)", address(module))));
         usdc.mint(address(safe), 1_000_000 * E6);
 
-        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(_list(lendAvax)))), 2));
+        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(_list(lendAvax))))));
     }
 
     // ---------- the sealed operations pass ----------
@@ -135,23 +138,24 @@ contract SealedListModuleTest is Test {
         vm.expectRevert(SealedListModule.OnlySafe.selector);
         module.setOperator(operator);
         vm.stopPrank();
-        vm.prank(owners[0]); // one signer alone is not the Safe
+        vm.prank(manager); // the manager's own address is not the Safe: it must sign a Safe transaction
         vm.expectRevert(SealedListModule.OnlySafe.selector);
         module.setRoot(bytes32(uint256(1)));
     }
 
-    function test_SealingNeedsTheThreshold() public {
+    function test_OnlyTheManagerSignatureSeals() public {
         bytes32 root = _root(_list(lendEth));
         bytes memory data = abi.encodeCall(SealedListModule.setRoot, (root));
-        vm.expectRevert(bytes("GS020")); // one signature for a 2 of 3 Safe
-        this.safeTxExternal(address(module), data, 1);
-        assertTrue(_safeTx(address(module), data, 2));
+        (, uint256 strangerKey) = makeAddrAndKey("notAnOwner");
+        vm.expectRevert(bytes("GS026")); // a signature from anyone but the owner
+        this.safeTxSignedBy(address(module), data, strangerKey);
+        assertTrue(_safeTx(address(module), data));
         assertEq(module.root(), root);
     }
 
     function test_ResealToAddAProtocol() public {
         bytes32[] memory both = _concat(_list(lendAvax), _list(lendEth));
-        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(both))), 2));
+        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(both)))));
         _deposit(lendEth, 50_000 * E6, both);
         assertEq(lendEth.getUserSupplied(address(safe), address(usdc)), 50_000 * E6);
     }
@@ -163,7 +167,7 @@ contract SealedListModuleTest is Test {
         bytes32[] memory careless = new bytes32[](2);
         careless[0] = module.leafOf(address(safe), addOwner, 0);
         careless[1] = module.leafOf(address(module), reseal, 0);
-        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(careless))), 2));
+        assertTrue(_safeTx(address(module), abi.encodeCall(SealedListModule.setRoot, (_root(careless)))));
 
         vm.startPrank(operator);
         vm.expectRevert(abi.encodeWithSelector(SealedListModule.ForbiddenTarget.selector, address(safe)));
@@ -171,7 +175,7 @@ contract SealedListModuleTest is Test {
         vm.expectRevert(abi.encodeWithSelector(SealedListModule.ForbiddenTarget.selector, address(module)));
         module.execute(address(module), reseal, 0, _proofOf(careless, careless[1]));
         vm.stopPrank();
-        assertEq(safe.getOwners().length, 3);
+        assertEq(safe.getOwners().length, 1);
     }
 
     // ---------- helpers: calldata and leaves ----------
@@ -296,34 +300,22 @@ contract SealedListModuleTest is Test {
         }
     }
 
-    // ---------- helpers: the Safe owners sign (EIP-712 SafeTx hash) ----------
+    // ---------- helpers: the asset manager signs (EIP-712 SafeTx hash) ----------
 
-    function _owners() internal {
-        for (uint256 i; i < 3; ++i) {
-            (address a, uint256 k) = makeAddrAndKey(string.concat("owner", vm.toString(i)));
-            uint256 j = owners.length;
-            owners.push(a);
-            ownerKeys.push(k);
-            for (; j > 0 && owners[j - 1] > a; --j) {
-                (owners[j], ownerKeys[j]) = (owners[j - 1], ownerKeys[j - 1]);
-            }
-            (owners[j], ownerKeys[j]) = (a, k);
-        }
+    function safeTxSignedBy(address to, bytes memory data, uint256 key) external returns (bool) {
+        return _safeTxSignedBy(to, data, key);
     }
 
-    function safeTxExternal(address to, bytes memory data, uint256 signers) external returns (bool) {
-        return _safeTx(to, data, signers);
+    function _safeTx(address to, bytes memory data) internal returns (bool) {
+        return _safeTxSignedBy(to, data, managerKey);
     }
 
-    function _safeTx(address to, bytes memory data, uint256 signers) internal returns (bool) {
+    function _safeTxSignedBy(address to, bytes memory data, uint256 key) internal returns (bool) {
         bytes32 hash =
             safe.getTransactionHash(to, 0, data, Enum.Operation.Call, 0, 0, 0, address(0), address(0), safe.nonce());
-        bytes memory signatures;
-        for (uint256 i; i < signers; ++i) {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKeys[i], hash);
-            signatures = bytes.concat(signatures, abi.encodePacked(r, s, v));
-        }
-        return
-            safe.execTransaction(to, 0, data, Enum.Operation.Call, 0, 0, 0, address(0), payable(address(0)), signatures);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(key, hash);
+        return safe.execTransaction(
+            to, 0, data, Enum.Operation.Call, 0, 0, 0, address(0), payable(address(0)), abi.encodePacked(r, s, v)
+        );
     }
 }

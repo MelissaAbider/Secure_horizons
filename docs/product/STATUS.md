@@ -37,7 +37,7 @@ Rules:
 
 | Step | Name | Status | Check |
 | --- | --- | --- | --- |
-| 1 | Connect test Safe on Fuji | done (T10: real Safe 1.4.1, 2 of 3 owners; the incident scenario still uses TreasuryVault) | `make seal-show NETWORK=fuji` |
+| 1 | Connect test Safe on Fuji | done (T10: real Safe 1.4.1, the asset manager signs alone; the incident scenario still uses TreasuryVault) | `make seal-show NETWORK=fuji` |
 | 2 | Aave + Benqi list, sealed | done (T10, with the simulated markets lend-avax and lend-eth) | `make seal-show NETWORK=fuji` |
 | 3 | Rules separated from instructions | not started |  |
 | 4 | Normal move accepted inside list and caps | in progress (T10: the list is enforced on-chain; caps not built yet) | `make seal-demo` |
@@ -64,7 +64,7 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 | T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
 | T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
 | T9 | Jury deliverables | not started | pitch | `make test-t9` |
-| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1 (12 Foundry + 8 pytest on anvil; Fuji run below); caps and the facts gate not built | 1, 2, 4 (list only) | `make test-t10` |
+| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1, the asset manager signs alone (12 Foundry + 8 pytest on anvil; Fuji run below); caps and the facts gate not built | 1, 2, 4 (list only) | `make test-t10` |
 
 ### Fuji run (2026-10-11, default attack, seed 0, T3 engine live on Alchemy RPC, polling every ~12 s)
 
@@ -79,21 +79,21 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 
 No response was executed in this run (T4 not wired yet): the vault positions stayed in place, so this measures detection only.
 
-### T10 Fuji run (2026-10-11, `make seal-demo`, 48 s)
+### T10 Fuji run (2026-10-11, `make seal-demo`, 46 s)
 
-Safe [`0x193b…2177`](https://testnet.snowtrace.io/address/0x193b75985E4Fe8E54c43B637E1d7748d5E1F2177) (canonical SafeL2 1.4.1, 2 of 3 owners), module [`0xA1F1…00Bd`](https://testnet.snowtrace.io/address/0xA1F109f7861b69BFEeaDf91Be75a14aD533B00Bd) enabled by 2 owner signatures ([tx](https://testnet.snowtrace.io/tx/0x3943dd46a304e779f40929831aefeea86d6ff8201441b6331ddbb1daf801ec6f)). Addresses and the published list: `sealed/deployments/fuji.json`.
+Safe [`0xc11D…907b`](https://testnet.snowtrace.io/address/0xc11D5B05D676393AD74bC8d0b2D9513Aed34907b) (canonical SafeL2 1.4.1, one owner: the asset manager signs alone), module [`0xa6d2…97bB`](https://testnet.snowtrace.io/address/0xa6d2506ec00B185B38Ec49622eDa9069653697bB), enabled by the manager's signature ([tx](https://testnet.snowtrace.io/tx/0x59369635a936ce13162348bda2d5324f845ab9a772e692a1119d0e3473e89d41)). Addresses and the published list: `sealed/deployments/fuji.json`.
 
 | Step | Result |
 |---|---|
-| Owners seal lend-avax (3 operations) | root signed by 2 of 3 owners ([tx](https://testnet.snowtrace.io/tx/0x6fd0e3a5278332a11f51ef52508c990e90c2115e5e832dd4f7af64ba34e8f62f)) |
-| Agent: deposit 100,000 USDC on lend-avax | executed by the module ([approve](https://testnet.snowtrace.io/tx/0xf4d71bc6848181962c96740acff8bc1bb0d47af6a44ad9edf4ff60ac5e0c5e2e), [supply](https://testnet.snowtrace.io/tx/0xbcc37272933c8ef7b753ec93a2c0728ed285f68ec9a60d2384b8958aea7f0d1d)) |
-| Agent: transfer 500,000 USDC to 0x9c…f1 | refused by the platform; forced through the module: `NotInSealedList`, reverted ([tx](https://testnet.snowtrace.io/tx/0x03c309a8cec1c2dec4babcfe2ed48beebcf58727c18be89c2adda28d45fbfc02)) |
-| Agent: withdraw 60,000 USDC to 0x9c…f1 | refused; forced: reverted ([tx](https://testnet.snowtrace.io/tx/0xf06d661449f6881c6acfdafc840d417362f21b3bb5a2dfc20a498ed954e46778)) |
-| Agent: deposit on an "audited 25%" protocol / on unticked lend-eth | refused; forced: reverted ([tx](https://testnet.snowtrace.io/tx/0xbb3cedfdc0dab030425e65922f3eb4ce845be8dd7916ac925ec95907670bbf34), [tx](https://testnet.snowtrace.io/tx/0x954c5f3a37374044e5e1ea13b75d35d00f0498caf460f79e17d24c68d4082c32)) |
-| Owners tick lend-eth: new root, 2 signatures | [tx](https://testnet.snowtrace.io/tx/0x022a36983835ca29bdeeb523e120b02903e1485af3a2c61beb49c793eba091da); the lend-eth deposit then runs ([supply](https://testnet.snowtrace.io/tx/0xb842dbaccb187ed86f89a850ae682ee77a07cf83b4c0eb539db3dc5b4aa9ade5)) |
+| Asset manager seals lend-avax (3 operations) | root signed by the manager ([tx](https://testnet.snowtrace.io/tx/0x7a154e370f8c7d2f3b161d0e92157343ca0db499e0e9b827606169ca6b781203)) |
+| Agent: deposit 100,000 USDC on lend-avax | executed by the module ([approve](https://testnet.snowtrace.io/tx/0x26bde6b3b18a0cdb7fad47152fe7e9c93e17aec8a942f3d868566b817e9b2a2c), [supply](https://testnet.snowtrace.io/tx/0xbe0956f7ffa1ac061ba18364399a8affe917c84edea4cb1fa974b3af475c3764)) |
+| Agent: transfer 500,000 USDC to 0x9c…f1 | refused by the platform; forced through the module: `NotInSealedList`, reverted ([tx](https://testnet.snowtrace.io/tx/0xfd5e31ec416c07394471e781ffee3f72c07c6f2f4260216b5c002c49fc10b6b9)) |
+| Agent: withdraw 60,000 USDC to 0x9c…f1 | refused; forced: reverted ([tx](https://testnet.snowtrace.io/tx/0x790fcc1c45e15e38084d33bef077ef3d18d7f8b1231bafc88f48f1cf5e865164)) |
+| Agent: deposit on an "audited 25%" protocol / on unticked lend-eth | refused; forced: reverted ([tx](https://testnet.snowtrace.io/tx/0x7fb8d49d9c90f2c12a62da53d3651d96d8aebce2162ad3daaf9ed44a0d17d61b), [tx](https://testnet.snowtrace.io/tx/0x6dea413a7ec402f1a43e2a7f7a7791d9bb90335658cea8635f3192eb657cac13)) |
+| Asset manager ticks lend-eth: new root, new signature | [tx](https://testnet.snowtrace.io/tx/0x17a4e3c06157c28056f7cfc238da01c1092d6d25a7240fd15bbf5e8448c26cf9); the lend-eth deposit then runs ([supply](https://testnet.snowtrace.io/tx/0x3f1c5d947117183d87d89dd895f44ea0e650fc80fad594f68df1a846c5dada6c)) |
 | Exit | everything withdrawn back to the Safe, so lend-avax and lend-eth reserves end as they started |
 
-One earlier Fuji run stalled for about 16 minutes between two steps (an RPC call that did not return); the rerun had no stall. Keep `NETWORK=local make seal-demo` as the fallback for a live demo.
+The first T10 Safe (`0x193b…2177`, 2 of 3 owners) is replaced by this one. One earlier Fuji run stalled for about 16 minutes between two steps (an RPC call that did not return); the reruns had no stall. Keep `NETWORK=local make seal-demo` as the fallback for a live demo.
 
 ## Session log
 

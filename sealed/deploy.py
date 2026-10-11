@@ -3,9 +3,9 @@
 python -m sealed.deploy            (make seal-deploy; FORCE=1 to replace an existing deployment)
 
 1. Safe v1.4.1: the canonical contracts on fuji, compiled from contracts/lib on a fresh anvil;
-2. a Safe proxy owned by the owner keys, threshold SAFE_THRESHOLD (default 2);
+2. a Safe proxy owned by the asset manager (SAFE_OWNER_PKS, one key for now), threshold SAFE_THRESHOLD (default 1);
 3. SealedListModule(safe, operator), with an empty root: nothing passes yet;
-4. a Safe transaction signed by the owners enables the module;
+4. a Safe transaction signed by the asset manager enables the module;
 5. the deployer mints test USDC to the Safe.
 The scenario contracts (USDC, lend-avax, lend-eth) come from deployments/<network>.json (T1).
 """
@@ -56,7 +56,7 @@ def main() -> int:
     relayer = chain.account("deployer")
     owners = S.owner_accounts()
     operator = S.operator_account()
-    print(f"T10 on {settings.NETWORK}: {len(owners)} owners, threshold {S.threshold()}, operator {operator.address}")
+    print(f"T10 on {settings.NETWORK}: {S.front_door(S.threshold(), len(owners))}, operator {operator.address}")
     fund_operator(operator, relayer)
 
     singleton, factory = S.safe_singleton_and_factory(relayer)
@@ -72,7 +72,7 @@ def main() -> int:
     data = safe.encode_abi("enableModule", args=[module_address])
     enabled = S.exec_safe_tx(safe_address, safe_address, data, owners[: S.threshold()], relayer)
     assert safe.functions.isModuleEnabled(module_address).call(), "module not enabled"
-    print(f"  module enabled by {len(enabled['signers'])} owner signatures: {link(enabled['tx_hash'])}")
+    print(f"  module enabled, signed by {', '.join(enabled['signers'])}: {link(enabled['tx_hash'])}")
 
     funded = chain.send(chain.token("USDC").functions.mint(safe_address, SAFE_USDC), relayer)
     print(f"  {SAFE_USDC // 10**6:,} test USDC minted to the Safe: {link(funded['tx_hash'])}")

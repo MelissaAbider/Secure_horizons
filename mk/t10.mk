@@ -4,10 +4,10 @@ PROTOCOLS ?= lend-avax
 
 .PHONY: seal-deploy seal seal-show seal-demo test-t10
 
-seal-deploy: t1-build ## T10: Safe (owners, threshold) + SealedListModule, module enabled by the owners (FORCE=1 to redeploy)
+seal-deploy: t1-build ## T10: Safe owned by the asset manager + SealedListModule, enabled by the manager (FORCE=1 to redeploy)
 	FORCE=$(FORCE) $(PYTHON) -m sealed.deploy
 
-seal: t1-build ## T10: the owners sign the root of the list for PROTOCOLS (default lend-avax, e.g. lend-avax,lend-eth)
+seal: t1-build ## T10: the asset manager signs the root of the list for PROTOCOLS (default lend-avax, e.g. lend-avax,lend-eth)
 	$(PYTHON) -m sealed.seal --protocols $(PROTOCOLS)
 
 seal-show: ## T10: print the sealed list and check it rebuilds the root stored on-chain

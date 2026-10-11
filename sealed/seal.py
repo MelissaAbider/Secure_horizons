@@ -1,9 +1,9 @@
-"""Seal: the owners tick protocols, the platform builds the list, the owners sign its root (T10).
+"""Seal: the asset manager ticks protocols, the platform builds the list, the manager signs its root (T10).
 
 python -m sealed.seal --protocols lend-avax[,lend-eth]   (make seal PROTOCOLS=...)
 python -m sealed.seal --show                             (make seal-show: print the list, check the on-chain root)
 
-The root goes on-chain only through a Safe transaction signed by the owners' threshold: the operator, the module
+The root goes on-chain only through a Safe transaction signed by the asset manager: the operator, the module
 and the agent cannot change it. The list is published in sealed/deployments/<network>.json: it is not secret,
 anyone can rebuild the root from it (python -m sealed.tree sealed/deployments/<network>.json).
 """
@@ -61,7 +61,7 @@ def show(state: dict[str, Any]) -> int:
         print("nothing sealed yet: make seal PROTOCOLS=lend-avax")
         return 1
     on_chain = "0x" + S.contract("SealedListModule", state["module"]).functions.root().call().hex()
-    print(f"Sealed list on {state['network']} — Safe {state['safe']} ({state['threshold']} of {len(state['owners'])})")
+    print(f"Sealed list on {state['network']} — Safe {state['safe']} ({S.front_door(state['threshold'], len(state['owners']))})")
     print(f"  ticked: {', '.join(sealed['protocols'])}")
     for x in sealed["leaves"]:
         args = ", ".join(a if a == "*" else _short(a) for a in x["args"])
@@ -90,7 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     protocols = [p.strip() for p in args.protocols.split(",") if p.strip()]
     state = seal(protocols)
     print(f"sealed {len(state['sealed']['leaves'])} operations on {settings.NETWORK}, "
-          f"signed by {len(state['sealed']['signers'])} of {len(state['owners'])} owners")
+          f"signed by {', '.join(state['sealed']['signers'])}")
     return show(state)
 
 

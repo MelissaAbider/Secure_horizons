@@ -1,8 +1,8 @@
-"""Safe side of T10: keys, contract artifacts, Safe creation, and Safe transactions signed by the owners.
+"""Safe side of T10: keys, contract artifacts, Safe creation, and Safe transactions signed by the asset manager.
 
 Keys. Nothing here is ever printed or written to disk.
-- owners (the front door): SAFE_OWNER_PKS on fuji (comma separated, no AVAX needed: they only sign);
-  anvil accounts 10, 11, 12 on local.
+- the asset manager (the front door, the Safe's only owner for now): SAFE_OWNER_PKS on fuji (no AVAX needed: it only
+  signs); anvil account 10 on local. Several comma-separated keys plus SAFE_THRESHOLD turn the Safe into a multisig.
 - operator (the teller window, the platform): OPERATOR_PK on fuji, anvil account 9 on local. It can only call
   SealedListModule.execute.
 - relayer: the deployer pays gas for deployments and Safe transactions. It has no right on the Safe.
@@ -28,11 +28,16 @@ CANONICAL = {
              "SafeProxyFactory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"},
 }
 ANVIL_OPERATOR_INDEX = 9
-ANVIL_OWNER_INDEXES = (10, 11, 12)
+ANVIL_OWNER_INDEXES = (10,)
 
 
 def threshold() -> int:
-    return int(os.environ.get("SAFE_THRESHOLD") or 2)
+    return int(os.environ.get("SAFE_THRESHOLD") or 1)
+
+
+def front_door(threshold_: int, owners: int) -> str:
+    """Who signs for the Safe: the asset manager alone for now, a multisig if SAFE_OWNER_PKS holds several keys."""
+    return "the asset manager signs alone" if owners == 1 else f"{threshold_} of {owners} owners sign"
 
 
 def owner_accounts() -> list:

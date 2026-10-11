@@ -38,7 +38,7 @@ Template: task, requested change, reason, impacted tasks, status.
 ## CR-006 · T10 environment variables
 
 - **Task:** T10 (branch `t10-sealed-list`)
-- **Change:** three lines in `.env.example`: `OPERATOR_PK`, `SAFE_OWNER_PKS`, `SAFE_THRESHOLD=2`. They are read by `sealed/safe.py`, not by `backend/settings.py`. On `local` they fall back to anvil accounts 9 (operator) and 10–12 (owners), using the same public mnemonic as `settings._anvil_key`.
+- **Change:** three variables in `.env.example`: `OPERATOR_PK`, `SAFE_OWNER_PKS` (the asset manager's key) and `SAFE_THRESHOLD=1`. They are read by `sealed/safe.py`, not by `backend/settings.py`. On `local` they fall back to anvil accounts 9 (operator) and 10 (asset manager), using the same public mnemonic as `settings._anvil_key`.
 - **Reason:** new roles for the sealed list (`docs/tasks/T10.md`, Keys).
 - **Impacted:** T0 (`.env.example`). No change to `backend/settings.py` or `backend/chain.py`.
 - **Status:** applied in the T10 pull request; T0 to confirm.

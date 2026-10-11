@@ -107,7 +107,7 @@ def test_the_list_decides_what_the_safe_does(deployed: dict) -> None:
     assert _supplied(state, "lend-avax") == 60_000 * 10**6
     assert _supplied(state, "lend-eth") == 0
 
-    state = seal.seal(["lend-avax", "lend-eth"])  # the owners tick lend-eth: new root, new signatures
+    state = seal.seal(["lend-avax", "lend-eth"])  # the asset manager ticks lend-eth: new root, new signature
     assert teller.decide(next(p for p in proposals() if p["id"] == "P6"), state)["verdict"] == "EXECUTED"
     assert _supplied(state, "lend-eth") == 50_000 * 10**6
     for p in exits(["lend-avax", "lend-eth"]):
@@ -115,7 +115,7 @@ def test_the_list_decides_what_the_safe_does(deployed: dict) -> None:
     assert _supplied(state, "lend-avax") == _supplied(state, "lend-eth") == 0
 
 
-def test_only_the_owners_change_the_seal(deployed: dict) -> None:
+def test_only_a_signed_safe_transaction_changes_the_seal(deployed: dict) -> None:
     from web3.exceptions import ContractCustomError
 
     from sealed import safe as S

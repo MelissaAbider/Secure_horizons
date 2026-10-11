@@ -1,11 +1,11 @@
-"""T10 demo: the owners seal a list, the agent proposes, the platform and the Safe decide.
+"""T10 demo: the asset manager seals a list, the agent proposes, the platform and the Safe decide.
 
 python -m sealed.demo [--no-force]     (make seal-demo)
 
-1. the owners tick lend-avax: 3 operations, root signed by the threshold of owners;
+1. the asset manager ticks lend-avax: 3 operations, root signed by the manager;
 2. the agent (no key) makes six proposals; inside the list they run, outside they are refused;
 3. each refusal is replayed as a compromised platform would (--no-force skips it): the module refuses on-chain;
-4. the owners tick lend-eth too (new root, new signatures) and the lend-eth deposit now runs;
+4. the manager ticks lend-eth too (new root, new signature) and the lend-eth deposit now runs;
 5. the agent withdraws everything back to the Safe, so the shared markets end as they started.
 """
 from __future__ import annotations
@@ -70,8 +70,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     state = S.load_state()
     top_up(state)
     print(f"== T10 sealed list demo on {settings.NETWORK}: Safe {state['safe']} "
-          f"({state['threshold']} of {len(state['owners'])} owners), operator {state['operator']}")
-    print("\n== 1. Front door: the owners tick lend-avax and sign the root")
+          f"({S.front_door(state['threshold'], len(state['owners']))}), operator {state['operator']}")
+    print("\n== 1. Front door: the asset manager ticks lend-avax and signs the root")
     state = seal.seal(["lend-avax"])
     seal.show(state)
     print(f"\n   start: {positions(state)}")
@@ -84,9 +84,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         counts[record["verdict"]] += 1
         show_decision(p, record)
 
-    print("\n== 3. Front door again: the owners tick lend-eth too, new root, new signatures")
+    print("\n== 3. Front door again: the asset manager ticks lend-eth too, new root, new signature")
     state = seal.seal(["lend-avax", "lend-eth"])
-    print(f"   new root {state['root']} signed by {len(state['sealed']['signers'])} owners: "
+    print(f"   new root {state['root']} signed by {', '.join(state['sealed']['signers'])}: "
           f"{link(state['sealed']['tx_hash'])}")
     retry = next(p for p in stub if p.get("protocol") == "lend-eth")
     record = teller.decide({**retry, "id": retry["id"] + "'"}, state, force=force)

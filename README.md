@@ -24,7 +24,7 @@ Any tool that reads `AGENTS.md` and `.agents/skills/` picks this up on clone. No
 
 ## Sealed list (T10)
 
-A real Safe 1.4.1 holds the funds. The owners tick protocols, the platform turns them into a Merkle list of allowed operations, and the owners sign its root. The `SealedListModule` teller window runs an operation only if it proves membership in that root. The agent proposes data and holds no key: `make seal-deploy`, `make seal PROTOCOLS=lend-avax`, `make seal-show`, `make seal-demo`, `make test-t10`. Details: `docs/tasks/T10.md`. Fuji addresses and the published list: `sealed/deployments/fuji.json`.
+A real Safe 1.4.1 holds the funds. The asset manager ticks protocols, the platform turns them into a Merkle list of allowed operations, and the manager signs its root (alone for now: Safe 1 of 1). The `SealedListModule` teller window runs an operation only if it proves membership in that root. The agent proposes data and holds no key: `make seal-deploy`, `make seal PROTOCOLS=lend-avax`, `make seal-show`, `make seal-demo`, `make test-t10`. Details: `docs/tasks/T10.md`. Fuji addresses and the published list: `sealed/deployments/fuji.json`.
 
 ## Do not
 
