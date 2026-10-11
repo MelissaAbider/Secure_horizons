@@ -300,8 +300,6 @@ export function Setup() {
         </div>
 
         {s.live && <LiveDemo />}
-
-        <p className="mt-8 text-center font-mono text-[11px] uppercase tracking-[0.16em] text-fog-500">Preview · setup is saved in this browser · the agent itself is phase 2</p>
       </div>
     </div>
   )
