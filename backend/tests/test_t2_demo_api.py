@@ -55,11 +55,12 @@ def test_attack_starts_run(runner):
 
 def test_log_and_exit_done(runner):
     run_id = client.post("/api/demo/attack", json={"seed": 0}).json()["run_id"]
-    line = {"run_id": run_id, "step": "forged_mint", "status": "ok", "block": 12, "tx_hash": None, "msg": "x", "at": "t"}
+    line = {"run_id": run_id, "step": "forged_mint", "status": "ok", "block": 12, "tx_hash": None, "msg": "x", "at": "2026-10-11T08:00:00Z"}
     runner.calls[0]["on_line"](json.dumps(line))
     finish(runner)
     run = client.get(f"/api/demo/runs/{run_id}").json()
     assert run["log"] == ["[12] forged_mint: x"] and run["status"] == "done" and run["finished_at"]
+    assert [(s["step"], s["block"], s["status"]) for s in run["steps"]] == [("forged_mint", 12, "ok")]
 
 
 def test_exit_nonzero_failed(runner):

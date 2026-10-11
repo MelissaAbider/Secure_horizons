@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light;
+  --ink-950: 243 244 250; --ink-900: 255 255 255; --ink-850: 255 255 255; --ink-800: 238 240 248; --ink-700: 227 230 241; --ink-600: 205 210 227;
+  --fog-100: 21 27 46; --fog-300: 75 83 112; --fog-400: 110 117 145; --fog-500: 144 151 176; }
+html.dark { color-scheme: dark;
+  --ink-950: 7 10 18; --ink-900: 14 19 34; --ink-850: 18 24 41; --ink-800: 22 29 48; --ink-700: 35 43 66; --ink-600: 52 62 92;
+  --fog-100: 238 241 248; --fog-300: 180 187 208; --fog-400: 139 147 173; --fog-500: 107 115 144; }
+html { scroll-behavior: auto; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+html, body { background: rgb(var(--ink-950)); color: rgb(var(--fog-100)); font-size: 16px; transition: background-color .3s; }
+*:focus-visible { outline: 2px solid #2747E0; outline-offset: 2px; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; } }
+
+/* Page wash: soft blue and rose light on lavender white */
+.page-wash { background:
+  radial-gradient(60rem 40rem at 85% -10%, rgba(79,123,255,0.18), transparent 60%),
+  radial-gradient(40rem 30rem at 10% 30%, rgba(229,72,107,0.06), transparent 60%),
+  radial-gradient(50rem 40rem at 50% 110%, rgba(39,71,224,0.10), transparent 60%),
+  #F3F4FA; }
+
+/* Headline treatments */
+.ink-grad { background: linear-gradient(180deg, #151B2E 0%, #2B3350 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.blue-italic { background: linear-gradient(95deg, #0E7FA8 0%, #2747E0 55%, #3B5BFF 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .1em; }
+
+/* Marquee */
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee { animation: marquee 32s linear infinite; }
+.mask-x { -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+
+/* Glowing chips */
+@keyframes pulseDot { 0%,100% { box-shadow: 0 0 0 0 rgba(229,72,107,0.6) } 50% { box-shadow: 0 0 0 6px rgba(229,72,107,0) } }
+.pulse-dot { animation: pulseDot 1.8s ease-out infinite; }
+@keyframes floatY { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.float-y { animation: floatY 6s ease-in-out infinite; }
+
+/* Layered isometric illustration */
+.iso { transform: rotateX(58deg) rotateZ(-42deg); transform-style: preserve-3d; }
+
+/* Rendered DORA report */
+.report h1 { font-size: 1.4rem; font-weight: 700; margin: 0 0 .75rem; color: #151B2E; }
+.report h2 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 .5rem; color: #151B2E; }
+.report p, .report li { color: #4B5370; line-height: 1.6; }
+.report ul { list-style: disc; padding-left: 1.25rem; }
+.report table { width: 100%; border-collapse: collapse; margin: .5rem 0; }
+.report th, .report td { border: 1px solid #E3E6F1; padding: .35rem .6rem; text-align: left; color: #4B5370; }
+.report strong { color: #151B2E; }
+
+/* ── v6: scroll story ── */
+.grain { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); opacity: .05; mix-blend-mode: overlay; }
+.glow-text { background: linear-gradient(100deg, #9DB6FF 0%, #FFFFFF 45%, #7FA0FF 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .08em; }
+.rose-text { background: linear-gradient(100deg, #FF8FA8 0%, #E5486B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.outline-text { color: transparent; -webkit-text-stroke: 1.5px rgba(21,27,46,.18); }
+.outline-text-dark { color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,.22); }
+.spot { background: radial-gradient(520px circle at var(--mx, 70%) var(--my, 40%), rgba(79,123,255,.18), transparent 60%); }
+.tilt { transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; will-change: transform; }
+.tilt-glare { background: radial-gradient(400px circle at var(--gx, 50%) var(--gy, 50%), rgba(255,255,255,.55), transparent 50%); opacity: 0; transition: opacity .3s; }
+.tilt:hover .tilt-glare { opacity: 1; }
+.scene { transform: rotateX(56deg) rotateZ(-38deg); transform-style: preserve-3d; }
+.scene * { transform-style: preserve-3d; }
+.dotgrid { background-image: radial-gradient(rgba(39,71,224,.55) 1.6px, transparent 1.8px); background-size: 22px 22px; }
+.dotgrid-rose { background-image: radial-gradient(rgba(229,72,107,.85) 1.8px, transparent 2px); background-size: 22px 22px; }
+@keyframes blink { 50% { opacity: 0 } }
+.caret::after { content: '▍'; margin-left: 2px; animation: blink 1s steps(1) infinite; color: #4F7BFF; }
+@keyframes spinSlow { to { transform: rotate(360deg) } }
+.spin-slow { animation: spinSlow 18s linear infinite; }
+
+/* Setup page: faint grid + soft blue light, like a workspace */
+.setup-bg { background:
+  radial-gradient(48rem 26rem at 88% 0%, rgba(79,123,255,.16), transparent 65%),
+  linear-gradient(rgba(21,27,46,.035) 1px, transparent 1px) 0 0 / 72px 72px,
+  linear-gradient(90deg, rgba(21,27,46,.035) 1px, transparent 1px) 0 0 / 72px 72px,
+  #F3F4FA; }
+
+/* ── Dark theme: white surfaces become night cards (elements on always-dark panels keep .keep-white) ── */
+html.dark .bg-white:not(.keep-white) { background-color: rgb(var(--ink-900)); }
+html.dark .bg-white\/60, html.dark .bg-white\/70, html.dark .bg-white\/75, html.dark .bg-white\/80, html.dark .bg-white\/85 { background-color: rgb(var(--ink-900) / .8); }
+html.dark .border-white { border-color: rgb(var(--ink-700)); }
+html.dark .bg-rose-50, html.dark .bg-rose-50\/60 { background-color: rgba(229,72,107,.13); }
+html.dark .bg-blue-50, html.dark .bg-blue-50\/70 { background-color: rgba(79,123,255,.14); }
+html.dark .bg-green-50 { background-color: rgba(34,197,94,.12); }
+html.dark .bg-amber-50 { background-color: rgba(245,158,11,.12); }
+html.dark .bg-yellow-50 { background-color: rgba(234,179,8,.12); }
+html.dark .bg-red-50 { background-color: rgba(239,68,68,.12); }
+html.dark .border-rose-200, html.dark .ring-rose-200 { border-color: rgba(229,72,107,.35); --tw-ring-color: rgba(229,72,107,.35); }
+html.dark .border-amber-200, html.dark .border-yellow-200, html.dark .border-red-200 { border-color: rgba(245,158,11,.3); }
+html.dark .text-amber-800, html.dark .text-yellow-800 { color: #FCD34D; }
+html.dark .text-amber-700, html.dark .text-amber-600 { color: #FBBF24; }
+html.dark .text-green-700 { color: #4ADE80; }
+html.dark .text-red-600 { color: #F87171; }
+html.dark .shadow-soft { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -8px rgba(0,0,0,.45); }
+html.dark .page-wash { background:
+  radial-gradient(60rem 40rem at 85% -10%, rgba(79,123,255,0.16), transparent 60%),
+  radial-gradient(40rem 30rem at 10% 30%, rgba(229,72,107,0.06), transparent 60%),
+  rgb(var(--ink-950)); }
+html.dark .setup-bg { background:
+  radial-gradient(48rem 26rem at 88% 0%, rgba(79,123,255,.18), transparent 65%),
+  linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 72px 72px,
+  linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 72px 72px,
+  rgb(var(--ink-950)); }
+html.dark .outline-text { -webkit-text-stroke: 1.5px rgba(255,255,255,.2); }
+html.dark .dotgrid { background-image: radial-gradient(rgba(120,150,255,.6) 1.6px, transparent 1.8px); }
+/* Hero amount: deep blue on light, glowing on dark */
+.hero-money { background: linear-gradient(100deg, #1B2A8C 0%, #2747E0 50%, #4F7BFF 100%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .08em; }
+html.dark .hero-money { background-image: linear-gradient(100deg, #9DB6FF 0%, #FFFFFF 45%, #7FA0FF 100%); }
