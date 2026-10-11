@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend import fixtures, settings
-from backend.models import DemoRun
+from backend.models import DemoRun, DemoStep
 from scenario.common import new_run_id
 from scenario.params import attack_params
 
@@ -63,12 +63,14 @@ def _reset_store() -> None:
     store.reset()
 
 
-def _format(line: str) -> str:
+def _parse(line: str) -> tuple[str, Optional[DemoStep]]:
+    """A scenario JSON line -> (log text, structured step); any other line is kept as is."""
     try:
         d = json.loads(line)
-        return f"[{d['block']}] {d['step']}: {d['msg']}" if d.get("block") is not None else f"{d['step']}: {d['msg']}"
+        text = f"[{d['block']}] {d['step']}: {d['msg']}" if d.get("block") is not None else f"{d['step']}: {d['msg']}"
+        return text, DemoStep.model_validate(d)
     except (ValueError, KeyError, TypeError):
-        return line
+        return line, None
 
 
 def _start(run: DemoRun, argv: list[str], runner: Runner) -> DemoRun:
@@ -79,8 +81,11 @@ def _start(run: DemoRun, argv: list[str], runner: Runner) -> DemoRun:
         _RUNS[run.run_id] = run
 
     def on_line(line: str) -> None:
+        text, step = _parse(line)
         with _LOCK:
-            run.log = (run.log + [_format(line)])[-MAX_LOG_LINES:]
+            run.log = (run.log + [text])[-MAX_LOG_LINES:]
+            if step is not None:
+                run.steps = (run.steps + [step])[-MAX_LOG_LINES:]
 
     def on_exit(code: int) -> None:
         if code == 0 and run.kind == "reset":

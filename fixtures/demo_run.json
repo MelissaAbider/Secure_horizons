@@ -16,5 +16,6 @@
     "forged_mint ok tx 0x…",
     "collateral_deposit ok tx 0x…",
     "borrow 1/6 ok tx 0x…"
-  ]
+  ],
+  "steps": []
 }

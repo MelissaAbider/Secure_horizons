@@ -20,6 +20,7 @@ export type ActionStatus =
   | 'approved'
   | 'rejected';
 export type ParamValue = string | number | boolean | string[];
+export type DemoVariant = 'default' | 'slow' | 'usdc';
 
 export interface ReserveSnapshot {
   deployment_id: string;
@@ -260,6 +261,15 @@ export interface Health {
   version: string;
 }
 
+export interface DemoStep {
+  step: string;
+  status: 'ok' | 'info' | 'blocked' | 'failed';
+  block: number | null;
+  tx_hash: string | null;
+  msg: string;
+  at: string;
+}
+
 export interface DemoRun {
   run_id: string;
   kind: 'attack' | 'normal' | 'reset' | 'seed';
@@ -270,6 +280,7 @@ export interface DemoRun {
   finished_at: string | null;
   params: Record<string, ParamValue>;
   log: string[];
+  steps: DemoStep[];
 }
 
 export interface RunRecord {
@@ -292,4 +303,14 @@ export interface EvalMetrics {
   synthetic: Record<string, ParamValue>;
   mainnet_replay: Record<string, ParamValue> | null;
   notes: string[];
+}
+
+export interface NotificationDelivery {
+  at: string;
+  channel: 'discord';
+  status: 'sent' | 'failed' | 'not_configured';
+  rule_ids: string[];
+  incident_id: string | null;
+  attachment: string | null;
+  http_status: number | null;
 }

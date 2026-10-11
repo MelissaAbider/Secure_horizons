@@ -1,0 +1,10 @@
+version: 1
+entity_name: "Example Treasury SAS (synthetic)"
+entity_type: "crypto-asset service provider"
+clients_count: 1200
+client_member_states: [FR, DE]
+critical_services: ["on-chain treasury management"]
+usd_to_eur: 0.92
+reputational_impact: false
+data_losses: false
+malicious_unauthorised_access: false   # the flaw is at the third-party bridge, not in our systems (Art. 9(5)(b) targets our ICT systems)

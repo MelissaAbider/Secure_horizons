@@ -58,9 +58,9 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 | T1 | On-chain contracts (local and Fuji) | done (bridge counters CR-003, redeployed on Fuji 2026-10-11, `deployments/fuji.json`) | 1 (simplified vault), 5 | `make test-t1` |
 | T2 | Scenario: seed, attack, normal traffic, reset | done (local tests; seed + default attack played on Fuji, see Fuji run) | 5 | `make test-t2` |
 | T3 | Monitoring: collector, rules R1–R5 (v3, CR-003/CR-004), state API | done on fixtures, local chain and Fuji live run (R1 critical 3 blocks after the forged release) | 5, 7 | `make test-t3` |
-| T4 | Response and evidence | in progress | 6, 7, 8 | `make test-t4` |
-| T5 | Incident and DORA draft | not started | 8 | `make test-t5` |
-| T6 | Dashboard | not started | all (screens) | `make test-t6` |
+| T4 | Response and evidence | in progress (detection-only: Discord alert from live T3 alerts done; fund withdrawal is phase 2) | 6, 7, 8 | `make test-t4` |
+| T5 | Incident and DORA draft | done for detection-only (incident + DORA PDF from live alerts, `/api/incidents/{id}/report.pdf`); Fuji live run pending | 8 | `make test-t5` |
+| T6 | Dashboard | in progress (T6 v8 merged; setup page live panel: attack on Fuji, steps with snowtrace links, detections, DORA download, Discord status) | all (screens) | `make test-t6` |
 | T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
 | T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
 | T9 | Jury deliverables | not started | pitch | `make test-t9` |

@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-10-11T07:00:00Z",
+  "rules_version": "sha256:09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+  "synthetic": {
+    "runs_attack": 0,
+    "runs_normal": 0,
+    "detection_rate": 0.0,
+    "false_positive_rate": 0.0,
+    "ttd_blocks_p50": -1,
+    "ttd_blocks_p90": -1,
+    "saved_pct_mean": 0.0,
+    "baseline_saved_pct_mean": 0.0
+  },
+  "mainnet_replay": null,
+  "notes": [
+    "FIXTURE: no evaluation run yet"
+  ]
+}

@@ -272,6 +272,17 @@ class Health(BaseModel):
     version: str
 
 
+class DemoStep(BaseModel):
+    """One JSON line of a scenario run (TASKS.md T2 Outputs), kept structured for the dashboard."""
+
+    step: str
+    status: Literal["ok", "info", "blocked", "failed"]
+    block: Optional[int] = None
+    tx_hash: Optional[str] = None
+    msg: str
+    at: datetime
+
+
 class DemoRun(BaseModel):
     run_id: str  # RUN-<yyyymmddHHMMSS>-<kind>-<seed>
     kind: Literal["attack", "normal", "reset", "seed"]
@@ -282,6 +293,7 @@ class DemoRun(BaseModel):
     finished_at: Optional[datetime] = None
     params: dict[str, ParamValue] = Field(default_factory=dict)
     log: list[str] = Field(default_factory=list)
+    steps: list[DemoStep] = Field(default_factory=list)  # the same run, structured (tx hashes for explorer links)
 
 
 class RunRecord(BaseModel):
@@ -310,3 +322,15 @@ class EvalMetrics(BaseModel):
     synthetic: dict[str, ParamValue] = Field(default_factory=dict)
     mainnet_replay: Optional[dict[str, ParamValue]] = None  # phase 2
     notes: list[str] = Field(default_factory=list)
+
+
+class NotificationDelivery(BaseModel):
+    """One alert notification attempt (backend/alerting.py), served by GET /api/notifications."""
+
+    at: datetime
+    channel: Literal["discord"]
+    status: Literal["sent", "failed", "not_configured"]
+    rule_ids: list[str] = Field(default_factory=list)
+    incident_id: Optional[str] = None
+    attachment: Optional[str] = None  # file name of the attached DORA draft, if any
+    http_status: Optional[int] = None
