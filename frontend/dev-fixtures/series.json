@@ -1,0 +1,1486 @@
+{
+  "lend-eth:WETH": [
+    {
+      "block_number": 45201800,
+      "block_time": "2026-10-11T08:00:00Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201802,
+      "block_time": "2026-10-11T08:00:04Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201804,
+      "block_time": "2026-10-11T08:00:08Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201806,
+      "block_time": "2026-10-11T08:00:12Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201808,
+      "block_time": "2026-10-11T08:00:16Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201810,
+      "block_time": "2026-10-11T08:00:20Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201812,
+      "block_time": "2026-10-11T08:00:24Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "800000000000000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201814,
+      "block_time": "2026-10-11T08:00:28Z",
+      "utilization_bps": 6486,
+      "available_liquidity": "650000000000000000000",
+      "supply_apy_bps": 189,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201816,
+      "block_time": "2026-10-11T08:00:32Z",
+      "utilization_bps": 6486,
+      "available_liquidity": "650000000000000000000",
+      "supply_apy_bps": 189,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201818,
+      "block_time": "2026-10-11T08:00:36Z",
+      "utilization_bps": 7027,
+      "available_liquidity": "550000000000000000000",
+      "supply_apy_bps": 217,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201820,
+      "block_time": "2026-10-11T08:00:40Z",
+      "utilization_bps": 7027,
+      "available_liquidity": "550000000000000000000",
+      "supply_apy_bps": 217,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201822,
+      "block_time": "2026-10-11T08:00:44Z",
+      "utilization_bps": 7567,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 247,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201824,
+      "block_time": "2026-10-11T08:00:48Z",
+      "utilization_bps": 7567,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 247,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201826,
+      "block_time": "2026-10-11T08:00:52Z",
+      "utilization_bps": 8108,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 555,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201828,
+      "block_time": "2026-10-11T08:00:56Z",
+      "utilization_bps": 8108,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 555,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201830,
+      "block_time": "2026-10-11T08:01:00Z",
+      "utilization_bps": 9142,
+      "available_liquidity": "150000000000000000000",
+      "supply_apy_bps": 3639,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201832,
+      "block_time": "2026-10-11T08:01:04Z",
+      "utilization_bps": 9142,
+      "available_liquidity": "150000000000000000000",
+      "supply_apy_bps": 3639,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201834,
+      "block_time": "2026-10-11T08:01:08Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201836,
+      "block_time": "2026-10-11T08:01:12Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201838,
+      "block_time": "2026-10-11T08:01:16Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201840,
+      "block_time": "2026-10-11T08:01:20Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201842,
+      "block_time": "2026-10-11T08:01:24Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201844,
+      "block_time": "2026-10-11T08:01:28Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201846,
+      "block_time": "2026-10-11T08:01:32Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201848,
+      "block_time": "2026-10-11T08:01:36Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201850,
+      "block_time": "2026-10-11T08:01:40Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201852,
+      "block_time": "2026-10-11T08:01:44Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201854,
+      "block_time": "2026-10-11T08:01:48Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201856,
+      "block_time": "2026-10-11T08:01:52Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201858,
+      "block_time": "2026-10-11T08:01:56Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201860,
+      "block_time": "2026-10-11T08:02:00Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201862,
+      "block_time": "2026-10-11T08:02:04Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201864,
+      "block_time": "2026-10-11T08:02:08Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201866,
+      "block_time": "2026-10-11T08:02:12Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201868,
+      "block_time": "2026-10-11T08:02:16Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201870,
+      "block_time": "2026-10-11T08:02:20Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201872,
+      "block_time": "2026-10-11T08:02:24Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201874,
+      "block_time": "2026-10-11T08:02:28Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201876,
+      "block_time": "2026-10-11T08:02:32Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201878,
+      "block_time": "2026-10-11T08:02:36Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201880,
+      "block_time": "2026-10-11T08:02:40Z",
+      "utilization_bps": 10000,
+      "available_liquidity": "0",
+      "supply_apy_bps": 6715,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    }
+  ],
+  "lend-eth:USDC": [
+    {
+      "block_number": 45201800,
+      "block_time": "2026-10-11T08:00:00Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201802,
+      "block_time": "2026-10-11T08:00:04Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201804,
+      "block_time": "2026-10-11T08:00:08Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201806,
+      "block_time": "2026-10-11T08:00:12Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201808,
+      "block_time": "2026-10-11T08:00:16Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201810,
+      "block_time": "2026-10-11T08:00:20Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201812,
+      "block_time": "2026-10-11T08:00:24Z",
+      "utilization_bps": 6000,
+      "available_liquidity": "1200000000000",
+      "supply_apy_bps": 166,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201814,
+      "block_time": "2026-10-11T08:00:28Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201816,
+      "block_time": "2026-10-11T08:00:32Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201818,
+      "block_time": "2026-10-11T08:00:36Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201820,
+      "block_time": "2026-10-11T08:00:40Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201822,
+      "block_time": "2026-10-11T08:00:44Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201824,
+      "block_time": "2026-10-11T08:00:48Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201826,
+      "block_time": "2026-10-11T08:00:52Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201828,
+      "block_time": "2026-10-11T08:00:56Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201830,
+      "block_time": "2026-10-11T08:01:00Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201832,
+      "block_time": "2026-10-11T08:01:04Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201834,
+      "block_time": "2026-10-11T08:01:08Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201836,
+      "block_time": "2026-10-11T08:01:12Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201838,
+      "block_time": "2026-10-11T08:01:16Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201840,
+      "block_time": "2026-10-11T08:01:20Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201842,
+      "block_time": "2026-10-11T08:01:24Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201844,
+      "block_time": "2026-10-11T08:01:28Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201846,
+      "block_time": "2026-10-11T08:01:32Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201848,
+      "block_time": "2026-10-11T08:01:36Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201850,
+      "block_time": "2026-10-11T08:01:40Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201852,
+      "block_time": "2026-10-11T08:01:44Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201854,
+      "block_time": "2026-10-11T08:01:48Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201856,
+      "block_time": "2026-10-11T08:01:52Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201858,
+      "block_time": "2026-10-11T08:01:56Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201860,
+      "block_time": "2026-10-11T08:02:00Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201862,
+      "block_time": "2026-10-11T08:02:04Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201864,
+      "block_time": "2026-10-11T08:02:08Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201866,
+      "block_time": "2026-10-11T08:02:12Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201868,
+      "block_time": "2026-10-11T08:02:16Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201870,
+      "block_time": "2026-10-11T08:02:20Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201872,
+      "block_time": "2026-10-11T08:02:24Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201874,
+      "block_time": "2026-10-11T08:02:28Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201876,
+      "block_time": "2026-10-11T08:02:32Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201878,
+      "block_time": "2026-10-11T08:02:36Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201880,
+      "block_time": "2026-10-11T08:02:40Z",
+      "utilization_bps": 6923,
+      "available_liquidity": "800000000000",
+      "supply_apy_bps": 212,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    }
+  ],
+  "lend-avax:WETH": [
+    {
+      "block_number": 45201800,
+      "block_time": "2026-10-11T08:00:00Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201802,
+      "block_time": "2026-10-11T08:00:04Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201804,
+      "block_time": "2026-10-11T08:00:08Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201806,
+      "block_time": "2026-10-11T08:00:12Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201808,
+      "block_time": "2026-10-11T08:00:16Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201810,
+      "block_time": "2026-10-11T08:00:20Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201812,
+      "block_time": "2026-10-11T08:00:24Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "450000000000000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201814,
+      "block_time": "2026-10-11T08:00:28Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201816,
+      "block_time": "2026-10-11T08:00:32Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201818,
+      "block_time": "2026-10-11T08:00:36Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201820,
+      "block_time": "2026-10-11T08:00:40Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201822,
+      "block_time": "2026-10-11T08:00:44Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201824,
+      "block_time": "2026-10-11T08:00:48Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201826,
+      "block_time": "2026-10-11T08:00:52Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201828,
+      "block_time": "2026-10-11T08:00:56Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201830,
+      "block_time": "2026-10-11T08:01:00Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201832,
+      "block_time": "2026-10-11T08:01:04Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201834,
+      "block_time": "2026-10-11T08:01:08Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201836,
+      "block_time": "2026-10-11T08:01:12Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201838,
+      "block_time": "2026-10-11T08:01:16Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201840,
+      "block_time": "2026-10-11T08:01:20Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201842,
+      "block_time": "2026-10-11T08:01:24Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201844,
+      "block_time": "2026-10-11T08:01:28Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201846,
+      "block_time": "2026-10-11T08:01:32Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201848,
+      "block_time": "2026-10-11T08:01:36Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201850,
+      "block_time": "2026-10-11T08:01:40Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201852,
+      "block_time": "2026-10-11T08:01:44Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201854,
+      "block_time": "2026-10-11T08:01:48Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201856,
+      "block_time": "2026-10-11T08:01:52Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201858,
+      "block_time": "2026-10-11T08:01:56Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201860,
+      "block_time": "2026-10-11T08:02:00Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201862,
+      "block_time": "2026-10-11T08:02:04Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201864,
+      "block_time": "2026-10-11T08:02:08Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201866,
+      "block_time": "2026-10-11T08:02:12Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201868,
+      "block_time": "2026-10-11T08:02:16Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201870,
+      "block_time": "2026-10-11T08:02:20Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201872,
+      "block_time": "2026-10-11T08:02:24Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201874,
+      "block_time": "2026-10-11T08:02:28Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201876,
+      "block_time": "2026-10-11T08:02:32Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201878,
+      "block_time": "2026-10-11T08:02:36Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201880,
+      "block_time": "2026-10-11T08:02:40Z",
+      "utilization_bps": 6111,
+      "available_liquidity": "350000000000000000000",
+      "supply_apy_bps": 171,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    }
+  ],
+  "lend-avax:USDC": [
+    {
+      "block_number": 45201800,
+      "block_time": "2026-10-11T08:00:00Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201802,
+      "block_time": "2026-10-11T08:00:04Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201804,
+      "block_time": "2026-10-11T08:00:08Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201806,
+      "block_time": "2026-10-11T08:00:12Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201808,
+      "block_time": "2026-10-11T08:00:16Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201810,
+      "block_time": "2026-10-11T08:00:20Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 10000
+    },
+    {
+      "block_number": 45201812,
+      "block_time": "2026-10-11T08:00:24Z",
+      "utilization_bps": 5500,
+      "available_liquidity": "900000000000",
+      "supply_apy_bps": 143,
+      "withdrawable_ratio_bps": 10000,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201814,
+      "block_time": "2026-10-11T08:00:28Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201816,
+      "block_time": "2026-10-11T08:00:32Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201818,
+      "block_time": "2026-10-11T08:00:36Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201820,
+      "block_time": "2026-10-11T08:00:40Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201822,
+      "block_time": "2026-10-11T08:00:44Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201824,
+      "block_time": "2026-10-11T08:00:48Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201826,
+      "block_time": "2026-10-11T08:00:52Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201828,
+      "block_time": "2026-10-11T08:00:56Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201830,
+      "block_time": "2026-10-11T08:01:00Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201832,
+      "block_time": "2026-10-11T08:01:04Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201834,
+      "block_time": "2026-10-11T08:01:08Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201836,
+      "block_time": "2026-10-11T08:01:12Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201838,
+      "block_time": "2026-10-11T08:01:16Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201840,
+      "block_time": "2026-10-11T08:01:20Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201842,
+      "block_time": "2026-10-11T08:01:24Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201844,
+      "block_time": "2026-10-11T08:01:28Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201846,
+      "block_time": "2026-10-11T08:01:32Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201848,
+      "block_time": "2026-10-11T08:01:36Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201850,
+      "block_time": "2026-10-11T08:01:40Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201852,
+      "block_time": "2026-10-11T08:01:44Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201854,
+      "block_time": "2026-10-11T08:01:48Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201856,
+      "block_time": "2026-10-11T08:01:52Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201858,
+      "block_time": "2026-10-11T08:01:56Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201860,
+      "block_time": "2026-10-11T08:02:00Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201862,
+      "block_time": "2026-10-11T08:02:04Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201864,
+      "block_time": "2026-10-11T08:02:08Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201866,
+      "block_time": "2026-10-11T08:02:12Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201868,
+      "block_time": "2026-10-11T08:02:16Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201870,
+      "block_time": "2026-10-11T08:02:20Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201872,
+      "block_time": "2026-10-11T08:02:24Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201874,
+      "block_time": "2026-10-11T08:02:28Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201876,
+      "block_time": "2026-10-11T08:02:32Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201878,
+      "block_time": "2026-10-11T08:02:36Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    },
+    {
+      "block_number": 45201880,
+      "block_time": "2026-10-11T08:02:40Z",
+      "utilization_bps": 6470,
+      "available_liquidity": "600000000000",
+      "supply_apy_bps": 188,
+      "withdrawable_ratio_bps": null,
+      "backing_ratio_bps": 1935
+    }
+  ]
+}

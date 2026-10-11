@@ -1,0 +1,140 @@
+{
+  "id": "INC-20261011-001",
+  "title": "rsETH backing below threshold (lend-avax, lend-eth)",
+  "status": "contained",
+  "severity": "critical",
+  "opened_at": "2026-10-11T08:00:26Z",
+  "detected_at": "2026-10-11T08:00:26Z",
+  "contained_at": "2026-10-11T08:01:04Z",
+  "alert_ids": [
+    "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+  ],
+  "decision_ids": [
+    "DEC-fuji-45201812-1"
+  ],
+  "exposure_usd": 1325000.0,
+  "saved_usd": 1325000.0,
+  "at_risk_usd": 0.0,
+  "dora": {
+    "criteria": {
+      "critical_services_affected": true,
+      "clients_affected_pct": 100.0,
+      "clients_affected_count": 1200,
+      "counterparts_affected_pct": 0.0,
+      "transactions_affected_value_pct": 0.0,
+      "transactions_affected_count_pct": 0.0,
+      "relevant_clients_affected": false,
+      "reputational_impact": false,
+      "duration_hours": 0.01,
+      "critical_service_downtime_hours": 0.02,
+      "member_states_affected": 2,
+      "data_losses": false,
+      "malicious_unauthorised_access": false,
+      "economic_impact_eur": 0.0
+    },
+    "thresholds_met": [
+      "9(1) clients, financial counterparts and transactions",
+      "9(4) geographical spread"
+    ],
+    "is_major": true,
+    "legal_basis": "RTS (EU) 2024/1772 Art. 8(1)(b): critical services affected and 2 materiality thresholds of Art. 9 met (9(1), 9(4)).",
+    "aware_at": "2026-10-11T08:00:26Z",
+    "classified_at": "2026-10-11T08:00:26Z",
+    "deadlines": {
+      "initial_notification_due": "2026-10-11T12:00:26Z",
+      "intermediate_report_due": "2026-10-14T12:00:26Z",
+      "final_report_due": "2026-11-13T12:00:26Z"
+    },
+    "report_markdown": "# DORA initial notification (draft, human review required)\n\n## 1. General information\nEntity: Example Treasury SAS (synthetic), crypto-asset service provider. Incident INC-20261011-001.\n\n## 2. Classification proposal\n**Major.** RTS (EU) 2024/1772 Art. 8(1)(b): critical services affected and 2 materiality thresholds of Art. 9 met (9(1), 9(4)).\n\n## 3. Description\nAt 2026-10-11T08:00:25Z the monitoring platform raised R1_BACKING_DROP (critical). Automated controls paused new deposits and withdrew 1,325,000 USD to the treasury vault. Value still at risk: 0 USD.\n\n## 5. Actions taken\n- Deposits paused\n- Emergency withdrawal: 150 WETH from lend-eth to the vault (375,000 USD)\n- Emergency withdrawal: 400,000 USDC from lend-eth to the vault\n- Emergency withdrawal: 100 WETH and 300,000 USDC from lend-avax to the vault\n\n## 8. Human review\nThis classification is a proposal. It must be reviewed and submitted by an authorised person.\n",
+    "ai_drafted_sections": [],
+    "submitted": false,
+    "submitted_by": null,
+    "submitted_at": null
+  },
+  "timeline": [
+    {
+      "at": "2026-10-11T08:00:24Z",
+      "block_number": 45201812,
+      "kind": "chain",
+      "text": "Forged release: 5,000 rsETH minted without backing",
+      "ref": null
+    },
+    {
+      "at": "2026-10-11T08:00:26Z",
+      "block_number": 45201812,
+      "kind": "alert",
+      "text": "R1_BACKING_DROP critical: rsETH backing below threshold",
+      "ref": "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"
+    },
+    {
+      "at": "2026-10-11T08:00:26Z",
+      "block_number": 45201812,
+      "kind": "decision",
+      "text": "Decision DEC-fuji-45201812-1: critical|exposure>=1k|exit_possible",
+      "ref": "DEC-fuji-45201812-1"
+    },
+    {
+      "at": "2026-10-11T08:00:26Z",
+      "block_number": 45201812,
+      "kind": "dora",
+      "text": "DORA classification proposed: major (9(1), 9(4))",
+      "ref": "INC-20261011-001"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "action",
+      "text": "Deposits paused",
+      "ref": "0x0101010101010101010101010101010101010101010101010101010101010101"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "action",
+      "text": "Emergency withdrawal: 400,000 USDC from lend-eth to the vault (400,000 USD)",
+      "ref": "0x0202020202020202020202020202020202020202020202020202020202020202"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "action",
+      "text": "Emergency withdrawal: 150 WETH from lend-eth to the vault (375,000 USD)",
+      "ref": "0x0303030303030303030303030303030303030303030303030303030303030303"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "action",
+      "text": "Emergency withdrawal: 300,000 USDC from lend-avax to the vault (300,000 USD)",
+      "ref": "0x0404040404040404040404040404040404040404040404040404040404040404"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "action",
+      "text": "Emergency withdrawal: 100 WETH from lend-avax to the vault (250,000 USD)",
+      "ref": "0x0505050505050505050505050505050505050505050505050505050505050505"
+    },
+    {
+      "at": "2026-10-11T08:00:28Z",
+      "block_number": 45201814,
+      "kind": "human",
+      "text": "Awaiting human approval: UNPAUSE_DEPOSITS",
+      "ref": "DEC-fuji-45201812-1"
+    },
+    {
+      "at": "2026-10-11T08:01:04Z",
+      "block_number": 45201832,
+      "kind": "decision",
+      "text": "Incident contained: no exposed position left",
+      "ref": "INC-20261011-001"
+    },
+    {
+      "at": "2026-10-11T08:01:16Z",
+      "block_number": 45201838,
+      "kind": "chain",
+      "text": "WETH liquidity on lend-eth reaches zero",
+      "ref": null
+    }
+  ]
+}

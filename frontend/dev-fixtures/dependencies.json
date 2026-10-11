@@ -1,0 +1,112 @@
+[
+  {
+    "id": "rpc-fuji",
+    "name": "Avalanche Fuji RPC",
+    "kind": "rpc",
+    "provider": "RPC provider",
+    "criticality": "critical",
+    "supports": [
+      "monitoring",
+      "response"
+    ],
+    "fallback": "RPC_FALLBACK_URL",
+    "status": "ok"
+  },
+  {
+    "id": "aws-compute",
+    "name": "AWS EC2 (us-east-1)",
+    "kind": "cloud",
+    "provider": "AWS",
+    "criticality": "critical",
+    "supports": [
+      "dashboard",
+      "engine"
+    ],
+    "fallback": "make demo on a laptop",
+    "status": "unknown"
+  },
+  {
+    "id": "aws-sns",
+    "name": "AWS SNS alerts",
+    "kind": "alerting",
+    "provider": "AWS",
+    "criticality": "important",
+    "supports": [
+      "notification"
+    ],
+    "fallback": "webhook",
+    "status": "unknown"
+  },
+  {
+    "id": "aws-s3",
+    "name": "AWS S3 evidence bucket",
+    "kind": "cloud",
+    "provider": "AWS",
+    "criticality": "important",
+    "supports": [
+      "evidence"
+    ],
+    "fallback": "data/evidence + on-chain hash",
+    "status": "unknown"
+  },
+  {
+    "id": "bedrock",
+    "name": "AWS Bedrock (Claude)",
+    "kind": "ai_model",
+    "provider": "AWS / Anthropic",
+    "criticality": "standard",
+    "supports": [
+      "DORA report drafting"
+    ],
+    "fallback": "deterministic template",
+    "status": "unknown"
+  },
+  {
+    "id": "oracle",
+    "name": "Price oracle",
+    "kind": "oracle",
+    "provider": "MockOracle",
+    "criticality": "critical",
+    "supports": [
+      "valuation"
+    ],
+    "fallback": "second oracle (planned)",
+    "status": "ok"
+  },
+  {
+    "id": "lend-eth",
+    "name": "Lending protocol (Ethereum deployment)",
+    "kind": "protocol",
+    "provider": "MiniLend",
+    "criticality": "critical",
+    "supports": [
+      "yield"
+    ],
+    "fallback": "-",
+    "status": "degraded"
+  },
+  {
+    "id": "lend-avax",
+    "name": "Lending protocol (Avalanche deployment)",
+    "kind": "protocol",
+    "provider": "MiniLend",
+    "criticality": "critical",
+    "supports": [
+      "yield"
+    ],
+    "fallback": "-",
+    "status": "ok"
+  },
+  {
+    "id": "rseth",
+    "name": "rsETH bridge",
+    "kind": "bridge",
+    "provider": "MockBridge",
+    "criticality": "important",
+    "supports": [
+      "collateral"
+    ],
+    "fallback": "-",
+    "status": "down"
+  }
+]
