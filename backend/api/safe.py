@@ -47,6 +47,8 @@ def _guarded(fn):
         return fn()
     except (ValueError, PermissionError) as exc:
         raise HTTPException(400, str(exc)) from exc
+    except RuntimeError as exc:  # missing key or Safe state on this machine: say which, never the value
+        raise HTTPException(503, str(exc)) from exc
     finally:
         _WRITE.release()
 
