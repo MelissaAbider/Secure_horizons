@@ -12,17 +12,16 @@ Rules:
 
 ## Now
 
-- Phase: T3 surveillance
-- Current task: T3 MVP implementation complete and rules reviewed against the KelpDAO timeline (version 4: live bridge mismatch critical when exposed, sticky R1, window-wide correlation for R2, early drain threshold for R3). 117 T3 tests pass; deployed-chain smoke test is opt-in and has not run here.
-- Validation limit: no deployed-node acceptance result in this environment. Independent forensic proof of the historical cross-chain message is outside this MVP completion and is not inferred from bridge counters.
-- Next: review the local T3 changes; when a deployed endpoint is available, run the read-only `T3_LIVE=1` check. No other task's implementation is part of this work and no automatic push is authorized.
+- Phase: integration and demo hardening. The MVP runs end to end on Avalanche Fuji and on a local chain.
+- Shipped: wallet-owned Safe with a sealed list (T10), three-layer monitoring with consensus (T3), one incident with a DORA draft and a Discord summary with withdraw buttons (T4/T5), allocation agent on Bedrock through MCP tools, live dashboard flow (T6), CI on GitHub Actions (T8).
+- Next: hosted deployment on AWS (T8), server-side enforcement of the guaranteed rules on every agent path, evaluation metrics (T7), jury deliverables (T9).
 
 ## T3 verification and handoff
 
 - T3 command: `python -m pytest backend/tests/test_t3_rules.py backend/tests/test_t3_hardening.py backend/tests/test_t3_engine.py backend/tests/test_t3_collector.py backend/tests/test_t3_api.py -q -p no:cacheprovider --basetemp=.pytest_cache/t3-complete` — 109 passed, 1 opt-in live test skipped; existing Starlette/httpx and websockets deprecation warnings.
 - Regression command: `python -m pytest backend/tests -q -p no:cacheprovider --basetemp=.pytest_cache/t3-review-full` — 139 passed (117 T3 + 22 existing T0), 1 live test skipped; no changes to T0 implementation or tests.
 - Collector and CLI: `python -m backend.collector --once [--block N]`; continuous monitoring: `python -m backend.engine --loop`; replay: `python -m backend.engine --replay fixtures/snapshots_attack.jsonl`. CLI help and mocked JSON collection tested.
-- Make targets `monitor-once` (optional `BLOCK=N`) and `monitor` added alongside `test-t3` and `replay-t3`. GNU make is not installed here; Python equivalents were verified.
+- Make targets `monitor-once` (optional `BLOCK=N`) and `monitor` added alongside `test-t3` and `replay-t3`.
 - Deployed read-only smoke: set `NETWORK=local`, `T3_LIVE=1`, a configured RPC and seeded deployment, then run `python -m pytest backend/tests/test_t3_collector.py -q`. This test sends no transactions.
 - Synthetic attack snapshots: 8 alerts including global bridge pause; normal snapshots: 0 alerts. Counts validate these fixtures only.
 - Coverage: exact threshold arithmetic, legitimate uncorroborated inflows, rolling/slow liquidity drains, active freezes/bridge pauses at startup, unknown evidence, stale/future timestamps, invalid/partial snapshots, retry after persistence error, serialized nonblocking handlers, maintenance, mocked RPC failover and lagging RPC rejection.
@@ -30,21 +29,19 @@ Rules:
 - Scope: only T3-owned implementation and tests plus tracking. Shared models, fixtures, chain/store helpers, application wiring and all other tasks' code are unchanged. The existing application automatically loads the new T3 router.
 - Delivery checklist: read-only collector complete; same-block reads and in-flight block-hash check complete; R1–R5 and latch complete; monitor loop complete; four API routes complete; command targets complete; mocked full-path tests complete; deployed smoke test not run.
 - API schemas remain unchanged. `X-Monitoring-Status` and `X-Monitoring-Issues` headers expose missing/stale coverage; `/health` becomes degraded and `/state` does not imply safety when evidence is unavailable.
-- Current delivery is local and uncommitted; no push in this completion session.
-- Git delivery target: `origin/feature/t3-kelpdao-surveillance` only, as requested by Melissa. Pre-push verification passed; report progress before publication. Never push this work directly to `main` or `master`.
 
 ## Demo path
 
 | Step | Name | Status | Check |
 | --- | --- | --- | --- |
-| 1 | Connect test Safe on Fuji | done (T10: real Safe 1.4.1, the asset manager signs alone; the incident scenario still uses TreasuryVault) | `make seal-show NETWORK=fuji` |
+| 1 | Connect test Safe on Fuji | done (T10: Safe 1.4.1 owned by the manager's wallet; the monitor watches it) | `make seal-show NETWORK=fuji` |
 | 2 | Aave + Benqi list, sealed | done (T10, with the simulated markets lend-avax and lend-eth) | `make seal-show NETWORK=fuji` |
 | 3 | Rules separated from instructions | not started |  |
-| 4 | Normal move accepted inside list and caps | in progress (T10: the list is enforced on-chain; caps not built yet) | `make seal-demo` |
-| 5 | April 2026 incident replay | not started |  |
-| 6 | Circuit breaker freezes and pulls back | not started |  |
-| 7 | 14% bait blocked after on-chain reread | not started |  |
-| 8 | Signed replayable proof, DORA draft not sent | not started |  |
+| 4 | Normal move accepted inside list and caps | done (agent moves: sealed list enforced on-chain, caps checked by the platform) | `make test-agent`, `make test-t10` |
+| 5 | April 2026 incident replay | done (T2 replay on Fuji, see Fuji run below) | `make attack` |
+| 6 | Circuit breaker freezes and pulls back | in progress (withdraw buttons on the Discord alert and the dashboard; automatic pause not built) | `make test-t4` |
+| 7 | 14% bait blocked after on-chain reread | in progress (agent deposits refused while a high or critical alert is active on the market) | `make test-agent` |
+| 8 | Signed replayable proof, DORA draft not sent | in progress (DORA draft PDF per incident; signed replayable decision records not built) | `make test-t5` |
 
 Allowed status values: `not started`, `in progress`, `blocked`, `done`.
 
@@ -54,17 +51,18 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 
 | Task | Name | Status | Demo steps covered | Check |
 | --- | --- | --- | --- | --- |
-| T0 | Repo foundations and shared contract | in progress | all (skeleton) | `make test-t0` |
+| T0 | Repo foundations and shared contract | done | all (skeleton) | `make test-t0` |
 | T1 | On-chain contracts (local and Fuji) | done (bridge counters CR-003, redeployed on Fuji 2026-10-11, `deployments/fuji.json`) | 1 (simplified vault), 5 | `make test-t1` |
 | T2 | Scenario: seed, attack, normal traffic, reset | done (local tests; seed + default attack played on Fuji, see Fuji run) | 5 | `make test-t2` |
 | T3 | Monitoring: collector, rules R1–R5 (v3, CR-003/CR-004), state API | done on fixtures, local chain and Fuji live run (R1 critical 3 blocks after the forged release) | 5, 7 | `make test-t3` |
-| T4 | Response and evidence | in progress (detection-only: Discord alert from live T3 alerts done; fund withdrawal is phase 2) | 6, 7, 8 | `make test-t4` |
+| T4 | Response and evidence | in progress (one Discord summary per incident; withdraw buttons through the teller window, docs/discord-actions.md; automatic pause and withdraw: phase 2) | 6, 7, 8 | `make test-t4` |
 | T5 | Incident and DORA draft | done for detection-only (incident + DORA PDF from live alerts, `/api/incidents/{id}/report.pdf`); Fuji live run pending | 8 | `make test-t5` |
-| T6 | Dashboard | in progress (T6 v8 merged; setup page live panel: attack on Fuji, steps with snowtrace links, detections, DORA download, Discord status) | all (screens) | `make test-t6` |
+| T6 | Dashboard | in progress (setup page is the live flow: wallet connect and disconnect, sealed list, allocate, attack, detections, DORA download, Discord status, agent panel) | all (screens) | `make test-t6` |
 | T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
-| T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
+| T8 | AWS, CI and hosted demo | in progress (CI on GitHub Actions: lint and the full suite on anvil; AWS hosting not started) | hosting | `make test-t8` |
 | T9 | Jury deliverables | not started | pitch | `make test-t9` |
-| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1 + dashboard: Rabby-owned Safe (owner signs module and seal in the wallet, platform relays), USDC and WETH integrations, allocate from the setup page, monitor watches the Safe | 1, 2, 4 (list only) | `make test-t10` |
+| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1 + dashboard: Rabby-owned Safe (owner signs module and seal in the wallet, platform relays), USDC and WETH integrations, allocate from the setup page, monitor watches the Safe; wallet disconnect, one Safe remembered per owner | 1, 2, 4 (list only) | `make test-t10` |
+| Agent | Allocation agent: Claude on Bedrock, MCP tools (`docs/agent.md`) | done v1 (proposals checked against the sealed list and the guaranteed rules; autopilot every 12 h) | 4, 7 | `make test-agent` |
 
 ### Fuji run (2026-10-11, default attack, seed 0, T3 engine live on Alchemy RPC, polling every ~12 s)
 
@@ -101,6 +99,7 @@ Newest first. One line. No narrative.
 
 | Date | Who | Did | Left at |
 | --- | --- | --- | --- |
+| 2026-10-11 | repo | Cleanup and CI: README rewritten, docs index, dead files removed, documented .env.example, ruff with make lint, GitHub Actions (lint and the full suite on anvil), wallet disconnect, agent every 12 h | `make lint`, `make test` on a fresh anvil: all suites green |
 | 2026-10-11 | T3/T5/T6/T10 | Live demo polish: user-facing three-monitor consensus uses persisted attack alerts; first high/critical signal opens one incident and sends one Discord summary + DORA PDF; later rules/ML/AI signals update it without spam; completed resets clear stale browser runs; reset deployment is portable on Windows without `make` in PATH | Live Fuji verified all three monitors and one Discord/PDF delivery. Checks: frontend typecheck/build + 26 tests; backend 194 passed, 21 skipped. Local Fuji deployment/history excluded. |
 | 2026-10-11 | T3 | Synced latest main/T10 into T3; three live layers remain wired (R1-R5, R6 Elliptic, asynchronous R7 Claude); restored ENGINE_ENABLED guard and made T2 reset test cross-platform | Checks: `144 passed, 1 skipped` T3; `185 passed, 21 skipped` full backend after the portability fix. R6/R7 thresholds remain development policy, not frozen evaluation metrics. |
 | 2026-10-11 | T3 | ML round 3: 34 v2 features (multi-scale, surge memory, concentration) + search over 240 one-class configs selected on normal-only cost; Elliptic Envelope on v2 flows wins: KelpDAO recall 0.76, precision 0.86, 0 pre-attack FP, +29 blocks, 0.87% held-out FP | Ceiling (not selectable, uses attack): OC-SVM recall 0.99 but 28% FP on normal days. Not wired into T3, not committed. |
