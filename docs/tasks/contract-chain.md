@@ -43,7 +43,7 @@ Exact signatures, events and revert messages: `TASKS.md` 2.2.
 |---|---|
 | `MockERC20` | USDC (6 decimals), WETH (18); `mint(to, amount)` by the owner |
 | `RsETH` | 18 decimals; mint and burn only by the bridge |
-| `MockBridge` | `deposit(weth)` mints backed rsETH; `forgedRelease(to, amount)` is **the flaw** (mints without backing, callable by anyone); `totalBacking()`, `backingRatioBps()` |
+| `MockBridge` | `deposit(weth)` locks WETH and releases backed rsETH (both nonces advance); `forgedRelease(to, amount)` is **the flaw** (releases with no source lock, only `destinationNonce` advances, callable by anyone); `sourceLocked()`, `destinationReleased()`, `sourceNonce()`, `destinationNonce()`, `conservationGap()`, `paused()`, `pause()` (owner); `totalBacking()` and `backingRatioBps()` kept for display |
 | `MockOracle` | `setPriceE8` / `getPriceE8`, USD with 8 decimals |
 | `MiniLend` x2 (`lend-eth`, `lend-avax`) | `supply`, `withdraw` (max = min(position, liquidity), 0 without revert if nothing), `depositCollateral`, `borrow` (collateral × LTV check via the oracle), `repay` (capped at the debt). Protocol guardian: `listReserve`, `setReserveFrozen`, `setReservePaused`, `setLtv`. Reads: `getAssets`, `getReservesData`, `getUserSupplied/Collateral/Borrowed`. Frozen = withdraw and repay still work; paused = everything blocked. Lending balance and collateral balance are separate. |
 | `TreasuryVault` | `owner` stands for the Safe signers; `guardian` is our platform and can only tighten. `supply`/`withdraw` (owner, from the vault's own balance), `emergencyWithdraw(market, asset)` (owner or guardian, always back to the vault, 0 with event if nothing), `pauseDeposits` (owner or guardian, idempotent), `unpauseDeposits` (owner only) |

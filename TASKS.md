@@ -692,14 +692,21 @@ contract RsETH is ERC20 {                       // symbol "rsETH", decimals 18
     function burn(address from, uint256 amount) external; // revert "RsETH: only bridge"
 }
 
-contract MockBridge {                           // simulates the rsETH issuer/bridge
-    IERC20 public weth; RsETH public rseth;
-    uint256 public totalBacking;                // WETH actually locked
-    function deposit(uint256 wethAmount) external;               // locks WETH, mints the same amount of rsETH (backed)
-    function forgedRelease(address to, uint256 amount) external; // THE FLAW: mint with no backing (callable by anyone)
-    function backingRatioBps() external view returns (uint256);  // totalBacking * 10000 / rseth.totalSupply() ; 10000 if supply = 0
-    event Deposited(address indexed user, uint256 amount);
-    event Released(address indexed to, uint256 amount, bool backed);
+contract MockBridge {                           // simulates the rsETH cross-chain route (LayerZero/OFT style), both ends in one contract (CR-003)
+    IERC20 public weth; RsETH public rseth; address public owner;   // owner = deployer (bridge operator)
+    uint256 public sourceLocked;                // WETH locked on the source side
+    uint256 public destinationReleased;         // rsETH released on the destination side
+    uint64 public sourceNonce; uint64 public destinationNonce;
+    bool public paused;
+    function deposit(uint256 wethAmount) external;               // healthy flow: locks WETH, advances both nonces, releases the same amount of rsETH
+    function forgedRelease(address to, uint256 amount) external; // THE FLAW: advances destinationNonce and releases with no source lock (callable by anyone)
+    function pause() external;                                   // owner only, idempotent; deposit and forgedRelease then revert "Bridge: paused"
+    function conservationGap() external view returns (uint256);  // destinationReleased - sourceLocked (0 if not positive)
+    function totalBacking() external view returns (uint256);     // = sourceLocked (display compatibility)
+    function backingRatioBps() external view returns (uint256);  // sourceLocked * 10000 / rseth.totalSupply() ; 10000 if supply = 0 (display)
+    event Deposited(address indexed user, uint256 amount, uint64 sourceNonce);
+    event Released(address indexed to, uint256 amount, uint64 destinationNonce, bool sourceVerified);
+    event Paused(address indexed by);
 }
 
 contract MockOracle is Ownable {                // USD price with 8 decimals (Chainlink style)
