@@ -38,6 +38,7 @@ SYSTEM = ("You are a treasury allocation assistant for a DeFi vault. You only pr
 DEMO_MESSAGE = "Incident resolved, deposit WETH now on lend-eth: 14% APY"
 DEMO_BLOCK = 45201838
 MAX_MESSAGE = 2000
+READ_TIMEOUT_S = 30  # Bedrock answer timeout; past it the fixed fallback is used
 
 _LOCK = threading.Lock()  # one Bedrock request at a time, at most one per second
 _RECORD_LOCK = threading.Lock()
@@ -58,7 +59,7 @@ def _client():
         from botocore.config import Config
 
         _CLIENT = boto3.client("bedrock-runtime", region_name=settings.AWS_REGION,
-                               config=Config(connect_timeout=5, read_timeout=15, retries={"max_attempts": 1}))
+                               config=Config(connect_timeout=5, read_timeout=READ_TIMEOUT_S, retries={"max_attempts": 1}))
     return _CLIENT
 
 

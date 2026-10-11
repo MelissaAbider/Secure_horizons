@@ -134,3 +134,20 @@ def test_demo_cli(capsys, isolated):
     assert "REFUSED" in out
     assert out.count("\n- ") == 3
     assert (isolated / "AGT-45201838-1.json").exists()
+
+
+def test_client_config_and_region(monkeypatch):
+    seen = {}
+
+    def fake_client(service, **kwargs):
+        seen.update(service=service, **kwargs)
+        return StubClient(text='{"action": "supply", "deployment_id": "lend-eth", "asset": "WETH", '
+                               '"amount": "1", "reason": "r"}')
+
+    monkeypatch.setattr(settings, "BEDROCK_MODEL_ID", "model-id-from-env")
+    monkeypatch.setattr(settings, "AWS_REGION", "us-east-1")
+    monkeypatch.setattr(boto3, "client", fake_client)
+    assert agent.propose("x", _snap(45201800, reacted=False))["model"] == "model-id-from-env"
+    assert seen["service"] == "bedrock-runtime" and seen["region_name"] == "us-east-1"
+    assert seen["config"].read_timeout == 30
+    assert seen["config"].retries == {"max_attempts": 1}
