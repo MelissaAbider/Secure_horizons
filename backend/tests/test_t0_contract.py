@@ -10,7 +10,7 @@ from eth_utils import keccak
 from backend import fixtures, models
 
 ROOT = Path(__file__).resolve().parents[2]
-RULE_IDS = {"R1_BACKING_DROP", "R2_LIQUIDITY_DROP", "R3_UTILIZATION_HIGH", "R4_POSITION_STUCK", "R5_RESERVE_FROZEN"}
+RULE_IDS = {"R1_BRIDGE_INVARIANT", "R2_COLLATERAL_SURGE", "R3_LIQUIDITY_DRAIN", "R4_EXITABILITY_DROP", "R5_CONTAINMENT"}
 
 
 def test_fixtures_validate() -> None:

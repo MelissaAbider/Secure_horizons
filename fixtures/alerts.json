@@ -1,7 +1,7 @@
 [
   {
-    "id": "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH",
-    "rule_id": "R1_BACKING_DROP",
+    "id": "ALT-fuji-45201812-R1_BRIDGE_INVARIANT-global-rsETH",
+    "rule_id": "R1_BRIDGE_INVARIANT",
     "severity": "critical",
     "network": "fuji",
     "deployment_id": null,
@@ -9,16 +9,17 @@
     "block_number": 45201812,
     "block_time": "2026-10-11T08:00:24Z",
     "detected_at": "2026-10-11T08:00:25Z",
-    "title": "rsETH backing below threshold",
-    "explanation": "rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).",
+    "title": "rsETH bridge invariant broken",
+    "explanation": "The rsETH bridge released 5,000 tokens without canonical source backing; destination nonce 308 is ahead of source nonce 307.",
     "metrics": {
-      "backing_ratio_bps": 1935,
-      "backing": 1200.0,
-      "total_supply": 6200.0,
-      "threshold_bps": 9900,
+      "source_locked": 1200.0,
+      "destination_released": 6200.0,
+      "conservation_gap": 5000.0,
+      "source_nonce": 307,
+      "destination_nonce": 308,
       "exposed_deployments": "lend-eth,lend-avax"
     },
     "exposure_usd": 1325000.0,
-    "rules_version": "sha256:6f1d2c0a9b8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a392817060f1e"
+    "rules_version": "sha256:036d099cfa02d29ebda537c713ff08858569f6a76b38ef467f6d83a68a73c9d1"
   }
 ]

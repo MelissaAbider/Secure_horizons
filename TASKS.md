@@ -47,7 +47,7 @@ Ten tasks, each run by one person with their own Claude Code. This part says **c
 1. run `make backend` then `curl -s localhost:8000/api/state` and get the `state.json` fixture; `localhost:8000/docs` lists every route in 2.9;
 2. run `make test-t0` and see everything green;
 3. run `make help` and see at least `setup backend demo test test-t0`;
-4. read the attack story in the fixtures: critical `R1_BACKING_DROP` alert at block 45,201,812, exposure $1,325,000, decision `DEC-fuji-45201812-1`, 250 WETH + 700,000 USDC pulled back to the vault, `at_risk_usd = 0`, incident `INC-20261011-001`, `verify` = MATCH.
+4. read the attack story in the fixtures: critical `R1_BRIDGE_INVARIANT` alert at block 45,201,812, exposure $1,325,000, decision `DEC-fuji-45201812-1`, 250 WETH + 700,000 USDC pulled back to the vault, `at_risk_usd = 0`, incident `INC-20261011-001`, `verify` = MATCH.
 
 **Key specs.**
 - Decision `DEC-fuji-45201812-1`: exactly 8 actions in this order, `NOTIFY`, `PAUSE_DEPOSITS`, 4 × `EMERGENCY_WITHDRAW` (lend-eth USDC, lend-eth WETH, lend-avax USDC, lend-avax WETH), `OPEN_INCIDENT`, `UNPAUSE_DEPOSITS` (pending human approval).
@@ -899,39 +899,44 @@ Definitions to follow:
 
 Allowed values: `severity ∈ {info, warning, high, critical}`; `Action.type ∈ {NOTIFY, PAUSE_DEPOSITS, EMERGENCY_WITHDRAW, FULL_EXIT, UNPAUSE_DEPOSITS, OPEN_INCIDENT}`; `Action.mode ∈ {auto, human}`; `Action.status ∈ {planned, executed, failed, skipped, pending_approval, approved, rejected}`.
 
-### 2.7 MVP detection rules (deliberately simple)
+### 2.7 MVP detection rules (KelpDAO causal chain, T3 rules v3)
 
-Five rules, each on **a single indicator**. Thresholds in `backend/config/rules.yaml` (T3). We will make them more complex in phase 2.
+Five deterministic rules follow the causal chain of the incident: forged bridge message → rsETH collateral inflow → extraction of the liquid assets → loss of exitability for our vault → official containment. No LLM or ML model decides an alert. Thresholds are frozen in `backend/config/rules.yaml` before evaluation runs. Full v3 semantics, coverage and evidence limits: `docs/product/THRESHOLDS.md` (CR-003, CR-004).
 
 | Id | Indicator | Scope | Condition | Severity |
 |---|---|---|---|---|
-| `R1_BACKING_DROP` | backing of a bridged token: `backing_ratio_bps` | global, per token (rsETH) | `< 9900` | critical |
-| `R2_LIQUIDITY_DROP` | drop in a market's available liquidity, relative to its maximum over the last `window_blocks` snapshots | each borrowable reserve where the vault has a position | drop ≥ 30% → high; ≥ 60% → critical | high / critical |
-| `R3_UTILIZATION_HIGH` | `utilization_bps` | each borrowable reserve where the vault has a position | ≥ 9000 → warning; ≥ 9800 → critical | warning / critical |
-| `R4_POSITION_STUCK` | withdrawable share of our position: `withdrawable_ratio_bps` | each vault position | < 8000 → high; < 5000 → critical | high / critical |
-| `R5_RESERVE_FROZEN` | `frozen` or `paused` goes from false to true | each reserve of a deployment where the vault has at least one position | state change | high |
+| `R1_BRIDGE_INVARIANT` | bridge conservation: `destination_released - source_locked`, and nonce consistency | global, per bridged token (rsETH) | gap > 0 or `destination_nonce > source_nonce` | critical when the vault has positions in a deployment accepting rsETH, otherwise high |
+| `R2_COLLATERAL_SURGE` | rise of rsETH posted as collateral vs the maximum of the previous snapshots of the window | each deployment accepting rsETH as collateral | rise ≥ 50 % → high; ≥ 200 % → critical; warning only when not corroborated by a bridge anomaly in the window | warning / high / critical |
+| `R3_LIQUIDITY_DRAIN` | drop of available liquidity vs its maximum over the previous snapshots of the window, plus persistent utilization | each borrowable reserve where the vault has a position | drop ≥ 30 % → high; ≥ 60 % → critical (≥ 10 % after a bridge anomaly); utilization ≥ 9000 → warning, ≥ 9800 → critical | warning / high / critical |
+| `R4_EXITABILITY_DROP` | share of our position that can really be withdrawn: `withdrawable_ratio_bps` | each vault position | < 8000 → high; < 5000 → critical | high / critical |
+| `R5_CONTAINMENT` | bridge paused, or reserve frozen/paused, transition false → true | global bridge and reserves of exposed deployments | on-chain state change | high; critical if `withdrawable_ratio_bps < 5000` |
 
 Common details:
 
-- **Exposure** (`exposure_usd`):
-  - R1: value of **all** vault positions in the deployments that accept this token as collateral (`ltv_bps > 0` for this token in this deployment);
-  - R2, R3, R4: value of the vault position in the reserve concerned;
-  - R5: value of all vault positions in this deployment.
-- **No duplicates**: an alert `(rule_id, deployment_id, asset)` is emitted only once per severity. It is re-emitted only if the severity rises, or if the condition disappears and then comes back.
-- **Explanation**: one sentence in English, with the numbers, e.g. `rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).`
-- `rules_version` = `"sha256:" + sha256(exact contents of rules.yaml)`.
-- Default `window_blocks`: 20.
+- **R1 detects the root cause.** The KelpDAO incident was a release of rsETH by a forged cross-chain message with no matching canonical lock/burn, not a plain lending-market hack. `MockBridge` (2.2) keeps source and destination accounting separate so `forgedRelease` breaks the invariant at its own block. On a live chain the mismatch is real but unverified against a canonical source message (`metrics.evidence_status = "unverified"`).
+- **R2 detects the propagation** (`total_collateral` of the rsETH reserve; the current snapshot is not part of the baseline; no ratio alert with fewer than two previous snapshots or a zero baseline).
+- **R3 detects the extraction**; it also covers the former "high utilization" rule.
+- **R4 measures our real risk**: a stable book value or price does not mean the position can be withdrawn.
+- **R5 is a late confirmation**, never the only detection mechanism; the state is always re-read on-chain.
+- **Exposure** (`exposure_usd`): R1 = all vault positions in deployments accepting rsETH; R2 and R5 = all positions of the deployment; R3 and R4 = the position of the reserve concerned. A global R5 alert has `deployment_id = null`, `asset = rsETH`, `metrics.scope = "bridge"`.
+- **No duplicates**: an alert `(rule_id, deployment_id, asset)` is emitted once per severity, re-emitted only if the severity rises or the condition clears and comes back.
+- **Explanation**: one sentence in English with the cause and the observed numbers.
+- `rules_version` = `"sha256:" + sha256(exact contents of rules.yaml)`. Default `window_snapshots`: 20 (snapshots, not blocks).
+- **Ids before CR-003** (still possible in older notes): `R1_BACKING_DROP` → `R1_BRIDGE_INVARIANT`; `R2_LIQUIDITY_DROP` and `R3_UTILIZATION_HIGH` → `R3_LIQUIDITY_DRAIN`; `R4_POSITION_STUCK` → `R4_EXITABILITY_DROP`; `R5_RESERVE_FROZEN` → `R5_CONTAINMENT`; `R2_COLLATERAL_SURGE` is new.
 
-Initial `backend/config/rules.yaml`:
+`backend/config/rules.yaml`:
 
 ```yaml
-version: 1
-window_blocks: 20
-R1_BACKING_DROP:     { enabled: true, min_backing_ratio_bps: 9900 }
-R2_LIQUIDITY_DROP:   { enabled: true, high_drop_pct: 30, critical_drop_pct: 60 }
-R3_UTILIZATION_HIGH: { enabled: true, warning_bps: 9000, critical_bps: 9800 }
-R4_POSITION_STUCK:   { enabled: true, high_below_bps: 8000, critical_below_bps: 5000 }
-R5_RESERVE_FROZEN:   { enabled: true }
+version: 3
+window_snapshots: 20
+max_snapshot_age_s: 60
+max_future_skew_s: 5
+handler_queue_size: 128
+R1_BRIDGE_INVARIANT:  { enabled: true }
+R2_COLLATERAL_SURGE:  { enabled: true, asset: rsETH, high_increase_pct: 50, critical_increase_pct: 200 }
+R3_LIQUIDITY_DRAIN:   { enabled: true, high_drop_pct: 30, critical_drop_pct: 60, bridge_anomaly_drop_pct: 10, warning_utilization_bps: 9000, critical_utilization_bps: 9800 }
+R4_EXITABILITY_DROP:  { enabled: true, high_below_bps: 8000, critical_below_bps: 5000 }
+R5_CONTAINMENT:       { enabled: true, critical_withdrawable_below_bps: 5000 }
 ```
 
 ### 2.8 MVP response matrix (`backend/config/playbook.yaml`, T4)
@@ -1169,7 +1174,7 @@ Every task follows the same outline:
 
 10. **Fixtures**: `fixtures/_generate.py` regenerates everything from `models.py`, with rules R1 to R5 from 2.7 and the matrix from 2.8. The story told by the "with reaction" fixtures:
     - block 45,201,812: forged mint of 5,000 rsETH;
-    - same block 45,201,812 (block snapshot): critical `R1_BACKING_DROP` alert, exposure $1,325,000, and decision `DEC-fuji-45201812-1` with `NOTIFY`, `PAUSE_DEPOSITS`, 4 × `EMERGENCY_WITHDRAW` (lend-eth USDC, lend-eth WETH, lend-avax USDC, lend-avax WETH), `OPEN_INCIDENT`, `UNPAUSE_DEPOSITS` pending approval; the transactions are mined in the following blocks;
+    - same block 45,201,812 (block snapshot): critical `R1_BRIDGE_INVARIANT` alert, exposure $1,325,000, and decision `DEC-fuji-45201812-1` with `NOTIFY`, `PAUSE_DEPOSITS`, 4 × `EMERGENCY_WITHDRAW` (lend-eth USDC, lend-eth WETH, lend-avax USDC, lend-avax WETH), `OPEN_INCIDENT`, `UNPAUSE_DEPOSITS` pending approval; the transactions are mined in the following blocks;
     - final state: vault paused, 250 WETH + 700,000 USDC pulled back to the vault, no positions left, `at_risk_usd = 0`;
     - incident `INC-20261011-001` contained, DORA major via 9(1) and 9(4);
     - `verify.json` = MATCH, with the decision's real `record_hash`.
@@ -1195,7 +1200,7 @@ Every task follows the same outline:
 | Id | Type | Command | Expected result |
 |---|---|---|---|
 | T0-01 | unit | `pytest backend/tests/test_t0_contract.py::test_fixtures_validate` | each JSON fixture validates against its model (`health`→`Health`, `state`→`StateResponse`, each `series` point→`SeriesPoint`, `alerts`→`Alert[]`, `decisions`→`Decision[]`, `verify`→`VerifyResult`, `incident`→`Incident`, `dependencies`→`Dependency[]`, `metrics`→`EvalMetrics`, `demo_run`→`DemoRun`, `run_record.example`→`RunRecord`) and each line of both `.jsonl` validates as `Snapshot` (41 lines each) |
-| T0-02 | unit | `pytest backend/tests/test_t0_contract.py::test_fixture_story` | alerts only use `R1_BACKING_DROP`…`R5_RESERVE_FROZEN`; decision `DEC-fuji-45201812-1` contains exactly the 8 actions listed in step 10, in that order; `incident.saved_usd == 1325000.0`; `state.totals` is `value_usd = 1325000`, `idle_usd = 1325000`, `withdrawable_usd = 0`, `at_risk_usd = 0`; `state.positions == []`; `verify.stored_hash == decisions[R1].record_hash`; `deployments.example.json` has the keys `assets`, `contracts.MockBridge`, `contracts.MockOracle`, `contracts.TreasuryVault`, `contracts.EvidenceRegistry`, `lending`, `roles` |
+| T0-02 | unit | `pytest backend/tests/test_t0_contract.py::test_fixture_story` | alerts only use `R1_BRIDGE_INVARIANT`…`R5_CONTAINMENT`; decision `DEC-fuji-45201812-1` contains exactly the 8 actions listed in step 10, in that order; `incident.saved_usd == 1325000.0`; `state.totals` is `value_usd = 1325000`, `idle_usd = 1325000`, `withdrawable_usd = 0`, `at_risk_usd = 0`; `state.positions == []`; `verify.stored_hash == decisions[R1].record_hash`; `deployments.example.json` has the keys `assets`, `contracts.MockBridge`, `contracts.MockOracle`, `contracts.TreasuryVault`, `contracts.EvidenceRegistry`, `lending`, `roles` |
 | T0-03 | unit | `pytest backend/tests/test_t0_contract.py::test_record_hash_recomputes` | recomputing keccak256 of the canonical JSON of the R1 decision (without `record_hash`, `anchor_tx`, `anchor_block`) gives back `record_hash` |
 | T0-05 | unit | `pytest backend/tests/test_t0_settings.py::test_local_keys` | with `NETWORK=local` and no key: the address of `account("deployer")` is `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`, that of `guardian` is `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC`, `bot_accounts()` returns 3 accounts; with `NETWORK=fuji` and no key, `private_key("guardian")` raises `RuntimeError` |
 | T0-06 | unit | `pytest backend/tests/test_t0_store.py` | append, read, `since_block`, `update_decision`, `upsert_incident`, `reset()` clears everything; JSONL writes to a temporary folder (`DATA_DIR` variable overridden) |
@@ -1800,6 +1805,8 @@ You are working on task T2 (scenario: seed, attack, normal traffic, reset) of TA
 ---
 ### T3 · Monitoring engine: collector, rules R1 to R5, state API
 
+> **Implemented as rules v3 (CR-003, CR-004).** The rule ids and logic of 2.7 and `docs/product/THRESHOLDS.md` are authoritative; where this sheet still describes the v1 rules (expected alert lists, test names), the T3 code and `backend/tests/test_t3_*.py` win.
+
 **Goal.** Read the chain state at every new block (a `Snapshot`), apply the five simple rules R1 to R5 from section 2.7 over a sliding window, emit `Alert`s without duplicates, pass them to subscribers (T4) and serve `GET /api/health`, `/api/state`, `/api/series`, `/api/alerts` from the store when `USE_FIXTURES=false`. One indicator per rule, nothing more in the MVP.
 
 **Depends on.**
@@ -1935,7 +1942,7 @@ def maintenance_flag_path() -> Path           # settings.DATA_DIR / "runtime" / 
 4. Append to the window, truncate to `window_blocks`.
 5. `new = latch.filter(rules.evaluate_all(window, cfg))`, then `detected_at = clock()` on each alert (`model_copy(update=…)`).
 6. `store.add_snapshot(snapshot)`; if `new`: `store.add_alerts(new)`.
-7. INFO log `block=45201812 positions=4 new_alerts=1` and one WARNING per alert: `ALERT critical R1_BACKING_DROP global/rsETH exposure=1325000 | rsETH backing fell to…`. Returns `new`.
+7. INFO log `block=45201812 positions=4 new_alerts=1` and one WARNING per alert: `ALERT critical R1_BRIDGE_INVARIANT global/rsETH exposure=1325000 | rsETH backing fell to…`. Returns `new`.
 
 `process(snapshot)` = `new = ingest(snapshot)` then, if `new`, each handler called directly inside a `try/except` (`logger.exception`, continue). Reserved for tests and `--replay` (no event loop); the production loop goes through `ingest` + the dispatcher below.
 
@@ -1978,14 +1985,14 @@ Command: `make test-t3` (= `python -m pytest -q backend/tests/test_t3_*.py`, nev
 |---|---|---|---|
 | T3-01 | `test_t3_rules.py::test_rules_yaml_matches_contract` | — | `yaml.safe_load` == dict from 2.7; `rules_version()` starts with `sha256:`, length 71, equal to the sha256 of the file bytes |
 | T3-02 | `test_t3_rules.py::test_exposure_helpers` | `s = snaps[0]` | `collateral_exposure(s, "rsETH") == (1325000.0, ["lend-eth", "lend-avax"])`; `deployment_exposure(s, "lend-eth") == 775000.0`; `"lend-avax"` → `550000.0`; `len(treasury_positions(s)) == 4` |
-| T3-03 | `test_t3_rules.py::test_r1_backing_drop` | `win(45201810)`, `win(45201812)` | 810 → `[]`; 812 → 1 critical alert, `id == "ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH"`, `deployment_id is None`, `asset == "rsETH"`, `block_number == 45201812`, `metrics["backing_ratio_bps"] == 1935`, `exposure_usd == 1325000.0`, `"19.4 %"` in `explanation` |
+| T3-03 | `test_t3_rules.py::test_r1_backing_drop` | `win(45201810)`, `win(45201812)` | 810 → `[]`; 812 → 1 critical alert, `id == "ALT-fuji-45201812-R1_BRIDGE_INVARIANT-global-rsETH"`, `deployment_id is None`, `asset == "rsETH"`, `block_number == 45201812`, `metrics["backing_ratio_bps"] == 1935`, `exposure_usd == 1325000.0`, `"19.4 %"` in `explanation` |
 | T3-04 | `test_t3_rules.py::test_r2_liquidity_drop` | `win(45201824)`, `win(45201826)`, `win(45201832)` | 824 (600 WETH, -25%) → `[]`; 826 → high, `drop_pct == 37.5`, `max_available_liquidity == 800.0`, `available_liquidity == 500.0`; 832 → critical, `drop_pct == 62.5`; `exposure_usd == 375000.0`; never an R2 alert on `lend-avax` nor on USDC |
 | T3-05 | `test_t3_rules.py::test_r3_utilization` | `win(45201834/836/838)` | 834 (8947 bps) → `[]`; 836 → warning, `utilization_bps == 9444`; 838 → critical, `10000` |
 | T3-06 | `test_t3_rules.py::test_r4_position_stuck` | same | 834 → `[]`; 836 → high, `withdrawable_ratio_bps == 6667`, `withdrawable_now == 100.0`; 838 → critical, `0`; `exposure_usd == 375000.0` |
 | T3-07 | `test_t3_rules.py::test_r5_reserve_frozen` | `win(45201876/878/880)` | 876 → `[]`; 878 → 1 high alert `lend-eth`/`rsETH`, `exposure_usd == 775000.0`, `metrics["state"] == "frozen"`; 880 → `[]` |
-| T3-08 | `test_t3_rules.py::test_disabled_rule_and_empty_window` | `cfg["R1_BACKING_DROP"]["enabled"] = False` | `evaluate_r1(win(45201812), cfg) == []`; `evaluate_all([], cfg) == []` |
+| T3-08 | `test_t3_rules.py::test_disabled_rule_and_empty_window` | `cfg["R1_BRIDGE_INVARIANT"]["enabled"] = False` | `evaluate_r1(win(45201812), cfg) == []`; `evaluate_all([], cfg) == []` |
 | T3-09 | `test_t3_rules.py::test_alert_latch` | synthetic alerts with the same key | high → emitted; high → nothing; critical → emitted; high → nothing; absent → key removed; high → re-emitted |
-| T3-10 | `test_t3_engine.py::test_attack_replay_expected_alerts` | `Engine(MemStore(), clock=clock)`, `process` on the 41 snapshots | exactly 8 alerts, in this order: `(45201812, R1_BACKING_DROP, None, rsETH, critical, 1325000)`, `(45201826, R2_LIQUIDITY_DROP, lend-eth, WETH, high, 375000)`, `(45201832, R2…, critical)`, `(45201836, R3_UTILIZATION_HIGH, lend-eth, WETH, warning)`, `(45201836, R4_POSITION_STUCK, lend-eth, WETH, high)`, `(45201838, R3…, critical)`, `(45201838, R4…, critical)`, `(45201878, R5_RESERVE_FROZEN, lend-eth, rsETH, high, 775000)`; no duplicate `(rule_id, deployment_id, asset, severity)`; no alert with `deployment_id == "lend-avax"`; all have `detected_at == clock()` |
+| T3-10 | `test_t3_engine.py::test_attack_replay_expected_alerts` | `Engine(MemStore(), clock=clock)`, `process` on the 41 snapshots | exactly 8 alerts, in this order: `(45201812, R1_BRIDGE_INVARIANT, None, rsETH, critical, 1325000)`, `(45201826, R3_LIQUIDITY_DRAIN, lend-eth, WETH, high, 375000)`, `(45201832, R2…, critical)`, `(45201836, R3_LIQUIDITY_DRAIN, lend-eth, WETH, warning)`, `(45201836, R4_EXITABILITY_DROP, lend-eth, WETH, high)`, `(45201838, R3…, critical)`, `(45201838, R4…, critical)`, `(45201878, R5_CONTAINMENT, lend-eth, rsETH, high, 775000)`; no duplicate `(rule_id, deployment_id, asset, severity)`; no alert with `deployment_id == "lend-avax"`; all have `detected_at == clock()` |
 | T3-11 | `test_t3_engine.py::test_normal_replay_no_alert` | same with `snapshots_normal.jsonl` | `0` alerts (max utilization 6000 bps, max liquidity drop 13.6%, backing 10000) |
 | T3-12 | `test_t3_engine.py::test_handlers_and_store` | `MemStore` (in-memory lists, same methods as 2.10, `generation = 0` incremented by `reset()`); one handler that records, one that raises | handler called 6 times (blocks 812, 826, 832, 836, 838, 878); the second one's exception interrupts nothing; store: 41 snapshots, 8 alerts |
 | T3-13 | `test_t3_engine.py::test_duplicate_and_backwards_blocks` | replay `snaps[5]` twice; then `snaps[0]` after `snaps[40]` | duplicate → `[]`; going backwards → window of size 1, empty latch |
@@ -2085,7 +2092,7 @@ You are working on task T3 (monitoring engine) from the TASKS.md file at the rep
 
 | Input | Format | Provided by | Mock meanwhile |
 |---|---|---|---|
-| New alerts of a snapshot | `list[Alert]` (2.6, rule_id `R1_BACKING_DROP`..`R5_RESERVE_FROZEN`) passed to `Responder.handle` | T3 (`engine.on_alerts`) | `make_alert(...)` in `backend/tests/test_t4_fixtures.py`; `fixtures/alerts.json` (regenerated: R1 alert at block 45201812) serves as a format example, not a test input |
+| New alerts of a snapshot | `list[Alert]` (2.6, rule_id `R1_BRIDGE_INVARIANT`..`R5_CONTAINMENT`) passed to `Responder.handle` | T3 (`engine.on_alerts`) | `make_alert(...)` in `backend/tests/test_t4_fixtures.py`; `fixtures/alerts.json` (regenerated: R1 alert at block 45201812) serves as a format example, not a test input |
 | Current snapshot | `Snapshot` (positions, reserves with `ltv_bps`, `vault.deposits_paused`) | T3 (collector) | `load_attack(block)` reading `fixtures/snapshots_attack.jsonl` (network `fuji`, 41 snapshots) |
 | Addresses and ABIs | `deployments/<network>.json`, `abi/TreasuryVault.json`, `abi/EvidenceRegistry.json`, `abi/MiniLend.json` | T1 | `DRY_RUN_ACTIONS=true` |
 | Keys | `settings.private_key("guardian" / "owner" / "evidence")` via `chain.account(role)` | T0 / `.env` | anvil accounts (index 2, 1, 5) automatic on `local` |
@@ -2139,9 +2146,10 @@ below_min_exposure:          # exposure < min_exposure_usd
 - `SEVERITY_RANK = {"info": 0, "warning": 1, "high": 2, "critical": 3}`.
 - `deployment_order(snapshot) -> list[str]`: deployment ids in order of first appearance in `snapshot.reserves` (fixtures: `["lend-eth", "lend-avax"]`).
 - `concerned_positions(alert, snapshot) -> list[PositionSnapshot]`:
-  - `R1_BACKING_DROP`: deployments where a reserve with `asset == alert.asset` has `ltv_bps > 0`; all vault positions in those deployments;
-  - `R2_LIQUIDITY_DROP`, `R3_UTILIZATION_HIGH`, `R4_POSITION_STUCK`: the position `(alert.deployment_id, alert.asset)` if it exists;
-  - `R5_RESERVE_FROZEN`: all positions of `alert.deployment_id`;
+  - `R1_BRIDGE_INVARIANT`: deployments where a reserve with `asset == alert.asset` has `ltv_bps > 0`; all vault positions in those deployments;
+  - `R2_COLLATERAL_SURGE`: all positions of `alert.deployment_id`;
+  - `R3_LIQUIDITY_DRAIN`, `R4_EXITABILITY_DROP`: the position `(alert.deployment_id, alert.asset)` if it exists;
+  - `R5_CONTAINMENT`: all positions of `alert.deployment_id`;
   - unknown rule_id: `[]` + `logger.warning`.
   - Positions with `supplied == "0"` are ignored. Sort: `(index in deployment_order, asset)` → `lend-eth USDC, lend-eth WETH, lend-avax USDC, lend-avax WETH`.
 - `assess(alerts, snapshot, playbook) -> dict`: `severity` = max severity; `positions` = union (key `(deployment_id, asset)`, **no duplicates**) of the concerned positions of all alerts with severity ≥ high; `exposure_usd` = sum of `value_usd` over the union of the concerned positions of **all** alerts; `withdrawable_usd` = sum of `withdrawable_usd` over that same union; `matrix_cell = f"{severity}|{'exposure>=1k' if exposure_usd >= min_exposure_usd else 'exposure<1k'}|{'exit_possible' if withdrawable_usd > 0 else 'no_liquidity'}"`. Round floats to 2 decimals.
@@ -2500,7 +2508,7 @@ def concerned_positions(alert: Alert, snapshot: Snapshot) -> set[tuple[str, str]
 
 | kind | source | text (exact example) | ref |
 |---|---|---|---|
-| alert | each alert | `R1_BACKING_DROP critical: rsETH backing below threshold` (`<rule_id> <severity>: <alert.title>`) | alert id |
+| alert | each alert | `R1_BRIDGE_INVARIANT critical: rsETH backing below threshold` (`<rule_id> <severity>: <alert.title>`) | alert id |
 | decision | each decision | `Decision DEC-fuji-45201812-1: critical\|exposure>=1k\|exit_possible` | decision id |
 | action | `executed` action | `Deposits paused` / `Emergency withdrawal: 150 WETH from lend-eth to the vault (375,000 USD)` / `Notification sent (log, webhook, sns)` (channels read from `Action.note` in T4 format `channels: log,webhook,sns`: regex `channels: ([^;]+)`, split on `,`, `strip()`, joined with `", "`; note missing or without `channels:` → `Notification sent`); suffix ` (dry run)` if `tx_hash` starts with `0xdry` | tx hash otherwise decision id |
 | action | `failed` action | `EMERGENCY_WITHDRAW failed: <note>` | decision id |
@@ -2541,7 +2549,7 @@ dora-demo:    ## print the report for the scenario facts (offline, no API)
 
 #### Tests that must pass
 
-Global command: `make test-t5` (= `python -m pytest backend/tests/test_t5_*.py -q`, never `-k`). Shared factories in `backend/tests/test_t5_factories.py` (no `test_*` functions): `load_attack()` (41 snapshots), `make_reacted_series()` (copy of the series; from block 45,201,814: positions `supplied = withdrawable_now = "0"`, `withdrawable_ratio_bps = 10000`, `value_usd = withdrawable_usd = 0.0`, `deposits_paused = True`, `idle_balances = {"WETH": "250000000000000000000", "USDC": "700000000000"}`), `make_alert_r1()` (`ALT-fuji-45201812-R1_BACKING_DROP-global-rsETH`, critical, `deployment_id=None`, asset rsETH, block 45,201,812, `block_time` 08:00:24Z, `detected_at` 08:00:26Z, exposure 1,325,000.0, title **exactly** T3's `rsETH backing below threshold`, explanation in T3 format `rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).`, `metrics` in T3 format `{"backing_ratio_bps": 1935, "backing": 1200.0, "total_supply": 6200.0, "threshold_bps": 9900, "exposed_deployments": "lend-eth,lend-avax"}`), `make_decision_r1(no_reaction=False)` (`DEC-fuji-45201812-1`, `created_at` 08:00:26Z, 8 actions from 2.8: NOTIFY, PAUSE_DEPOSITS, 4 × EMERGENCY_WITHDRAW lend-eth WETH `150e18`, lend-eth USDC `400000e6`, lend-avax WETH `100e18`, lend-avax USDC `300000e6` with `tx_hash = "0x" + f"{i:02x}" * 32`, NOTIFY `note="channels: log,webhook,sns"`, OPEN_INCIDENT, UNPAUSE_DEPOSITS human `pending_approval`; `no_reaction=True` → the 4 withdrawals `skipped`, `amount=None`, to simulate a platform that could not react), `FakeStore`, `run_series(manager, snapshots, at={block: (decisions, alerts)})` (adds each snapshot then calls `handle`, with `[]`, `[]` outside the given blocks).
+Global command: `make test-t5` (= `python -m pytest backend/tests/test_t5_*.py -q`, never `-k`). Shared factories in `backend/tests/test_t5_factories.py` (no `test_*` functions): `load_attack()` (41 snapshots), `make_reacted_series()` (copy of the series; from block 45,201,814: positions `supplied = withdrawable_now = "0"`, `withdrawable_ratio_bps = 10000`, `value_usd = withdrawable_usd = 0.0`, `deposits_paused = True`, `idle_balances = {"WETH": "250000000000000000000", "USDC": "700000000000"}`), `make_alert_r1()` (`ALT-fuji-45201812-R1_BRIDGE_INVARIANT-global-rsETH`, critical, `deployment_id=None`, asset rsETH, block 45,201,812, `block_time` 08:00:24Z, `detected_at` 08:00:26Z, exposure 1,325,000.0, title **exactly** T3's `rsETH backing below threshold`, explanation in T3 format `rsETH backing fell to 19.4 % (1,200 WETH backing for 6,200 rsETH supply).`, `metrics` in T3 format `{"backing_ratio_bps": 1935, "backing": 1200.0, "total_supply": 6200.0, "threshold_bps": 9900, "exposed_deployments": "lend-eth,lend-avax"}`), `make_decision_r1(no_reaction=False)` (`DEC-fuji-45201812-1`, `created_at` 08:00:26Z, 8 actions from 2.8: NOTIFY, PAUSE_DEPOSITS, 4 × EMERGENCY_WITHDRAW lend-eth WETH `150e18`, lend-eth USDC `400000e6`, lend-avax WETH `100e18`, lend-avax USDC `300000e6` with `tx_hash = "0x" + f"{i:02x}" * 32`, NOTIFY `note="channels: log,webhook,sns"`, OPEN_INCIDENT, UNPAUSE_DEPOSITS human `pending_approval`; `no_reaction=True` → the 4 withdrawals `skipped`, `amount=None`, to simulate a platform that could not react), `FakeStore`, `run_series(manager, snapshots, at={block: (decisions, alerts)})` (adds each snapshot then calls `handle`, with `[]`, `[]` outside the given blocks).
 
 | Id | Type | File::test | Setup | Expected result |
 |---|---|---|---|---|
@@ -2564,7 +2572,7 @@ Global command: `make test-t5` (= `python -m pytest backend/tests/test_t5_*.py -
 | T5-17 | integration | `test_t5_incidents.py::test_opens_one_incident_reacted` | `make_reacted_series()`, R1 decision at block 45,201,812 | 1 incident `INC-20261011-001`, `contained`, `contained_at = 2026-10-11T08:01:04Z`, `saved_usd 1325000.0`, `at_risk_usd 0.0`, `exposure_usd 1325000.0`, `severity critical`, DORA major `[T_9_1, T_9_4]`, `initial_notification_due 2026-10-11T12:00:26Z` |
 | T5-18 | integration | `::test_no_open_incident_action` | warning decision (NOTIFY only) | `handle` → `None`, `store.incidents() == []` |
 | T5-19 | integration | `::test_attaches_later_decisions_raw` | raw series, R1 `no_reaction=True` + high R2 decision at block 45,201,826 (with OPEN_INCIDENT) | a single incident, 2 decisions, 2 alerts, `open`, `saved_usd 0.0`, `at_risk_usd 375000.0`, thresholds `[T_9_1, T_9_4, T_9_6]` |
-| T5-20 | integration | `::test_timeline` | T5-17 | kinds ⊇ {alert, decision, action, human, dora}; sorted by `at`; 4 `Emergency withdrawal` events with `ref` = tx hash; contains `Emergency withdrawal: 150 WETH from lend-eth to the vault (375,000 USD)`, `Notification sent (log, webhook, sns)` and `R1_BACKING_DROP critical: rsETH backing below threshold` |
+| T5-20 | integration | `::test_timeline` | T5-17 | kinds ⊇ {alert, decision, action, human, dora}; sorted by `at`; 4 `Emergency withdrawal` events with `ref` = tx hash; contains `Emergency withdrawal: 150 WETH from lend-eth to the vault (375,000 USD)`, `Notification sent (log, webhook, sns)` and `R1_BRIDGE_INVARIANT critical: rsETH backing below threshold` |
 | T5-21 | integration | `::test_human_approval_picked_up` | T5-17, action 7 → `executed`, `note="approved by treasury-signer-1; "` (T4 format), `refresh`; then `rejected` variant, `note="rejected by risk-officer"` | event `UNPAUSE_DEPOSITS approved by treasury-signer-1` (no trailing `;` or space); variant: `UNPAUSE_DEPOSITS rejected by risk-officer`; no more `Awaiting human approval` event |
 | T5-22 | integration | `::test_reopen_on_new_relevant_alert` | T5-17 then critical alert with exposure 5,000 | `open`, `contained_at is None` |
 | T5-23 | integration | `::test_idempotent_and_resolved` | `handle` 2× same decision; then incident forced to `resolved` + new OPEN_INCIDENT decision | no duplicate; new id `INC-20261011-002` |
@@ -2766,7 +2774,7 @@ A `DashboardDataProvider` (React context in `App.tsx`) polls `health`, `state`, 
 - `formatUtc(iso)` → `"2026-10-11 08:00:27 UTC"` (always display UTC, explicitly).
 - `tones` → Tailwind classes: ok `bg-green-600`, warn `bg-amber-500`, bad `bg-red-600`; severities: info `bg-slate-500`, warning `bg-amber-500`, high `bg-orange-600`, critical `bg-red-600` (white text, word written in capitals: colour is never the only information).
 
-**6. Labels `src/lib/labels.ts`.** `RULE_LABELS`: `R1_BACKING_DROP` "Bridged token backing drop", `R2_LIQUIDITY_DROP` "Market liquidity drop", `R3_UTILIZATION_HIGH` "Market utilization high", `R4_POSITION_STUCK` "Our position is stuck", `R5_RESERVE_FROZEN` "Reserve frozen or paused"; fall back to the raw id. `ACTION_LABELS`: NOTIFY "Notify the team", PAUSE_DEPOSITS "Pause new deposits", EMERGENCY_WITHDRAW "Emergency withdrawal to the vault", FULL_EXIT "Full exit", UNPAUSE_DEPOSITS "Resume deposits", OPEN_INCIDENT "Open incident". `DEPLOYMENT_LABELS`: `lend-eth` "Lending protocol (Ethereum deployment)", `lend-avax` "Lending protocol (Avalanche deployment)".
+**6. Labels `src/lib/labels.ts`.** `RULE_LABELS`: `R1_BRIDGE_INVARIANT` "Forged bridge release", `R2_COLLATERAL_SURGE` "rsETH collateral surge", `R3_LIQUIDITY_DRAIN` "Market liquidity drain", `R4_EXITABILITY_DROP` "Our position is stuck", `R5_CONTAINMENT` "Bridge or reserve contained"; fall back to the raw id. `ACTION_LABELS`: NOTIFY "Notify the team", PAUSE_DEPOSITS "Pause new deposits", EMERGENCY_WITHDRAW "Emergency withdrawal to the vault", FULL_EXIT "Full exit", UNPAUSE_DEPOSITS "Resume deposits", OPEN_INCIDENT "Open incident". `DEPLOYMENT_LABELS`: `lend-eth` "Lending protocol (Ethereum deployment)", `lend-avax` "Lending protocol (Avalanche deployment)".
 
 **7. Layout (`App.tsx`, `components/Layout.tsx`).** Sidebar with the 8 routes; badge with the number of `pending_approval` actions on "Alerts & decisions". Header: network (`FUJI`/`LOCAL`), current block, green/red dot for `rpc_ok`, `engine_running`, "Updated 2 s ago" (from `lastUpdated`), "Operator name" field (stored in `localStorage['sh.operator']`, default `dashboard-operator`, read/write inside a `try/catch`), used as `approver` and `submitted_by`. Yellow banner `FIXTURE MODE: data from fixtures/, no backend` if `isFixtureMode()`. Grey banner `Waiting for first block: the monitoring engine has not read the chain yet` if `state` polling returns 503 (`isNoSnapshotYet`): this is not an outage, polling continues and the banner disappears at the first snapshot. Red banner `Backend unreachable: showing last data from block N` if `state` polling fails for any other reason (network, 5xx other than 503). Amber banner `Data is stale` if `now - updated_at > 15 s` (disabled in fixture mode).
 Jury readability: key figures in `text-4xl font-bold tabular-nums`, 16 px base text, AA contrast, bars with `role="progressbar"` and `aria-valuenow`, visible keyboard focus, no abbreviations (no "bps" on screen: everything in %).
@@ -3044,7 +3052,7 @@ python -m evaluation.run_synthetic --runs 10 --normal 3 --minutes 2 --settle-blo
    f. Drift check: any alert whose `rules_version != frozen` → abort, exit 3 (`"rules.yaml changed during evaluation"`).
    g. `drained = drained_keys_from_series(...)`; if the series are empty, fallback: if `"liquidity_zero" in record.phase_blocks`, `drained = {VARIANT_TARGET[variant]}` with `VARIANT_TARGET = {"default": "lend-eth:WETH", "slow": "lend-eth:WETH", "usdc": "lend-eth:USDC"}` + warning.
    h. `evaluate_attack(...)`. Cross-check: `idle_delta_usd` (idle after − before, valued) vs `saved_usd`; gap > 1% of the start value → warning. If detected but no `executed` `EMERGENCY_WITHDRAW` → warning `"no executed EMERGENCY_WITHDRAW"`. If a `0xdry…` `tx_hash` appears → excluded from the saved value and note `"dry-run withdrawals excluded from saved: <run_id> (backend must run with DRY_RUN_ACTIONS=false)"`.
-   i. Append the line to `runs.jsonl` immediately (a crash does not lose runs already done). Log: `[eval] attack 3/10 seed=3 variant=usdc run=RUN-… detected=yes rule=R1_BACKING_DROP ttd=1 saved=100.0% baseline=69.8%`.
+   i. Append the line to `runs.jsonl` immediately (a crash does not lose runs already done). Log: `[eval] attack 3/10 seed=3 variant=usdc run=RUN-… detected=yes rule=R1_BRIDGE_INVARIANT ttd=1 saved=100.0% baseline=69.8%`.
 4. **Normal loop** `j = 0..normal-1`: `seed = 10_000 + base_seed + j`; reset as in 3a; `run_id = run_normal(seed, minutes)`; wait for `end_block + settle`; `evaluate_normal`. Log: `[eval] normal 1/3 seed=10001 run=RUN-… false_positive=no max_severity=warning`.
 5. **Errored runs.** `DemoRun.status == "failed"`, timeout, missing or invalid `RunRecord` → "errored" run: excluded from rates, listed in the notes (`"ERRORED <run_id or seed>: <reason>"`) and in the report. Never silently rerun. If more than 20% of runs errored → metrics written anyway, exit 2.
 6. **End.** `aggregate(...)` → `metrics.json` (atomic write: `.tmp` file then `os.replace`); `report.write_report(...)`. Systematic notes: `"network=local"`, `"variants: default x4, slow x3, usdc x3"`, `"settle_blocks=10"`, `"rules anchored: tx 0x… block N (local, ephemeral)"` or `"rules not anchored"`, `"thresholds frozen before first run; variants authored by T2 independently of rules.yaml"`.
@@ -3104,7 +3112,7 @@ Global command: `make test-t7` (= `pytest backend/tests/test_t7_*.py`, no networ
 | Id | Type | Command | Setup | Expected result |
 |---|---|---|---|---|
 | T7-01 | unit | `pytest backend/tests/test_t7_metrics.py::test_percentile_nearest_rank` | fixed lists | `[0,1,2,3,10]` → p50 = 2, p90 = 10; `[3]` → 3 and 3; `[2,0,1,1]` → p50 = 1, p90 = 2; `[]` → `ValueError` |
-| T7-02 | unit | `…::test_detected_and_ttd` | `REC`; alerts: R1 critical block 113, R3 warning block 130, R2 critical block 105 (before the attack) | `detected is True`, `first_critical_block == 113`, `first_rule_id == "R1_BACKING_DROP"`, `ttd_blocks == 1`, `pre_attack_alerts == 1` |
+| T7-02 | unit | `…::test_detected_and_ttd` | `REC`; alerts: R1 critical block 113, R3 warning block 130, R2 critical block 105 (before the attack) | `detected is True`, `first_critical_block == 113`, `first_rule_id == "R1_BRIDGE_INVARIANT"`, `ttd_blocks == 1`, `pre_attack_alerts == 1` |
 | T7-03 | unit | `…::test_not_detected` | `REC`; alerts: R4 high block 140, R1 critical block 195 (outside window: 195 > 190) | `detected is False`, `ttd_blocks is None` |
 | T7-04 | unit | `…::test_saved_full` | `REC`; 1 decision at block 114 with 4 `executed` `EMERGENCY_WITHDRAW`, full amounts | `start_value_usd == 1325000.0`, `saved_usd == 1325000.0`, `saved_pct == 100.0` |
 | T7-05 | unit | `…::test_saved_ignores_non_executed` | `REC`; `lend-eth:WETH` 150 `executed`; `lend-eth:USDC` `failed`; `lend-avax:WETH` `pending_approval`; `lend-avax:USDC` `planned` with `amount` filled in | `saved_usd == 375000.0`, `saved_pct == 28.3` |
@@ -3118,7 +3126,7 @@ Global command: `make test-t7` (= `pytest backend/tests/test_t7_*.py`, no networ
 | T7-13 | unit | `pytest backend/tests/test_t7_report.py::test_outputs_schema` | results from T7-10, `write_report` + writing `metrics.json` into `tmp_path` | `EvalMetrics.model_validate(json.load(...))` passes; `report.md` contains `"| Detection rate | 66.7 % (2/3) |"`, 3 lines in "Attack runs", 2 in "Normal runs", the miss line |
 | T7-14 | API | `pytest backend/tests/test_t7_api.py::test_metrics_file_then_fixture` | `monkeypatch.setattr(settings, "DATA_DIR", tmp_path)`, `TestClient(app)` | without file: 200 and `synthetic.runs_attack == 0` (fixture); with the `metrics.json` from T7-13: 200 and `synthetic.detection_rate == 0.667` |
 | T7-15 | API | `…::test_metrics_invalid_file` | `tmp_path/eval/metrics.json` = `"{oops"` | 200, body = fixture, one `WARNING` log |
-| T7-16 | offline integration | `pytest backend/tests/test_t7_replay.py` | replays the 41 snapshots of each `.jsonl` through `backend.engine.Engine(Store()).process`; **`pytest.skip` if `backend.store` or `Engine` is still a stub (no alert on the attack series)** | attack: first critical alert `R1_BACKING_DROP` at block 45,201,812 → `ttd_blocks == 0` with `attack_start_block = 45201812`; normal: `false_positive is False` |
+| T7-16 | offline integration | `pytest backend/tests/test_t7_replay.py` | replays the 41 snapshots of each `.jsonl` through `backend.engine.Engine(Store()).process`; **`pytest.skip` if `backend.store` or `Engine` is still a stub (no alert on the attack series)** | attack: first critical alert `R1_BRIDGE_INVARIANT` at block 45,201,812 → `ttd_blocks == 0` with `attack_start_block = 45201812`; normal: `false_positive is False` |
 | T7-17 | offline harness | `pytest backend/tests/test_t7_harness.py::test_run_eval_with_fake_api` | `FakeApi` (step 6), `runs=3`, `normal=1`, `anchor=False`, `out_dir=tmp_path` | valid `metrics.json`; `runs_attack == 3`, `runs_normal == 1`, `detection_rate == 1.0`, `ttd_blocks_p50 == 1`, `saved_pct_mean == 100.0`, `baseline_saved_pct_mean == 71.1`; `runs.jsonl` has 4 lines; variants `default, slow, usdc` |
 | T7-18 | offline harness | `…::test_rules_drift_aborts` | `FakeApi` where one alert has `rules_version="sha256:" + "0"*64` | `SystemExit` code 3 |
 | T7-19 | offline harness | `…::test_failed_run_reported` | `FakeApi` where run 2 returns `status="failed"` | `runs_attack == 2`, note starting with `"ERRORED "`, line in `report.md` |
@@ -3646,7 +3654,7 @@ Command: `pytest backend/tests/test_t9_docs.py` (never `-k`), via `make test-t9`
 - **Invented "catchy" numbers.** No "99% detection" until T7 has produced `metrics.json`. PLACEHOLDER mode exists for that; otherwise `make docs-final` blocks the submission.
 - **`fixtures/metrics.json` is 0 everywhere.** Showing "0% false positives" would be false and flattering: test T9-05 forbids it.
 - **Metric units.** Fixed by 2.6: `*_rate` in 0..1 (multiply by 100 for display), `*_pct_*` already in 0..100 (do not multiply again), `ttd_blocks_*` = -1 when nothing is detected (show "not detected"). A "10000%" or "1%" of funds saved betrays a double conversion.
-- **API fixtures.** The regenerated fixtures (2.13) put the R1 alert and `DEC-fuji-45201812-1` at block 45,201,812; if your copy of `alerts.json`, `decisions.json` or `incident.json` still contains D1..D7, it is stale (rebase). Even up to date, a fixture is not a source of numbers for the jury: every number goes through the allowlist with its source. Rules are named `R1_BACKING_DROP` to `R5_RESERVE_FROZEN`.
+- **API fixtures.** The regenerated fixtures (2.13) put the R1 alert and `DEC-fuji-45201812-1` at block 45,201,812; if your copy of `alerts.json`, `decisions.json` or `incident.json` still contains D1..D7, it is stale (rebase). Even up to date, a fixture is not a source of numbers for the jury: every number goes through the allowlist with its source. Rules are named `R1_BRIDGE_INVARIANT` to `R5_CONTAINMENT`.
 - **Strict tests in `make test`.** Never remove the `skipif` from T9-03, T9-04, T9-06: they depend on other tasks' files and would break `main` on every T1 redeployment, T4 matrix change or new T7 evaluation. They run in `make docs-final`.
 - **Decision ids.** They carry the block of the alerts snapshot (`DEC-<network>-<block>-<n>`), not the block where transactions execute: in the docs, cite `DEC-fuji-45201812-1` for the fixtures, and the real id copied from the dashboard for Fuji.
 - **`deployments.example.json` ≠ 2.3 format** (`Bridge`/`Oracle` instead of `MockBridge`/`MockOracle`): the generator walks the keys present, with no hard-coded list.
@@ -3731,7 +3739,7 @@ Expected results:
 
 | # | Check | Expected |
 |---|---|---|
-| 1 | `GET /api/alerts` | a critical `R1_BACKING_DROP` alert at most 2 blocks after the `forgedRelease` block (block read from `data/runs/<run_id>.json`) |
+| 1 | `GET /api/alerts` | a critical `R1_BRIDGE_INVARIANT` alert at most 2 blocks after the `forgedRelease` block (block read from `data/runs/<run_id>.json`) |
 | 2 | `GET /api/decisions` | a decision with `NOTIFY`, `PAUSE_DEPOSITS`, 4 × `EMERGENCY_WITHDRAW`, `OPEN_INCIDENT` with status `executed` (with `tx_hash`), and `UNPAUSE_DEPOSITS` as `pending_approval` |
 | 3 | `GET /api/state` | `vault.deposits_paused = true`, `positions = []`, `idle_balances` = 250 WETH and 700,000 USDC, `totals.at_risk_usd = 0` |
 | 4 | after protection | no more R2 to R5 alerts: the vault has no exposure left |

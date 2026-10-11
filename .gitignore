@@ -30,6 +30,9 @@ data/anvil.log
 data/eval/*
 !data/eval/metrics.json
 !data/eval/report.md
+# external datasets (GBs): rebuilt by evaluation/data_sources scripts; only the README is tracked
+data/external/*
+!data/external/README.md
 deployments/local.json
 deployments/*.pending.json
 deployments/history/local-*

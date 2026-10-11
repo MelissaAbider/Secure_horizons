@@ -1,0 +1,10 @@
+version: 3
+window_snapshots: 20
+max_snapshot_age_s: 60
+max_future_skew_s: 5
+handler_queue_size: 128
+R1_BRIDGE_INVARIANT:  { enabled: true }
+R2_COLLATERAL_SURGE:  { enabled: true, asset: rsETH, high_increase_pct: 50, critical_increase_pct: 200 }
+R3_LIQUIDITY_DRAIN:   { enabled: true, high_drop_pct: 30, critical_drop_pct: 60, bridge_anomaly_drop_pct: 10, warning_utilization_bps: 9000, critical_utilization_bps: 9800 }
+R4_EXITABILITY_DROP:  { enabled: true, high_below_bps: 8000, critical_below_bps: 5000 }
+R5_CONTAINMENT:       { enabled: true, critical_withdrawable_below_bps: 5000 }

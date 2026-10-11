@@ -48,6 +48,11 @@ export interface TokenSnapshot {
   backing: string | null;
   backing_ratio_bps: number | null;
   price_usd: number;
+  bridge_source_locked: string | null;
+  bridge_destination_released: string | null;
+  bridge_source_nonce: number | null;
+  bridge_destination_nonce: number | null;
+  bridge_paused: boolean | null;
 }
 
 export interface PositionSnapshot {

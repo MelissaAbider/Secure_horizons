@@ -54,9 +54,14 @@ class TokenSnapshot(BaseModel):
     address: str
     decimals: int
     total_supply: str
-    backing: Optional[str] = None            # rsETH only
-    backing_ratio_bps: Optional[int] = None  # rsETH only
+    backing: Optional[str] = None            # rsETH display compatibility only
+    backing_ratio_bps: Optional[int] = None  # rsETH display compatibility only
     price_usd: float
+    bridge_source_locked: Optional[str] = None
+    bridge_destination_released: Optional[str] = None
+    bridge_source_nonce: Optional[int] = None
+    bridge_destination_nonce: Optional[int] = None
+    bridge_paused: Optional[bool] = None
 
 
 class PositionSnapshot(BaseModel):

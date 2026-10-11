@@ -14,6 +14,21 @@ The MVP is split into tasks T0–T9 in `TASKS.md`. If you were given a task, bui
 
 Use `orient` only when the request conflicts with `Now`. Use `boundary-check` before touching keys, the Safe module, or the Merkle list. Use `measure-honesty` before a measurement run. Use `session-close` at the end.
 
+## Before every push
+
+- Update `docs/product/STATUS.md` and report progress to the user before running `git push`.
+- State what is implemented, which checks actually passed or failed, what remains incomplete or blocked, and the branch and commits to be pushed.
+- Distinguish synthetic-fixture validation from live-chain verification. Do not describe passing unit tests as proof that the whole task is complete.
+- Push only when explicitly requested; a progress report does not grant permission to push.
+- Publish Melissa's T3 work only to `feature/t3-kelpdao-surveillance`. Never push directly to `main` or `master`; verify the current branch and use an explicit destination ref.
+
+## T3 verification
+
+- Run `python -m pytest backend/tests -q -p no:cacheprovider --basetemp=.pytest_cache/t3-validation` from the repo root. The workspace-local temporary directory avoids the Windows system-temp permission failure.
+- Version-3 T3 behavior and evidence limitations are in `docs/product/THRESHOLDS.md`; CR-004 tracks the unapproved cross-task integration delta. Do not rewrite other tasks or their fixtures to match T3 results.
+- T3 collection: `python -m backend.collector --once [--block N]`; monitoring: `python -m backend.engine --loop`. These are the equivalents of `make monitor-once [BLOCK=N]` and `make monitor` when GNU make is unavailable.
+- T3 live smoke is read-only and opt-in with `T3_LIVE=1`; it requires a configured RPC and deployed/seeded contracts. A skipped live check is not evidence of a successful deployment test.
+
 ## Speed
 
 - Act. Do not present a plan unless the user asked for one, or a hard stop applies.
