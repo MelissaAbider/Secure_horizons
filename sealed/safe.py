@@ -72,7 +72,7 @@ def artifact(name: str) -> dict[str, Any]:
     path = OUT / _ARTIFACTS[name] / f"{name}.json"
     if not path.exists():
         raise RuntimeError(f"{path.relative_to(ROOT)} missing: run make t1-build first")
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def contract(name: str, address: str):
@@ -94,13 +94,13 @@ def load_state() -> dict[str, Any]:
     path = STATE_DIR / f"{settings.NETWORK}.json"
     if not path.exists():
         raise RuntimeError(f"{path.relative_to(ROOT)} missing: run make seal-deploy first")
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def save_state(state: dict[str, Any]) -> Path:
     STATE_DIR.mkdir(exist_ok=True)
     path = STATE_DIR / f"{settings.NETWORK}.json"
-    path.write_text(json.dumps(state, indent=2) + "\n")
+    path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     return path
 
 

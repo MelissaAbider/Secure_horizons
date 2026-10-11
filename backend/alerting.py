@@ -85,6 +85,8 @@ class Alerting:
         if incident is None and any(a.severity == "critical" for a in alerts):
             self.alerts, self.classified_at, opened = [], _now(), True
             incident = self._new_incident(alerts[0])
+        elif incident is None:
+            self._send_high(alerts, snapshot)
         if incident is not None:
             self.alerts += alerts
             incident = self._update(incident, snapshot)
@@ -165,6 +167,26 @@ class Alerting:
                 + (f" Subsequent signals: {later}." if later else ""))
 
     # ---------- Discord ----------
+
+    def _send_high(self, alerts: list[Alert], snapshot: Snapshot) -> bool:
+        def record(status: str, http_status: Optional[int] = None) -> bool:
+            self.deliveries = (self.deliveries + [NotificationDelivery(
+                at=_now(), channel="discord", status=status, rule_ids=[a.rule_id for a in alerts],
+                incident_id=None, attachment=None, http_status=http_status)])[-200:]
+            return status == "sent"
+
+        url = settings.ALERT_WEBHOOK_URL
+        if not url or not notify.is_discord_webhook(url):
+            return record("not_configured")
+        try:
+            status = self.post(url, notify.build_alert_payload(alerts, snapshot), None)
+        except Exception as exc:
+            log.warning("Discord high alert failed (%s)", type(exc).__name__)
+            return record("failed")
+        if status >= 300:
+            log.warning("Discord webhook answered HTTP %s", status)
+            return record("failed", status)
+        return record("sent", status)
 
     def _send(self, alerts: list[Alert], snapshot: Snapshot, incident: Incident) -> bool:
         name = f"{incident.id}-DORA-draft.pdf"

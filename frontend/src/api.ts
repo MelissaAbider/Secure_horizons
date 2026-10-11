@@ -1,6 +1,6 @@
 import type {
   Alert, Decision, DemoRun, DemoVariant, Dependency, DiscordAction, EvalMetrics, Health, Incident,
-  NotificationDelivery, SeriesPoint, StateResponse, VerifyResult,
+  MonitoringLayers, NotificationDelivery, SeriesPoint, StateResponse, VerifyResult,
 } from './types'
 import { ApiError } from './apiError'
 import { fixtureDb } from './fixtureDb'
@@ -36,6 +36,13 @@ export interface NotificationsConfig { discord_configured: boolean; network: str
 export const api = {
   health(): Promise<Health> { return isFixtureMode() ? fixtureDb.health() : getJson('/api/health') },
   state(): Promise<StateResponse> { return isFixtureMode() ? fixtureDb.state() : getJson('/api/state') },
+  async monitoringLayers(): Promise<MonitoringLayers> {
+    if (isFixtureMode()) return { alerting: [], agreement: 'none', agent_available: true, ml_available: true }
+    const res = await request('/api/state')
+    const raw = res.headers.get('X-Monitoring-Layers')
+    if (!raw) throw new ApiError(502, 'Monitoring layer status header missing')
+    return JSON.parse(raw) as MonitoringLayers
+  },
   series(deploymentId: string, asset: string, limit = 300): Promise<SeriesPoint[]> {
     if (isFixtureMode()) return fixtureDb.series(deploymentId, asset, limit)
     const q = new URLSearchParams({ deployment_id: deploymentId, asset, limit: String(limit) })

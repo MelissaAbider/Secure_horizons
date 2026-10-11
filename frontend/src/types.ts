@@ -261,6 +261,13 @@ export interface Health {
   version: string;
 }
 
+export interface MonitoringLayers {
+  alerting: Array<'rules' | 'ml' | 'llm'>;
+  agreement: 'none' | 'single' | 'partial' | 'full';
+  agent_available: boolean;
+  ml_available: boolean;
+}
+
 export interface DemoStep {
   step: string;
   status: 'ok' | 'info' | 'blocked' | 'failed';

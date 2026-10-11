@@ -1,13 +1,14 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { api } from './api'
 import { usePolling, type Polled } from './hooks/usePolling'
-import type { Alert, Decision, Health, StateResponse } from './types'
+import type { Alert, Decision, Health, MonitoringLayers, StateResponse } from './types'
 
 interface DashboardData {
   health: Polled<Health>
   state: Polled<StateResponse>
   alerts: Polled<Alert[]>
   decisions: Polled<Decision[]>
+  layers: Polled<MonitoringLayers>
 }
 
 const Ctx = createContext<DashboardData | null>(null)
@@ -18,7 +19,8 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const state = usePolling(() => api.state(), 2000)
   const alerts = usePolling(() => api.alerts(0), 2000)
   const decisions = usePolling(() => api.decisions(), 2000)
-  return <Ctx.Provider value={{ health, state, alerts, decisions }}>{children}</Ctx.Provider>
+  const layers = usePolling(() => api.monitoringLayers(), 2000)
+  return <Ctx.Provider value={{ health, state, alerts, decisions, layers }}>{children}</Ctx.Provider>
 }
 
 export function useDashboardData(): DashboardData {
