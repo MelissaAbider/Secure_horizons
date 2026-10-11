@@ -327,3 +327,52 @@ export interface NotificationDelivery {
   attachment: string | null;
   http_status: number | null;
 }
+
+/** One proposal of the allocation agent and the platform's verdict (backend/agent_tools.py). */
+export interface AgentMoveRecord {
+  id: string;
+  at: string;
+  source: 'agent' | 'fallback' | 'mcp';
+  block_number: number;
+  action: string;
+  protocol: string;
+  asset: string;
+  amount: string;
+  reason: string;
+  verdict: 'approved' | 'signature' | 'refused';
+  reasons: string[];
+  value_usd: number;
+  status: 'executing' | 'executed' | 'simulated' | 'awaiting_signature' | 'refused' | 'refused_onchain' | 'failed';
+  txs: string[];
+  detail: string | null;
+  approved_by: string | null;
+  paper?: boolean;
+}
+
+export interface AgentCycle {
+  id: string;
+  started_at: string;
+  finished_at: string | null;
+  trigger: string;
+  block_number: number;
+  model: string | null;
+  source: 'bedrock' | 'fallback' | 'none';
+  instructions: string;
+  dry_run: boolean;
+  steps: { at: string; tool: string; input: Record<string, unknown>; output: Record<string, unknown> }[];
+  moves: AgentMoveRecord[];
+  thoughts: string[];
+  summary: string;
+  error: string | null;
+  record_hash: string;
+}
+
+export interface AgentStatus {
+  loop: boolean;
+  interval_s: number | null;
+  running: boolean;
+  model_configured: boolean;
+  region: string;
+  dry_run: boolean;
+  rules: Record<string, unknown>;
+}

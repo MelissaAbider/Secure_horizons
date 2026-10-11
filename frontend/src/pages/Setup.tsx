@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { CHANNEL_NAMES, ChannelLogo } from '../components/ChannelLogo'
 import { ApiError } from '../api'
 import rabbyLogo from '../assets/rabby.svg'
+import { AgentAutopilot } from '../components/AgentAutopilot'
 import { LiveDemo } from '../components/LiveDemo'
 import { SafePanel } from '../components/SafePanel'
 import { usePolling } from '../hooks/usePolling'
@@ -326,6 +327,7 @@ export function Setup() {
         </div>
 
         {s.live && <SafePanel safe={safe} ticked={s.protocols} />}
+        {s.live && <AgentAutopilot instructions={s.instructions} />}
         {s.live && <LiveDemo />}
       </div>
     </div>

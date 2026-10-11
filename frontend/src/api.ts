@@ -1,5 +1,5 @@
 import type {
-  Alert, Decision, DemoRun, DemoVariant, Dependency, DiscordAction, EvalMetrics, Health, Incident,
+  AgentCycle, AgentMoveRecord, AgentStatus, Alert, Decision, DemoRun, DemoVariant, Dependency, DiscordAction, EvalMetrics, Health, Incident,
   NotificationDelivery, SeriesPoint, StateResponse, VerifyResult,
 } from './types'
 import { ApiError } from './apiError'
@@ -79,6 +79,16 @@ export const api = {
   },
   /** Clicks on the withdraw buttons of the Discord alert, newest first (none in fixture mode). */
   discordActions(): Promise<DiscordAction[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/discord/actions') },
+  agentStatus(): Promise<AgentStatus> { return getJson('/api/agent/status') },
+  agentCycles(): Promise<AgentCycle[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/agent/cycles') },
+  agentMoves(): Promise<AgentMoveRecord[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/agent/moves') },
+  agentRun(instructions: string): Promise<AgentCycle> { return postJson('/api/agent/run', { instructions }) },
+  agentLoop(enabled: boolean, intervalS: number, instructions: string): Promise<AgentStatus> {
+    return postJson('/api/agent/loop', { enabled, interval_s: intervalS, instructions })
+  },
+  agentApprove(moveId: string, approver: string): Promise<AgentMoveRecord> {
+    return postJson(`/api/agent/moves/${encodeURIComponent(moveId)}/approve`, { approver })
+  },
   incidentPdfUrl(id: string): string { return `${API_URL}/api/incidents/${encodeURIComponent(id)}/report.pdf` },
   demoRun(runId: string): Promise<DemoRun> {
     return isFixtureMode() ? fixtureDb.demoRun(runId) : getJson(`/api/demo/runs/${encodeURIComponent(runId)}`)
