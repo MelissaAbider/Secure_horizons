@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from functools import lru_cache
 from typing import Any
 
@@ -14,6 +15,9 @@ from backend import settings
 
 _locks: dict[str, threading.Lock] = {}
 _locks_guard = threading.Lock()
+# Several machines may share a Fuji key (the deployer relays for every teammate): a clash takes the next nonce.
+NONCE_RETRIES = 4
+NONCE_CLASH = ("nonce too low", "replacement transaction underpriced", "already known", "nonce has already been used")
 
 
 @lru_cache(maxsize=1)
@@ -96,12 +100,19 @@ def send(fn, sender, value: int = 0) -> dict[str, Any]:
         lock = _locks.setdefault(sender.address, threading.Lock())
     client = w3()
     with lock:
-        nonce = client.eth.get_transaction_count(sender.address, "pending")
-        tx = fn.build_transaction({"from": sender.address, "nonce": nonce, "value": value, "chainId": settings.CHAIN_ID})
-        tx["gas"] = int(client.eth.estimate_gas(tx) * 1.3)
-        signed = sender.sign_transaction(tx)
-        raw = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction")
-        tx_hash = client.eth.send_raw_transaction(raw)
+        for attempt in range(NONCE_RETRIES):
+            nonce = client.eth.get_transaction_count(sender.address, "pending")
+            tx = fn.build_transaction({"from": sender.address, "nonce": nonce, "value": value, "chainId": settings.CHAIN_ID})
+            tx["gas"] = int(client.eth.estimate_gas(tx) * 1.3)
+            signed = sender.sign_transaction(tx)
+            raw = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction")
+            try:
+                tx_hash = client.eth.send_raw_transaction(raw)
+                break
+            except Exception as exc:  # another machine sent with the same key: take the next nonce
+                if attempt + 1 == NONCE_RETRIES or not any(m in str(exc).lower() for m in NONCE_CLASH):
+                    raise
+                time.sleep(1 + attempt)
     receipt = client.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
     return {
         "tx_hash": Web3.to_hex(tx_hash),
