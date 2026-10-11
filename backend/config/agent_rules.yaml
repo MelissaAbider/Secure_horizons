@@ -1,0 +1,16 @@
+# Guaranteed rules for the allocation agent (docs/product/CONTEXT.md, brief defaults).
+# The agent reads them through the get_rules tool; it cannot change them. Instructions typed in the dashboard
+# guide strategy only and never override these values.
+max_share_per_protocol_bps: 4000       # 40 % of the treasury per protocol after the move
+human_signature_above_usd: 100000      # a move above this value waits for a human
+max_moves_per_cycle: 2
+min_move_usd: 100
+block_deposits_on_alert: [high, critical]
+max_utilization_bps_for_deposit: 9800  # a market this busy may not let us exit
+
+# Paper treasury: used ONLY when DRY_RUN_ACTIONS=true and no Safe is connected, so the agent can be tried without
+# keys. Shown as "paper" everywhere; simulated moves update it in memory. Whole tokens.
+paper_portfolio:
+  sealed_integrations: [lend-avax:USDC, lend-eth:USDC, lend-eth:WETH]
+  idle: {USDC: "400000", WETH: "40"}
+  positions: {lend-eth:USDC: "100000"}
