@@ -48,6 +48,23 @@ Rules:
 
 Allowed status values: `not started`, `in progress`, `blocked`, `done`.
 
+## MVP tasks (`TASKS.md`)
+
+One row per task. The check is the task's `make test-tN`, plus its acceptance tests in `TASKS.md`.
+
+| Task | Name | Status | Demo steps covered | Check |
+| --- | --- | --- | --- | --- |
+| T0 | Repo foundations and shared contract | in progress | all (skeleton) | `make test-t0` |
+| T1 | On-chain contracts (local and Fuji) | done (bridge counters CR-003; Fuji redeploy with them in progress) | 1 (simplified vault), 5 | `make test-t1` |
+| T2 | Scenario: seed, attack, normal traffic, reset | done on local; Fuji seed + attack in progress | 5 | `make test-t2` |
+| T3 | Monitoring: collector, rules R1–R5 (v3, CR-003/CR-004), state API | done on fixtures and local chain (R1 critical at the forged release block); Fuji live run in progress | 5, 7 | `make test-t3` |
+| T4 | Response and evidence | in progress | 6, 7, 8 | `make test-t4` |
+| T5 | Incident and DORA draft | not started | 8 | `make test-t5` |
+| T6 | Dashboard | not started | all (screens) | `make test-t6` |
+| T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
+| T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
+| T9 | Jury deliverables | not started | pitch | `make test-t9` |
+
 ## Session log
 
 Newest first. One line. No narrative.

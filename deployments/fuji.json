@@ -1,0 +1,42 @@
+{
+  "network": "fuji",
+  "chain_id": 43113,
+  "deployed_at_block": 59283201,
+  "explorer": "https://testnet.snowtrace.io",
+  "assets": {
+    "USDC": "0x437B3dB6cEFD9687a5F3A4102E5494C1A647b697",
+    "WETH": "0x2E5776b3E08E1BC3DE327623695E18a73971BD63",
+    "rsETH": "0x3BeA4535157Ca72E427C76eE1F437D3210887953"
+  },
+  "contracts": {
+    "MockBridge": "0x9D32f99002f75976c45332474e7eBe4FC8391814",
+    "MockOracle": "0x2D6c3AfF3CA2Ce1e07783c1331D7a741B8D9f669",
+    "TreasuryVault": "0x5656296F81772cA3EBBaB8c59805fbFeb12D3B90",
+    "EvidenceRegistry": "0xba939532a7d249ae76182b4BA365E6b503A0104a"
+  },
+  "lending": [
+    {
+      "id": "lend-eth",
+      "label": "Lending protocol, Ethereum deployment (simulated)",
+      "address": "0xF0EbAE8387bAe020A87125cbB222D77dE0EBbffc"
+    },
+    {
+      "id": "lend-avax",
+      "label": "Lending protocol, Avalanche deployment (simulated)",
+      "address": "0xC6CBA37aEE2276d80918A9E8A4AB0B699d242c41"
+    }
+  ],
+  "roles": {
+    "deployer": "0x35f3349407233aC684cD59c55AF9f674EB2b6Dc2",
+    "owner": "0xa50d04078b0d6220967eC62eDB60d54BE7F1DA00",
+    "guardian": "0xF428F5C2c267cAC84E53b2bd12618dB04b522115",
+    "protocol_guardian": "0x976C19F6b78D1Db7793928b3F0ecBB84242B1935",
+    "attacker": "0x53E37D65776340c52C2Fc9915B9d9c294d91465E",
+    "evidence": "0x1ce3D8212AEe705Ee8b126eD1E66d8B1F90A24E8",
+    "bots": [
+      "0x5f3D4bebb8b5E14fd7e6e8328DEa962aE8470fCb",
+      "0x2e8980efb9ED56f3fc9c3299A457aFc0622E9eAC",
+      "0x76ada8E1C007694aDdC7F899678890498025b21e"
+    ]
+  }
+}

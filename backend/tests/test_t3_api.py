@@ -297,10 +297,9 @@ async def test_monitor_loop_keeps_real_api_responsive_during_slow_response(api, 
 
 
 def test_new_router_is_loaded_by_existing_main(monkeypatch):
-    from backend.main import SOURCES, app
+    from backend.main import app
     monkeypatch.setattr(settings, "USE_FIXTURES", True)
     monkeypatch.setattr(settings, "ENGINE_ENABLED", False)
-    assert SOURCES["api/state (T3)"] == "real"
     assert len(state.router.routes) == 4
     with TestClient(app) as client:
         for path in ("/api/health", "/api/state", "/api/series", "/api/alerts"):

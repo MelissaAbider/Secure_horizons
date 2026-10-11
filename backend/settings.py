@@ -86,18 +86,17 @@ def _anvil_key(index: int) -> str:
 
 
 def private_key(role: str) -> str:
-    """Private key of a role from .env. On NETWORK=local without a value, the matching anvil test account."""
+    """Private key of a role. On NETWORK=local, always the matching anvil test account (the .env keys are for fuji)."""
+    if NETWORK == "local":
+        return _anvil_key(ANVIL_INDEX[role])
     value = os.environ.get(ROLE_ENV[role], "")
     if value:
         return value
-    if NETWORK == "local":
-        return _anvil_key(ANVIL_INDEX[role])
     raise RuntimeError(f"Missing {ROLE_ENV[role]} in .env for NETWORK={NETWORK}")
 
 
 def bot_pks() -> list[str]:
-    """Three normal users. BOT_PKS is comma separated; on local, falls back to anvil accounts 6, 7, 8."""
-    keys = [k.strip() for k in os.environ.get("BOT_PKS", "").split(",") if k.strip()]
-    if keys or NETWORK != "local":
-        return keys
-    return [_anvil_key(i) for i in ANVIL_BOT_INDEXES]
+    """Three normal users: BOT_PKS (comma separated) on fuji, anvil accounts 6, 7, 8 on local."""
+    if NETWORK == "local":
+        return [_anvil_key(i) for i in ANVIL_BOT_INDEXES]
+    return [k.strip() for k in os.environ.get("BOT_PKS", "").split(",") if k.strip()]

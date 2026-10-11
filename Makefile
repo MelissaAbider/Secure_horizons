@@ -1,7 +1,6 @@
 # Root Makefile (TASKS.md 2.11). Owner: T0.
-# Each task adds its own targets in mk/tN.mk. NETWORK comes from .env or the command line, never from a makefile.
--include .env
-export
+# Each task adds its own targets in mk/tN.mk. The Python scripts read .env themselves (python-dotenv), and a variable
+# set on the command line wins over .env: NETWORK=local make deploy. Never set NETWORK in a makefile.
 
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 .DEFAULT_GOAL := help
@@ -13,10 +12,11 @@ include $(wildcard mk/*.mk)
 help: ## list the available targets
 	@grep -hE '^[a-zA-Z0-9_.-]+:.*## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
-setup: ## create .venv and install Python deps; npm and forge deps when their task has created them
+setup: ## create .venv, install Python deps, fetch the contracts' libraries, npm deps when the dashboard exists
 	python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt
+	git submodule update --init --recursive
 	@if [ -f frontend/package.json ]; then npm --prefix frontend install; fi
-	@if [ -f contracts/foundry.toml ]; then cd contracts && forge install; fi
+	@command -v forge >/dev/null || [ -x $(HOME)/.foundry/bin/forge ] || echo "Foundry missing: curl -L https://foundry.paradigm.xyz | bash && foundryup"
 
 backend: ## API on :8000 (one worker; every route serves fixtures until its task plugs in)
 	$(PYTHON) -m uvicorn backend.main:app --port 8000
