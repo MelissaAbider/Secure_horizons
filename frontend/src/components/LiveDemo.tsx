@@ -2,10 +2,11 @@ import { useState, type ReactNode } from 'react'
 import { api, ApiError } from '../api'
 import { useDashboardData } from '../DataContext'
 import { usePolling } from '../hooks/usePolling'
-import { formatUsd, formatUtc, shortHash } from '../lib/format'
+import { formatUsd, formatUtc, severityClass, shortHash } from '../lib/format'
 import { ruleLabel } from '../lib/labels'
 import type { DemoRun, DemoStep } from '../types'
-import { Pill, SeverityBadge } from './ui'
+import { ChannelLogo } from './ChannelLogo'
+import { Pill } from './ui'
 
 // Live part of the setup page, shown once monitoring is on: launch the attack on Fuji, follow it on chain and in
 // our monitor, then get the DORA draft and the Discord confirmation. Everything comes from the backend.
@@ -54,6 +55,14 @@ function BlockLink({ explorer, block }: { explorer?: string; block: number | nul
     : <span className="tabular-nums">{text}</span>
 }
 
+function Severity({ severity }: { severity: string }) {
+  return (
+    <span className={`inline-flex w-[84px] justify-center rounded px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-white ${severityClass[severity] ?? 'bg-slate-600'}`}>
+      {severity}
+    </span>
+  )
+}
+
 function stepTone(s: DemoStep): 'ok' | 'warn' | 'bad' | 'neutral' {
   return s.status === 'ok' ? 'ok' : s.status === 'blocked' ? 'warn' : s.status === 'failed' ? 'bad' : 'neutral'
 }
@@ -76,13 +85,13 @@ export function LiveDemo() {
   const steps = (attack?.steps ?? []).filter((s) => s.step in STEP_LABELS)
   const reached = new Set(steps.filter((s) => s.status !== 'failed').map((s) => s.step))
   const startBlock = attack?.steps.find((s) => s.step === 'start')?.block ?? undefined
-  const forgedBlock = attack?.steps.find((s) => s.step === 'forged_mint')?.block ?? undefined
   const startedAt = attack ? Date.parse(attack.started_at) - 5000 : undefined
   const detected = startBlock === undefined ? [] : (alerts.data ?? [])
     .filter((a) => a.block_number >= startBlock).sort((a, b) => a.block_number - b.block_number)
   const incident = startedAt === undefined ? undefined
     : (incidents.data ?? []).find((i) => Date.parse(i.opened_at) >= startedAt)
-  const sent = startedAt === undefined ? [] : (deliveries.data ?? []).filter((d) => Date.parse(d.at) >= startedAt).reverse()
+  // one summary alert per incident, sent as soon as the fraud is detected
+  const summary = startedAt === undefined ? undefined : (deliveries.data ?? []).find((d) => Date.parse(d.at) >= startedAt && d.incident_id)
   const failure = current?.status === 'failed' ? [...current.steps].reverse().find((s) => s.status === 'failed') : undefined
   const h = health.data
 
@@ -168,18 +177,18 @@ export function LiveDemo() {
 
             <div className={CARD}>
               <div className="flex items-center justify-between"><b>Our monitor</b><span className="text-[13px] text-fog-400">{detected.length} alert{detected.length === 1 ? '' : 's'}</span></div>
-              <table className="mt-3 w-full text-left text-[13px]" data-testid="detections">
+              <table className="mt-3 w-full table-fixed text-left text-[13px]" data-testid="detections">
+                <colgroup><col /><col className="w-[100px]" /><col className="w-[96px]" /></colgroup>
                 <thead className="font-mono text-[10px] uppercase tracking-[0.14em] text-fog-500">
-                  <tr><th className="py-2 pr-2">Rule</th><th className="pr-2">Severity</th><th className="pr-2">Block</th><th>After the forged release</th></tr>
+                  <tr><th className="py-2 pr-3">Rule</th><th className="pr-3">Severity</th><th className="text-right">Block</th></tr>
                 </thead>
                 <tbody>
-                  {detected.length === 0 && <tr><td colSpan={4} className="py-3 text-fog-400">Nothing abnormal yet.</td></tr>}
+                  {detected.length === 0 && <tr><td colSpan={3} className="py-3 text-fog-400">Nothing abnormal yet.</td></tr>}
                   {detected.map((a) => (
                     <tr key={a.id} className="border-t border-ink-700 align-top">
-                      <td className="py-2 pr-2"><div className="font-medium">{ruleLabel(a.rule_id)}</div><div className="text-[12px] text-fog-400">{a.explanation}</div></td>
-                      <td className="py-2 pr-2"><SeverityBadge severity={a.severity} /></td>
-                      <td className="py-2 pr-2"><BlockLink explorer={explorer} block={a.block_number} /></td>
-                      <td className="py-2 tabular-nums">{forgedBlock === undefined ? '—' : `+${a.block_number - forgedBlock} blocks`}</td>
+                      <td className="py-3 pr-3"><div className="font-medium leading-5">{ruleLabel(a.rule_id)}</div><div className="text-[12px] text-fog-400">{a.explanation}</div></td>
+                      <td className="py-3 pr-3"><Severity severity={a.severity} /></td>
+                      <td className="py-3 text-right leading-5"><BlockLink explorer={explorer} block={a.block_number} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -196,7 +205,7 @@ export function LiveDemo() {
                 <>
                   <dl className="mt-3 divide-y divide-ink-700 text-[14px]">
                     {[
-                      ['Incident', <span className="font-mono">{incident.id}</span>],
+                      ['Incident', <span key="id" className="font-mono">{incident.id}</span>],
                       ['Classification', `${incident.dora.thresholds_met.map((t) => t.split(' ')[0]).join(', ') || 'no threshold'} met`],
                       ['Exposure at detection', formatUsd(incident.exposure_usd)],
                       ['Detected', formatUtc(incident.detected_at)],
@@ -212,28 +221,30 @@ export function LiveDemo() {
             </div>
 
             <div className={CARD} data-testid="discord-card">
-              <div className="flex items-center justify-between"><b>Discord alerts</b>
+              <div className="flex items-center justify-between"><b>Discord</b>
                 {config.data && <Pill tone={config.data.discord_configured ? 'ok' : 'warn'}>{config.data.discord_configured ? 'webhook set' : 'webhook missing'}</Pill>}
               </div>
               {config.data && !config.data.discord_configured && (
                 <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-800">
-                  No Discord webhook yet: add ALERT_WEBHOOK_URL to .env and restart the backend. The alerts below were prepared but not sent.
+                  No Discord webhook yet: add ALERT_WEBHOOK_URL to .env and restart the backend. The summary below was prepared but not sent.
                 </p>
               )}
-              <ul className="mt-3 divide-y divide-ink-700 text-[14px]">
-                {sent.length === 0 && <li className="py-2 text-fog-400">No alert to send yet.</li>}
-                {sent.map((d, i) => (
-                  <li key={i} className="flex items-start justify-between gap-3 py-2">
-                    <div>
-                      <div className="font-medium">{d.rule_ids.map(ruleLabel).join(', ')}</div>
-                      <div className="text-[12px] text-fog-400">{formatUtc(d.at)}{d.attachment && ` · ${d.attachment} attached`}</div>
+              {!summary ? <p className="mt-3 text-fog-400">One summary alert goes out as soon as the fraud is detected.</p> : (
+                <div className="mt-3 flex items-start gap-4 rounded-xl border border-ink-700 p-4" data-testid="discord-summary">
+                  <ChannelLogo channel="discord" className="mt-0.5 h-7 w-7 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <b>Fraud alert{incident ? `: ${incident.title}` : ''}</b>
+                      <Pill tone={summary.status === 'sent' ? 'ok' : summary.status === 'failed' ? 'bad' : 'warn'}>
+                        {summary.status === 'sent' ? 'sent ✓' : summary.status === 'failed' ? `failed${summary.http_status ? ` ${summary.http_status}` : ''}` : 'not sent'}
+                      </Pill>
                     </div>
-                    <Pill tone={d.status === 'sent' ? 'ok' : d.status === 'failed' ? 'bad' : 'warn'}>
-                      {d.status === 'sent' ? 'sent ✓' : d.status === 'failed' ? `failed${d.http_status ? ` ${d.http_status}` : ''}` : 'not sent'}
-                    </Pill>
-                  </li>
-                ))}
-              </ul>
+                    <div className="mt-1 text-[13px] text-fog-400">
+                      {formatUtc(summary.at)}{incident && ` · exposure ${formatUsd(incident.exposure_usd)}`}{summary.attachment && ` · ${summary.attachment} attached`}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>

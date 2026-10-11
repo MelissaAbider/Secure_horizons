@@ -44,7 +44,7 @@ def test_payload_format_and_limits():
     payload = build_alert_payload([r1()], snap)
     embed = payload["embeds"][0]
     assert payload["allowed_mentions"] == {"parse": []} and payload["username"] == "Secure Horizons"
-    assert embed["color"] == 0xE53935 and payload["content"].startswith("🚨 **[CRITICAL]")
+    assert embed["color"] == 0xE53935 and payload["content"].startswith("🚨 **Fraud detected:")
     assert len(payload["content"]) <= 2000 and len(embed["title"]) <= 256 and len(embed["description"]) <= 4096
     names = [f["name"] for f in embed["fields"]]
     assert names[:4] == ["Exposure", "Withdrawable now", "Network / block", "Scope"]
@@ -70,12 +70,12 @@ def test_incident_dora_and_discord_flow(env):
     pdf = (data / "reports" / f"{incident.id}.pdf").read_bytes()
     assert pdf.startswith(b"%PDF")
 
-    assert [p["file"] is not None for p in posts] == [True, False, True]  # PDF on opening and on containment
+    assert len(posts) == 1 and posts[0]["url"] == WEBHOOK  # one fraud summary, at detection
     assert posts[0]["file"][0] == f"{incident.id}-DORA-draft.pdf" and posts[0]["file"][1].startswith(b"%PDF")
-    assert all(p["url"] == WEBHOOK for p in posts)
-    assert any(f["name"] == "Incident" for f in posts[1]["payload"]["embeds"][0]["fields"])
+    assert any(f["name"] == "Incident" for f in posts[0]["payload"]["embeds"][0]["fields"])
+    assert "R1_BRIDGE_INVARIANT" in posts[0]["payload"]["embeds"][0]["description"]
     sent = [e for e in incident.timeline if e.kind == "action"]
-    assert len(sent) == 3 and sent[0].text.endswith("(DORA draft attached)")
+    assert len(sent) == 1 and sent[0].text.endswith("(DORA draft attached)")
 
 
 def test_warnings_are_not_sent_and_high_alone_opens_no_incident(env):
@@ -84,8 +84,7 @@ def test_warnings_are_not_sent_and_high_alone_opens_no_incident(env):
     assert alerting.handle([later("R2_COLLATERAL_SURGE", "warning", 45201826, "lend-eth", "rsETH", 1)], snap) is None
     assert posts == []
     assert alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snap) is None
-    assert len(posts) == 1 and posts[0]["file"] is None
-    assert alerting.store.incidents() == []
+    assert posts == [] and alerting.store.incidents() == []  # a liquidity risk alone is not a fraud summary
 
 
 def test_no_webhook_still_writes_the_dora_draft(env, monkeypatch):
@@ -104,17 +103,17 @@ def test_failed_webhook_is_not_recorded_as_sent(env):
     assert not [e for e in incident.timeline if e.kind == "action"]
 
 
-def test_deliveries_record_every_attempt(env, monkeypatch):
-    alerting, _, _ = env
-    snap = snapshots()[45201812]
-    alerting.handle([r1()], snap)
-    alerting.post = lambda url, payload, file: 500
-    alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snap)
-    monkeypatch.setattr(settings, "ALERT_WEBHOOK_URL", "")
-    alerting.handle([later("R4_EXITABILITY_DROP", "high", 45201836, "lend-eth", "WETH", 375_000)], snap)
-    got = [(d.status, d.http_status, d.rule_ids, d.attachment is not None) for d in alerting.deliveries]
-    assert got == [("sent", 204, ["R1_BRIDGE_INVARIANT"], True), ("failed", 500, ["R3_LIQUIDITY_DRAIN"], False),
-                   ("not_configured", None, ["R4_EXITABILITY_DROP"], False)]
+def test_deliveries_record_every_attempt(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "DATA_DIR", tmp_path)
+    got = []
+    for url, code in ((WEBHOOK, 204), (WEBHOOK, 500), ("", None)):
+        monkeypatch.setattr(settings, "ALERT_WEBHOOK_URL", url)
+        alerting = Alerting(Store(runtime_dir=tmp_path / f"rt-{code}"), post=lambda u, payload, file, c=code: c)
+        alerting.handle([r1()], snapshots()[45201812])
+        alerting.handle([later("R3_LIQUIDITY_DRAIN", "high", 45201826, "lend-eth", "WETH", 375_000)], snapshots()[45201826])
+        got += [(d.status, d.http_status, d.rule_ids, d.attachment is not None) for d in alerting.deliveries]
+    assert got == [("sent", 204, ["R1_BRIDGE_INVARIANT"], True), ("failed", 500, ["R1_BRIDGE_INVARIANT"], True),
+                   ("not_configured", None, ["R1_BRIDGE_INVARIANT"], True)]
 
 
 def test_incident_routes_and_pdf_download(tmp_path, monkeypatch):

@@ -1,7 +1,7 @@
-"""Discord alert message (format from the T4/T5 branch, content from our live data). Owner: T4.
+"""Discord fraud summary (format from the T4/T5 branch, content from our live data). Owner: T4.
 
-One message per batch of T3 alerts: a short content line plus one embed (colour by severity, the alert explanations,
-exposure and withdrawable value read on-chain, the incident and its DORA status). Discord limits are respected
+One message per incident, sent when the fraud is detected: a short content line plus one embed (colour by severity,
+the alert explanation, exposure and withdrawable value read on-chain, the incident and its DORA status). Discord limits are respected
 (content 2000, title 256, description 4096, 25 fields, field value 1024) and the message can never ping anyone.
 The webhook URL is a secret (.env ALERT_WEBHOOK_URL): it is never printed or logged.
 """
@@ -63,14 +63,15 @@ def build_alert_payload(alerts: list[Alert], snapshot: Snapshot, incident: Optio
             f"`{incident.id}` · {incident.status} · DORA: **{'major' if d.is_major else 'not major'}** "
             f"(thresholds {', '.join(t.split(' ')[0] for t in d.thresholds_met) or 'none'})\n"
             f"Initial notification due {d.deadlines.initial_notification_due.strftime('%Y-%m-%d %H:%M UTC')} · "
-            f"draft PDF attached when the incident opens")[:1024], "inline": False})
+            f"DORA draft PDF attached")[:1024], "inline": False})
     fields.append({"name": "Response", "value": "Detection only: no automated withdrawal. Review the positions.",
                    "inline": False})
     return {
         "username": "Secure Horizons",
-        "content": f"{_ICON[top.severity]} **[{top.severity.upper()}] {top.title}** on {where}"[:2000],
+        "content": (f"{_ICON[top.severity]} **Fraud detected: {top.title}** · treasury exposure "
+                    f"{_usd(max(a.exposure_usd for a in alerts))}" + (" · DORA draft attached" if incident else ""))[:2000],
         "embeds": [{
-            "title": top.title[:256],
+            "title": f"Fraud detected: {top.title}"[:256],
             "description": "\n".join(f"**{a.rule_id}** ({a.severity}) {a.explanation}" for a in alerts)[:4096],
             "color": DISCORD_COLORS[top.severity],
             "fields": fields[:25],

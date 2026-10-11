@@ -1,4 +1,5 @@
-"""Detection-only response: T3 alerts -> Discord message; first critical alert -> incident + DORA draft PDF. Owner: T5.
+"""Detection-only response: the first critical T3 alert opens an incident, writes the DORA draft PDF and sends one
+Discord summary of the fraud with the PDF attached. Later alerts update the incident and its PDF. Owner: T5.
 
 Fund withdrawal (the T4 responder) is out of scope for now: nothing here sends a transaction.
 Every figure comes from the T3 alerts and the on-chain snapshot they were raised on.
@@ -17,7 +18,7 @@ from backend.dora_pdf import render_pdf
 from backend.models import Alert, DoraAssessment, Incident, NotificationDelivery, Snapshot, TimelineEvent
 
 log = logging.getLogger("backend.alerting")
-NOTIFY_MIN = "high"  # warnings stay on the dashboard, high and critical go to Discord
+NOTIFY_MIN = "high"  # warnings stay on the dashboard; high and critical alerts enter the incident
 RANK = notify.SEVERITY_RANK
 
 
@@ -85,11 +86,10 @@ class Alerting:
         if incident is not None:
             self.alerts += alerts
             incident = self._update(incident, snapshot)
-        attach = incident is not None and (opened or any(a.rule_id == "R5_CONTAINMENT" for a in alerts))
-        if self._send(alerts, snapshot, incident, attach) and incident is not None:
+        if opened and self._send(alerts, snapshot, incident):  # one summary per incident, as soon as the fraud is seen
             sent = TimelineEvent(at=_now(), block_number=snapshot.block_number, kind="action",
-                                 text=f"Operations channel alerted on Discord: {', '.join(a.rule_id for a in alerts)}"
-                                      + (" (DORA draft attached)" if attach else ""), ref=None)
+                                 text="Fraud summary sent to the operations channel on Discord (DORA draft attached)",
+                                 ref=None)
             incident = self._update(incident.model_copy(update={"timeline": incident.timeline + [sent]}), snapshot)
         return incident
 
@@ -164,13 +164,13 @@ class Alerting:
 
     # ---------- Discord ----------
 
-    def _send(self, alerts: list[Alert], snapshot: Snapshot, incident: Optional[Incident], attach: bool) -> bool:
-        name = f"{incident.id}-DORA-draft.pdf" if attach and incident is not None else None
+    def _send(self, alerts: list[Alert], snapshot: Snapshot, incident: Incident) -> bool:
+        name = f"{incident.id}-DORA-draft.pdf"
 
         def record(status: str, http_status: Optional[int] = None) -> bool:
             self.deliveries = (self.deliveries + [NotificationDelivery(
                 at=_now(), channel="discord", status=status, rule_ids=[a.rule_id for a in alerts],
-                incident_id=incident.id if incident else None, attachment=name, http_status=http_status)])[-200:]
+                incident_id=incident.id, attachment=name, http_status=http_status)])[-200:]
             return status == "sent"
 
         url = settings.ALERT_WEBHOOK_URL
@@ -180,7 +180,7 @@ class Alerting:
             log.warning("ALERT_WEBHOOK_URL is not a discord.com webhook: message not sent")
             return record("not_configured")
         payload = notify.build_alert_payload(alerts, snapshot, incident)
-        file = (name, (settings.DATA_DIR / "reports" / f"{incident.id}.pdf").read_bytes()) if name else None
+        file = (name, (settings.DATA_DIR / "reports" / f"{incident.id}.pdf").read_bytes())
         try:
             status = self.post(url, payload, file)
         except Exception as exc:

@@ -85,30 +85,3 @@ export function ruleHints(text: string, protocols: string[]): RuleHint[] {
   }
   return out
 }
-
-/** The policy file the signers would seal (what the engine and the vault enforce). */
-export function policyJson(s: SetupState) {
-  return {
-    version: 1,
-    vault: { safe: s.safe, network: s.network, threshold: `${s.threshold} of ${s.signers}` },
-    allowlist: s.protocols,
-    guaranteed_rules: {
-      max_per_protocol_pct: s.rules.maxPerProtocolPct,
-      protocol_caps_pct: s.rules.protocolCaps,
-      max_loss_per_move_pct: s.rules.maxLossPct,
-      human_signature_above_usd: s.rules.humanAboveUsd,
-      circuit_breaker: s.rules.circuitBreaker,
-    },
-    detection_rules: ['R1_BRIDGE_INVARIANT', 'R2_COLLATERAL_SURGE', 'R3_LIQUIDITY_DRAIN', 'R4_EXITABILITY_DROP', 'R5_CONTAINMENT'],
-    strategy_instructions: s.instructions,
-    channels: Object.entries(s.channels).filter(([, on]) => on).map(([k]) => k),
-  }
-}
-
-export async function fingerprint(obj: unknown): Promise<string> {
-  try {
-    const bytes = new TextEncoder().encode(JSON.stringify(obj))
-    const h = await crypto.subtle.digest('SHA-256', bytes)
-    return '0x' + Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, '0')).join('')
-  } catch { return '' }
-}

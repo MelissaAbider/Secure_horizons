@@ -1,19 +1,13 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { CHANNEL_NAMES, ChannelLogo } from '../components/ChannelLogo'
 import { LiveDemo } from '../components/LiveDemo'
-import { getOperator } from '../DataContext'
 import {
-  PROTOCOLS, defaultSetup, fingerprint, isAddress, loadSetup, policyJson, ruleHints, saveSetup, shortAddr, stepsDone,
+  PROTOCOLS, defaultSetup, isAddress, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
   type SetupState,
 } from '../lib/setup'
 
 const STEPS = ['Connect your Safe', 'Choose your protocols', 'Set your agent', 'Start monitoring']
 const NEXT = ['connect your Safe.', 'choose your protocols.', 'set your agent.', 'start monitoring.']
-
-function greeting(d = new Date()): string {
-  const h = d.getHours()
-  return h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night'
-}
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <div className="font-mono text-[12px] font-medium uppercase tracking-[0.24em] text-fog-400">{children}</div>
@@ -54,13 +48,9 @@ export function Setup() {
   const firstOpen = done.findIndex((d) => !d)
   const [open, setOpen] = useState<number>(firstOpen === -1 ? -1 : firstOpen)
   const [addrError, setAddrError] = useState('')
-  const [fp, setFp] = useState('')
-  const name = getOperator()
-  const policy = useMemo(() => policyJson(s), [s])
   const hints = ruleHints(s.instructions, s.protocols).filter((h) => s.rules.protocolCaps[h.protocolId] !== h.pct)
 
   useEffect(() => { saveSetup(s) }, [s])
-  useEffect(() => { let on = true; fingerprint(policy).then((h) => { if (on) setFp(h) }); return () => { on = false } }, [policy])
 
   const update = (p: Partial<SetupState>) => setS((x) => ({ ...x, ...p }))
   const goNext = (i: number) => setOpen(i + 1 < 4 ? i + 1 : -1)
@@ -77,14 +67,8 @@ export function Setup() {
     setOpen(i)
     document.getElementById(`step-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
-  function download() {
-    const blob = new Blob([JSON.stringify({ ...policy, fingerprint: fp }, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = 'treasury-guard-policy.json'; a.click()
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-  }
 
-  const nextLabel = firstOpen === -1 ? 'Open the dashboard' : STEPS[firstOpen]
+  const nextLabel = STEPS[Math.max(firstOpen, 0)]
 
   return (
     <div className="setup-bg relative -mx-4 -mt-4 min-h-[calc(100vh-80px)] px-4 pb-16 pt-12 sm:-mx-6 sm:px-6">
@@ -94,13 +78,11 @@ export function Setup() {
           <div>
             <Eyebrow>Setup</Eyebrow>
             <h1 className="mt-3 font-display text-[clamp(2.2rem,4vw,3.2rem)] font-semibold leading-none tracking-[-0.035em]">
-              {greeting()}{name && name !== 'dashboard-operator' ? ` ${name}` : ''}
+              Keepers of value
             </h1>
             <p className="mt-3 text-lg text-fog-400">{firstOpen === -1 ? 'Your treasury is under watch.' : `Next step: ${NEXT[firstOpen]}`}</p>
           </div>
-          {firstOpen === -1
-            ? <Link to="/" className={BTN}>Open the dashboard <Arrow /></Link>
-            : <button onClick={nextAction} className={BTN}>{nextLabel} <Arrow /></button>}
+          {firstOpen !== -1 && <button onClick={nextAction} className={BTN}>{nextLabel} <Arrow /></button>}
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.45fr_1fr]">
@@ -148,21 +130,13 @@ export function Setup() {
                                 placeholder="0x…" spellCheck={false} className={`${INPUT} font-mono`} />
                             </label>
                             {addrError && <p role="alert" className="text-[14px] text-rose-glow">{addrError}</p>}
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <label className="block">
-                                <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Network</span>
-                                <select value={s.network} onChange={(e) => update({ network: e.target.value as SetupState['network'] })} className={INPUT}>
-                                  <option value="fuji">Avalanche Fuji (test network)</option>
-                                  <option value="local">Local (anvil)</option>
-                                </select>
-                              </label>
-                              <label className="block">
-                                <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Signatures needed</span>
-                                <select value={`${s.threshold}/${s.signers}`} onChange={(e) => { const [a, b] = e.target.value.split('/').map(Number); update({ threshold: a, signers: b }) }} className={INPUT}>
-                                  {['2/3', '3/5', '4/7'].map((v) => <option key={v} value={v}>{v.replace('/', ' of ')}</option>)}
-                                </select>
-                              </label>
-                            </div>
+                            <label className="block">
+                              <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Network</span>
+                              <select value={s.network} onChange={(e) => update({ network: e.target.value as SetupState['network'] })} className={INPUT}>
+                                <option value="fuji">Avalanche Fuji (test network)</option>
+                                <option value="local">Local (anvil)</option>
+                              </select>
+                            </label>
                             <button data-testid="connect-safe" onClick={connect} className={BTN}>Connect the Safe <Arrow /></button>
                           </div>
                         )}
@@ -284,19 +258,18 @@ export function Setup() {
               <div>
                 <div className="font-display text-[22px] font-semibold tracking-[-0.02em]">Treasury Guard</div>
                 <div data-testid="guard-status" className={`text-[15px] ${s.live ? 'text-green-700' : 'text-fog-400'}`}>
-                  {s.live ? `Watching ${s.network === 'fuji' ? 'Avalanche Fuji' : 'local chain'} · every block` : s.connected ? 'Connected, not watching yet' : 'Not connected'}
+                  {s.live ? `Watching ${s.network === 'fuji' ? 'Avalanche Fuji' : 'local chain'}` : s.connected ? 'Connected, not watching yet' : 'Not connected'}
                 </div>
               </div>
             </div>
 
             <dl className="mt-7 divide-y divide-ink-700 text-[15px]">
               {[
-                ['Safe', s.connected ? <span className="font-mono">{shortAddr(s.safe)} · {s.threshold} of {s.signers}</span> : '—'],
+                ['Safe', s.connected ? <span key="safe" className="font-mono">{shortAddr(s.safe)}</span> : '—'],
                 ['Allowed', s.protocols.length ? s.protocols.map((p) => PROTOCOLS.find((x) => x.id === p)?.label).join(', ') : '—'],
                 ['Max per protocol', `${s.rules.maxPerProtocolPct}%`],
                 ...Object.entries(s.rules.protocolCaps).map(([pid, pct]) => [`Max on ${PROTOCOLS.find((p) => p.id === pid)?.label ?? pid}`, `${pct}%`]),
                 ['Human signature', `above $${s.rules.humanAboveUsd.toLocaleString('en-US')}`],
-                ['Circuit breaker', s.rules.circuitBreaker ? 'ON' : 'off'],
               ].map(([k, v]) => (
                 <div key={String(k)} className="flex items-start justify-between gap-4 py-3">
                   <dt className="text-fog-400">{k}</dt><dd className="text-right font-medium">{v}</dd>
@@ -308,28 +281,21 @@ export function Setup() {
               <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Alerts go to</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(['discord', 'telegram', 'slack', 'email'] as const).map((c) => (
-                  <button key={c} onClick={() => update({ channels: { ...s.channels, [c]: !s.channels[c] } })}
-                    className={`rounded-full border px-4 py-2 text-[14px] capitalize transition ${s.channels[c] ? 'border-fog-100 bg-fog-100 text-ink-950' : 'border-ink-700 bg-white text-fog-300'}`}>{c}</button>
+                  <button key={c} type="button" aria-label={CHANNEL_NAMES[c]} aria-pressed={s.channels[c]} title={CHANNEL_NAMES[c]}
+                    onClick={() => update({ channels: { ...s.channels, [c]: !s.channels[c] } })}
+                    className={`grid h-12 w-12 place-items-center rounded-2xl border transition ${s.channels[c] ? 'border-signal-violet bg-white shadow-soft' : 'border-ink-700 bg-white opacity-40 grayscale hover:opacity-70'}`}>
+                    <ChannelLogo channel={c} className="h-6 w-6" />
+                  </button>
                 ))}
               </div>
-              <p className="mt-2 text-[13px] text-fog-400">For alerts, questions and pause. Never to widen the agent's rights.</p>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-ink-950 px-4 py-3">
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-fog-400">Policy fingerprint</div>
-              <div data-testid="policy-fp" className="mt-1 truncate font-mono text-[13px]">{fp || '—'}</div>
-            </div>
 
-            <div className="mt-auto grid gap-3 pt-7">
-              {s.live
-                ? <Link to="/" className={`${BTN} w-full py-4`}>Open the dashboard <Arrow /></Link>
-                : <button onClick={nextAction} className={`${BTN_LIGHT} w-full py-4`}>{nextLabel} <Arrow /></button>}
-              <button onClick={download} className="text-[14px] font-medium text-signal-violet hover:underline">Download the policy file</button>
-              {(s.connected || s.live) && (
-                <button onClick={() => { setS(defaultSetup()); setOpen(0) }}
-                  className="text-[13px] text-fog-400 hover:text-fog-100">Start over</button>
-              )}
-            </div>
+            {!s.live && (
+              <div className="mt-auto pt-7">
+                <button onClick={nextAction} className={`${BTN_LIGHT} w-full py-4`}>{nextLabel} <Arrow /></button>
+              </div>
+            )}
           </aside>
         </div>
 
