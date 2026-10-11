@@ -160,9 +160,27 @@ contract ScenarioTest is Test {
     // ---------- the attack ----------
 
     function test_forged_release_drops_backing_to_1935() public {
+        assertEq(bridge.conservationGap(), 0);
+        assertEq(bridge.sourceNonce(), bridge.destinationNonce());
         bridge.forgedRelease(attacker, 5000 * E18);
         assertEq(rseth.totalSupply(), 6200 * E18);
         assertEq(bridge.backingRatioBps(), 1935);
+        assertEq(bridge.conservationGap(), 5000 * E18);
+        assertEq(bridge.destinationNonce(), bridge.sourceNonce() + 1);
+        assertEq(bridge.totalBacking(), bridge.sourceLocked());
+    }
+
+    function test_bridge_pause_stops_both_flows() public {
+        vm.prank(attacker);
+        vm.expectRevert("Bridge: only owner");
+        bridge.pause();
+        bridge.pause();
+        bridge.pause(); // idempotent
+        vm.expectRevert("Bridge: paused");
+        bridge.forgedRelease(attacker, 1);
+        vm.prank(borrower);
+        vm.expectRevert("Bridge: paused");
+        bridge.deposit(1);
     }
 
     function test_drain_without_reaction_leaves_vault_stuck() public {

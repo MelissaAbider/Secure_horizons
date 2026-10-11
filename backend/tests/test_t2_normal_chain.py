@@ -31,7 +31,7 @@ def normal_run(tmp_path_factory):
         yield {"rec": rec, "lines": lines, "data": path, "rseth_supply": chain.token("rsETH").functions.totalSupply().call(),
                "backing": chain.bridge().functions.backingRatioBps().call(),
                "forged": len(chain.bridge().events.Released().get_logs(from_block=rec.start_block,
-                                                                       argument_filters={"backed": False}))}
+                                                                       argument_filters={"sourceVerified": False}))}
 
 
 def test_normal_safe(normal_run):
