@@ -90,8 +90,31 @@ function DiscordActionRow({ action, explorer }: { action: DiscordAction; explore
   )
 }
 
+function DetectionLayer({ index, name, id, detail, available, alerting }: {
+  index: string; name: string; id: string; detail: string; available: boolean; alerting: boolean
+}) {
+  const label = !available ? 'Unavailable' : alerting ? 'Threat detected' : 'Monitoring'
+  const dot = !available ? 'bg-slate-300' : alerting ? 'bg-amber-500 shadow-[0_0_0_6px_rgba(245,158,11,.12)]' : 'bg-emerald-500'
+  return (
+    <div className="relative flex min-w-0 flex-1 gap-4 px-1 py-3" data-layer={id}>
+      <div className="flex flex-col items-center">
+        <span className="font-mono text-[10px] font-semibold tracking-[0.16em] text-fog-500">{index}</span>
+        <span className={`mt-3 h-2.5 w-2.5 rounded-full transition ${dot}`} />
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <b className="text-[15px] text-fog-100">{name}</b>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fog-500">{id}</span>
+        </div>
+        <p className="mt-1 text-[12px] leading-5 text-fog-400">{detail}</p>
+        <p className={`mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] ${alerting ? 'text-amber-600' : available ? 'text-emerald-600' : 'text-slate-400'}`}>{label}</p>
+      </div>
+    </div>
+  )
+}
+
 export function LiveDemo() {
-  const { health, state, alerts } = useDashboardData()
+  const { health, state, alerts, layers } = useDashboardData()
   const config = usePolling(() => api.notificationsConfig(), 15000)
   const [runId, setRunId] = useState<string | undefined>(loadRunId)
   const [first, setFirst] = useState<DemoRun>()
@@ -119,6 +142,23 @@ export function LiveDemo() {
   const clicks = startedAt === undefined ? [] : (discordActions.data ?? []).filter((a) => Date.parse(a.at) >= startedAt)
   const failure = current?.status === 'failed' ? [...current.steps].reverse().find((s) => s.status === 'failed') : undefined
   const h = health.data
+  const layerState = layers.data
+  const incidentLayers = new Set<'rules' | 'ml' | 'llm'>()
+  for (const alert of detected) {
+    if (alert.rule_id.startsWith('R6_')) incidentLayers.add('ml')
+    else if (alert.rule_id.startsWith('R7_')) incidentLayers.add('llm')
+    else if (/^R[1-5]_/.test(alert.rule_id)) incidentLayers.add('rules')
+  }
+  const alertingLayers = attack ? incidentLayers : new Set(layerState?.alerting ?? [])
+  const layerCount = alertingLayers.size
+  const agreement = attack
+    ? layerCount === 3 ? 'full' : layerCount === 2 ? 'partial' : layerCount === 1 ? 'single' : 'none'
+    : layerState?.agreement ?? 'loading'
+  const consensusLabel = agreement === 'full' ? 'Confirmed by all 3 monitors'
+    : agreement === 'partial' ? 'Confirmed by 2 monitors'
+      : agreement === 'single' ? 'Detected by 1 monitor'
+        : agreement === 'none' ? 'No threat detected' : 'Checking monitors…'
+  const rulesAvailable = Boolean(h?.engine_running && h.rpc_ok)
 
   async function start(call: () => Promise<DemoRun>) {
     setMsg(undefined)
@@ -150,6 +190,21 @@ export function LiveDemo() {
             {running && attack ? 'Attack in progress…' : 'Launch the attack on Fuji'} <span aria-hidden>→</span>
           </button>
           <button data-testid="reset-demo" disabled={running} onClick={reset} className={BTN_LIGHT}>Reset the test network</button>
+        </div>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-ink-700 bg-white" data-testid="surveillance-layers">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-700 px-5 py-4">
+          <div>
+            <Eyebrow>Security monitoring</Eyebrow>
+            <p className="mt-1 text-[13px] text-fog-400">Three independent monitors watch every position and cross-check each other.</p>
+          </div>
+          <Pill tone={agreement === 'full' ? 'bad' : agreement === 'partial' ? 'warn' : 'neutral'}>{consensusLabel}</Pill>
+        </div>
+        <div className="relative grid px-5 py-2 md:grid-cols-3 md:divide-x md:divide-ink-700">
+          <DetectionLayer index="01" name="Blockchain safety checks" id="Deterministic controls" detail="Verifies bridge backing, collateral movements, market liquidity, withdrawals and emergency freezes." available={rulesAvailable} alerting={alertingLayers.has('rules')} />
+          <DetectionLayer index="02" name="Attack pattern detection" id="Machine learning" detail="Compares live market behavior with normal activity to catch unusual attack sequences." available={Boolean(layerState?.ml_available)} alerting={alertingLayers.has('ml')} />
+          <DetectionLayer index="03" name="Independent risk review" id="AI analysis" detail="Reviews the same evidence independently and explains whether the events form a coordinated attack." available={Boolean(layerState?.agent_available)} alerting={alertingLayers.has('llm')} />
         </div>
       </div>
 

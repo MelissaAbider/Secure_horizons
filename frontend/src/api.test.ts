@@ -39,4 +39,11 @@ describe('api client (T6-05)', () => {
     await api.demoAttack(7, 'slow')
     expect(f.mock.calls[0][1]?.body).toBe('{"seed":7,"variant":"slow"}')
   })
+  it('reads the real three-layer status header', async () => {
+    vi.stubEnv('VITE_USE_FIXTURES', 'false')
+    const layers = { alerting: ['rules', 'ml', 'llm'], agreement: 'full', agent_available: true, ml_available: true }
+    const response = new Response(JSON.stringify(stateFixture), { status: 200, headers: { 'X-Monitoring-Layers': JSON.stringify(layers) } })
+    vi.stubGlobal('fetch', vi.fn(async () => response))
+    await expect(api.monitoringLayers()).resolves.toEqual(layers)
+  })
 })
