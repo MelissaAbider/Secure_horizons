@@ -1,29 +1,29 @@
 {
   "network": "fuji",
   "chain_id": 43113,
-  "deployed_at_block": 59287440,
+  "deployed_at_block": 59292214,
   "explorer": "https://testnet.snowtrace.io",
   "assets": {
-    "USDC": "0xAd0308595D1d1fC240d87eb7d8C3405F598eFf01",
-    "WETH": "0x7583eAAC7E2458d317dbBD8Daa53A130C6F5f28e",
-    "rsETH": "0x3FcE419fA2A361c1DA16Ee637d6C4Bc2eB957932"
+    "USDC": "0x0a7BF4fb2c6dc61B5c04222341774fb70251A3c7",
+    "WETH": "0x151167469EF5cD76651cE7e54eB357E1d9E3D30c",
+    "rsETH": "0x8967F55b6071b5B944C8a461fc05ABFE127D02EA"
   },
   "contracts": {
-    "MockBridge": "0x2B22922c92aff241374E2E86c6cc06c0A164715D",
-    "MockOracle": "0xb7D3E9f8b237e4dC64eE84c109ec7f4AEB883075",
-    "TreasuryVault": "0xcB011cc4D2E4E3670A67Ce02766b7B3762A03617",
-    "EvidenceRegistry": "0x36b647CB4b69FBF8501082f79a417488592BA632"
+    "MockBridge": "0x8B1831Ebd09755697184E515882be748185FbC47",
+    "MockOracle": "0x52722756DdaD60c782Ab8D40777dD6AB9c8a2371",
+    "TreasuryVault": "0x162CF025729580ADDee4D26F580701480A52C9e7",
+    "EvidenceRegistry": "0xb3391c5CeC1f521E21596cD51508149b544E63D4"
   },
   "lending": [
     {
       "id": "lend-eth",
       "label": "Lending protocol, Ethereum deployment (simulated)",
-      "address": "0x56EEB8CD7294B063228Be3DfB4848EEBED4b2841"
+      "address": "0xD9Cb01Cf8E2050f9F7225eD90DcC715630052Bd6"
     },
     {
       "id": "lend-avax",
       "label": "Lending protocol, Avalanche deployment (simulated)",
-      "address": "0x559e5226ccFD1D03EAF5EAC8de2CfAcEefCD5773"
+      "address": "0xBB8BecC3F102B2C974f759562f9859Ec07eE5174"
     }
   ],
   "roles": {

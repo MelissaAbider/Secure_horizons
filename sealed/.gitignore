@@ -1,0 +1,4 @@
+# a local anvil deployment changes at every restart; the fuji one is committed
+deployments/local.json
+# the dashboard writes the connected owner's Safe here
+deployments/fuji.json
