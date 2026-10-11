@@ -17,7 +17,7 @@ const INPUT = 'w-full rounded-xl border border-ink-700 bg-white px-3 py-2.5 text
 
 function short(a?: string): string { return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '—' }
 
-export function SafePanel({ safe, ticked }: { safe: Polled<SafeStatus>; ticked: string[] }) {
+export function SafePanel({ safe, ticked, onDisconnect }: { safe: Polled<SafeStatus>; ticked: string[]; onDisconnect?: () => void }) {
   const { state } = useDashboardData()
   const d = safe.data
   const [integration, setIntegration] = useState('')
@@ -67,7 +67,8 @@ export function SafePanel({ safe, ticked }: { safe: Polled<SafeStatus>; ticked: 
           <h2 className="mt-3 font-display text-[26px] font-semibold tracking-[-0.02em]">
             {explorer ? <a href={`${explorer}/address/${d.safe}`} target="_blank" rel="noreferrer" className="hover:underline">{short(d.safe)}</a> : short(d.safe)}
           </h2>
-          <p className="mt-1 text-[14px] text-fog-400">Owned by {short(d.owner)} alone · the platform relays, it holds no key</p>
+          <p className="mt-1 text-[14px] text-fog-400">Owned by {short(d.owner)} alone · the platform relays, it holds no key
+            {onDisconnect && <> · <button onClick={onDisconnect} className="font-medium text-rose-glow hover:underline">Disconnect</button></>}</p>
         </div>
         <Pill tone={d.seal_status === 'sealed' ? 'ok' : 'warn'}>{d.seal_status === 'sealed' ? 'list sealed' : d.seal_status === 'stale' ? 're-seal needed' : 'not sealed'}</Pill>
       </div>

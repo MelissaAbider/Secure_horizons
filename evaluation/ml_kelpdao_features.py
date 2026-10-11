@@ -82,7 +82,6 @@ def per_block(events: list[dict]) -> dict[int, dict]:
 def windows(blocks: dict[int, dict], lo_block: int, hi_block: int, span: int, step: int, attack_block: int | None, horizon: int,
             baseline: dict) -> list[dict]:
     rows = []
-    rate_series = sorted((b, v["bor_rate"]) for b, v in blocks.items() if v["bor_rate"] is not None)
     last_rate = {}
     cur = None
     for b in range(lo_block, hi_block + 1):

@@ -1,6 +1,6 @@
 # Secure Horizons — project context
 
-Source: `projet-en-bref.pdf` (Track 1 "Guardians of Value", 10–11 October 2026). The PDF is in French. This file is the English working copy. If they diverge, the PDF wins. Update this file before coding the divergence.
+Source: `docs/brief/projet-en-bref.pdf` (Track 1 "Guardians of Value", 10–11 October 2026). The PDF is in French. This file is the English working copy. If they diverge, the PDF wins. Update this file before coding the divergence.
 
 All agent-facing docs, code, commits, UI copy, and proofs are in English. Do not add French product docs.
 

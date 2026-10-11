@@ -38,6 +38,7 @@ async function call<T>(path: string, body?: unknown): Promise<T> {
 export const safeApi = {
   status: () => call<SafeStatus>(''),
   connect: (owner: string) => call<SafeStatus>('/connect', { owner }),
+  disconnect: () => call<SafeStatus>('/disconnect', {}),
   prepare: (action: 'enable_module' | 'seal', integrations: string[] = []) => call<SafeRequest>('/prepare', { action, integrations }),
   submit: (safeTxHash: string, signature: string) => call<{ tx_hash: string; status: SafeStatus }>('/submit', { safe_tx_hash: safeTxHash, signature }),
   fund: () => call<{ txs: string[]; status: SafeStatus }>('/fund', {}),

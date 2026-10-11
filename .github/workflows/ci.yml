@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint and test (contracts, backend, dashboard)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Local anvil chain: every role uses anvil's public test accounts, so CI needs no secret.
+      NETWORK: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install
+        run: make setup
+
+      - name: Lint
+        run: make lint
+
+      - name: Start a local chain and deploy the contracts
+        run: |
+          nohup anvil --silent > anvil.log 2>&1 &
+          for _ in $(seq 1 30); do cast block-number > /dev/null 2>&1 && break; sleep 1; done
+          make deploy
+
+      - name: Test
+        run: make test

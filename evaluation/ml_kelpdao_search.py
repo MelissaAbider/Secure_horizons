@@ -15,8 +15,6 @@ Output: data/external/ml/kelpdao/search_results.json, search_report.md
 """
 from __future__ import annotations
 
-import itertools
-import json
 import warnings
 from pathlib import Path
 

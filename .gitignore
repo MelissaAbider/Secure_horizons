@@ -36,6 +36,6 @@ data/external/*
 deployments/local.json
 deployments/*.pending.json
 deployments/*.raw.json
-deployments/history/local-*
+deployments/history/
 frontend/.env*
 !frontend/.env.example

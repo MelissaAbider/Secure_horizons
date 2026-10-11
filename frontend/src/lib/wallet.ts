@@ -48,6 +48,11 @@ export async function connectWallet(chainId: number): Promise<string> {
   return accounts[0]
 }
 
+/** Drops this site's access in the wallet (EIP-2255) so the next connect asks again; ignored where unsupported. */
+export async function disconnectWallet(): Promise<void> {
+  try { await wallet().request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }) } catch { /* not supported */ }
+}
+
 /** EIP-712 signature of a Safe transaction prepared by the backend. */
 export async function signTypedData(account: string, typedData: unknown): Promise<string> {
   return await wallet().request({ method: 'eth_signTypedData_v4', params: [account, JSON.stringify(typedData)] }) as string

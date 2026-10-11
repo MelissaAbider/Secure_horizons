@@ -7,7 +7,9 @@ relays them and pays the gas: it never holds the manager's key. Allocations go t
 """
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 from typing import Any, Optional
 
 from backend import chain, settings
@@ -22,6 +24,36 @@ TEST_FUNDS = {"USDC": 1_000_000, "WETH": 500}  # what the Safe holds after "fund
 
 def _state() -> Optional[dict[str, Any]]:
     return S.load_state() if (S.STATE_DIR / f"{settings.NETWORK}.json").exists() else None
+
+
+def _known_dir() -> Path:
+    """Every Safe this backend created, one file per owner: reconnecting a wallet brings its Safe back."""
+    return S.STATE_DIR / f"{settings.NETWORK}-safes"
+
+
+def _remember(state: dict[str, Any]) -> None:
+    folder = _known_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{state['owners'][0].lower()}.json").write_text(json.dumps(state, indent=2) + "\n")
+
+
+def _known_safe(owner: str) -> Optional[dict[str, Any]]:
+    path = _known_dir() / f"{owner.lower()}.json"
+    if not path.exists():
+        return None
+    state = json.loads(path.read_text())
+    on_chain = state.get("chain_id") == settings.CHAIN_ID and len(chain.w3().eth.get_code(state["safe"])) > 0
+    return state if on_chain else None  # a Safe from a previous anvil run no longer exists
+
+
+def disconnect() -> dict[str, Any]:
+    """Forgets the connected wallet: its Safe stays on-chain (and is restored if the same wallet connects again),
+    the monitor goes back to the scenario vault until someone connects."""
+    state = _state()
+    if state:
+        _remember(state)
+        (S.STATE_DIR / f"{settings.NETWORK}.json").unlink()
+    return status()
 
 
 def _units(symbol: str, amount: int) -> int:
@@ -82,7 +114,8 @@ def fund(state: dict[str, Any]) -> list[str]:
 
 
 def connect(owner: str) -> dict[str, Any]:
-    """The Safe of this owner: reused when it exists, otherwise created (1 of 1) with its module, then funded."""
+    """The Safe of this owner: the connected one, or one this backend created for it before, otherwise a new one
+    (1 of 1) with its module; then topped up with test tokens."""
     from web3 import Web3
 
     owner = Web3.to_checksum_address(owner)
@@ -90,7 +123,13 @@ def connect(owner: str) -> dict[str, Any]:
     reuse = state and state["owners"] == [owner] and len(chain.w3().eth.get_code(state["safe"]))
     relayer = chain.account("deployer")
     txs: dict[str, str] = {}
-    if not reuse:
+    if state and not reuse:
+        _remember(state)  # another wallet was connected: keep its Safe to restore it later
+    known = None if reuse else _known_safe(owner)
+    if known:
+        state = known
+        S.save_state(state)
+    elif not reuse:
         operator = S.operator_account()
         fund_operator(operator, relayer)
         singleton, factory = S.safe_singleton_and_factory(relayer)
@@ -104,6 +143,7 @@ def connect(owner: str) -> dict[str, Any]:
                  "root": "0x" + "00" * 32, "txs": txs, "sealed": None,
                  "assets": {a: chain.load_deployment()["assets"][a] for a in TEST_FUNDS}}
         S.save_state(state)
+    _remember(state)
     fund(state)
     return status()
 

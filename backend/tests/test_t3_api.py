@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from backend import engine, fixtures, rules, settings
+from backend import engine, fixtures, settings
 from backend.api import state
 from backend.models import Health, SeriesPoint, StateResponse
 from backend.store import Store

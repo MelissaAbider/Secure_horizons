@@ -2,7 +2,7 @@
 
 GET  /agent/status                 loop on/off, model configured, dry-run, guaranteed rules
 POST /agent/run                    one cycle now {"instructions": "..."}
-POST /agent/loop                   {"enabled": true, "interval_s": 30, "instructions": "..."}
+POST /agent/loop                   {"enabled": true, "interval_s": 43200, "instructions": "..."}  (12 h; first cycle at once)
 GET  /agent/cycles                 recorded cycles, newest first (tool calls, moves, summary, record_hash)
 GET  /agent/moves                  every proposal and its verdict, newest first
 POST /agent/moves/{id}/approve     a human signs a move above the threshold {"approver": "..."}
@@ -27,7 +27,7 @@ class RunBody(BaseModel):
 
 class LoopBody(BaseModel):
     enabled: bool
-    interval_s: float = Field(default=30, ge=15, le=3600)
+    interval_s: float = Field(default=12 * 3600, ge=15, le=24 * 3600)  # proposals every 12 h by default
     instructions: str = Field(default="", max_length=autopilot.MAX_INSTRUCTIONS)
 
 

@@ -106,3 +106,17 @@ def test_safe_routes(live):
         assert client.post("/api/safe/allocate", json={"integration": "lend-eth:WETH", "action": "withdraw", "amount": "max"}).status_code == 409
     finally:
         demo._RUNS.pop("RUN-busy")
+
+
+def test_disconnect_then_another_wallet_then_back(live):
+    from backend.collector import build_snapshot
+
+    first, second = Account.create(), Account.create()
+    a = live.connect(first.address)
+    assert live.disconnect()["connected"] is False
+    snap = build_snapshot(chain.w3().eth.block_number)
+    assert snap.vault.address == chain.load_deployment()["contracts"]["TreasuryVault"]  # no Safe: back to the vault
+    b = live.connect(second.address)  # a new wallet: a new Safe it alone owns
+    assert b["safe"] != a["safe"] and b["owner"] == second.address and not b["module_enabled"]
+    again = live.connect(first.address)  # the first wallet comes back: its own Safe, nothing redeployed
+    assert again["safe"] == a["safe"] and again["owner"] == first.address

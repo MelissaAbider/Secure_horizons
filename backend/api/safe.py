@@ -68,6 +68,13 @@ def safe_connect(body: ConnectBody) -> dict:
     return _guarded(lambda: live.connect(body.owner))
 
 
+@router.post("/safe/disconnect")
+def safe_disconnect() -> dict:
+    from sealed import live
+
+    return _guarded(live.disconnect)
+
+
 @router.post("/safe/prepare")
 def safe_prepare(body: PrepareBody) -> dict:
     from sealed import live

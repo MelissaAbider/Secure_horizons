@@ -32,7 +32,7 @@ Connect any MCP client to the running backend: `claude mcp add secure-horizons -
   credentials from the instance role or the usual AWS variables. Empty model id: deterministic fallback planner.
 - `DRY_RUN_ACTIONS=true` (default): approved moves are simulated. Without a connected Safe, a labelled paper treasury
   (`paper_portfolio` in the rules file) is used so the agent can be tried without keys. `false`: real Fuji moves.
-- Dashboard: Setup page → "Let the agent manage" (one cycle) or "Autopilot every 30s".
+- Dashboard: Setup page → "Let the agent manage" (one cycle) or "Autopilot every 12h" (first cycle at once, then every 12 hours).
 - Bedrock: read timeout 30 s, no retry, at most 1 request per second; an error before the first tool call falls back.
 
 Every cycle is written to `data/evidence/CYC-<block>-<n>.json` with its `record_hash`.

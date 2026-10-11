@@ -1,0 +1,17 @@
+# Tooling configuration only: the Python code runs from the repository root (make setup installs requirements.txt).
+
+[tool.ruff]
+line-length = 130
+target-version = "py311"
+extend-exclude = ["contracts/lib", "contracts/out", "frontend", "data"]
+
+[tool.ruff.lint]
+# pyflakes (undefined names, unused imports and variables) and syntax errors; formatting is not enforced
+select = ["F", "E9"]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest fixtures imported from another module and requested by name as test arguments
+"backend/tests/*" = ["F811"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]

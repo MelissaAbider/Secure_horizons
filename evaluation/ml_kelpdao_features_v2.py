@@ -14,14 +14,13 @@ windows) is computed from normal files only. Output: data/external/ml/kelpdao/wi
 from __future__ import annotations
 
 import json
-import math
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from evaluation.ml_kelpdao_features import SRC, COLLATERAL, BORROWABLE, load_events, per_block, log10
+from evaluation.ml_kelpdao_features import SRC, load_events, per_block, log10
 
 OUT = Path(__file__).resolve().parents[1] / "data" / "external" / "ml" / "kelpdao"
 
