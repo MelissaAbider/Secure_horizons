@@ -8,7 +8,7 @@ import { SafePanel } from '../components/SafePanel'
 import { usePolling } from '../hooks/usePolling'
 import { safeApi } from '../lib/safeApi'
 import {
-  AGENT_INTERVAL_S,
+  AGENT_INTERVAL_S, formatEvery,
   PROTOCOLS, defaultSetup, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
   type SetupState,
 } from '../lib/setup'
@@ -266,7 +266,7 @@ export function Setup() {
 
                         {i === 3 && (
                           <div className="space-y-4">
-                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules, alerts your team on Discord and drafts the DORA notification.{s.agentMode === 'autopilot' ? ` The agent starts managing the money: a cycle every ${AGENT_INTERVAL_S}s, inside the list and the caps.` : ' The agent runs when you ask it.'}</p>
+                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules, alerts your team on Discord and drafts the DORA notification.{s.agentMode === 'autopilot' ? ` The agent starts managing the money: a cycle every ${formatEvery(AGENT_INTERVAL_S)} (the first one right away), inside the list and the caps.` : ' The agent runs when you ask it.'}</p>
                             <ul className="grid gap-2 sm:grid-cols-2">
                               {['Forged bridge release', 'rsETH collateral surge', 'Market liquidity drain', 'Our withdrawable share', 'Bridge or market contained'].map((r, k) => (
                                 <li key={r} className="flex items-center gap-3 rounded-xl border border-ink-700 bg-white px-4 py-3 text-[14px]">

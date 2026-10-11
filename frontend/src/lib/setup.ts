@@ -4,7 +4,10 @@
 
 export type Network = 'fuji' | 'local'
 export type AgentMode = 'autopilot' | 'on_demand'
-export const AGENT_INTERVAL_S = 30
+export const AGENT_INTERVAL_S = 12 * 60 * 60 // autopilot: one proposal cycle every 12 hours (the first runs at once)
+export function formatEvery(seconds: number): string {
+  return seconds >= 3600 ? `${+(seconds / 3600).toFixed(1)}h` : seconds >= 60 ? `${+(seconds / 60).toFixed(1)} min` : `${seconds}s`
+}
 
 export interface Protocol { id: string; label: string; available: boolean }
 export const PROTOCOLS: Protocol[] = [

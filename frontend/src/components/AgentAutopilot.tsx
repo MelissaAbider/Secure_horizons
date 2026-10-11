@@ -3,7 +3,7 @@ import { api, ApiError } from '../api'
 import { usePolling } from '../hooks/usePolling'
 import { formatUsd, formatUtc, shortHash } from '../lib/format'
 import type { AgentMode } from '../lib/setup'
-import { AGENT_INTERVAL_S } from '../lib/setup'
+import { AGENT_INTERVAL_S, formatEvery } from '../lib/setup'
 import type { AgentCycle, AgentMoveRecord } from '../types'
 import { Pill } from './ui'
 
@@ -98,7 +98,7 @@ export function AgentAutopilot({ instructions }: { instructions: string }) {
           <div className="mt-3 flex flex-wrap gap-2">
             {st && <Pill tone={st.model_configured ? 'ok' : 'warn'}>{st.model_configured ? `Bedrock · ${st.region}` : 'no model: fallback planner'}</Pill>}
             {st && <Pill tone={st.dry_run ? 'warn' : 'ok'}>{st.dry_run ? 'dry run: nothing sent' : 'live on Fuji'}</Pill>}
-            {st?.loop && <Pill tone="violet">auto · every {st.interval_s}s</Pill>}
+            {st?.loop && <Pill tone="violet">auto · every {formatEvery(st.interval_s ?? INTERVAL_S)}</Pill>}
             {st?.running && <Pill>thinking…</Pill>}
           </div>
         </div>
@@ -107,7 +107,7 @@ export function AgentAutopilot({ instructions }: { instructions: string }) {
             {busy || st?.running ? 'Agent at work…' : 'Let the agent manage'} <span aria-hidden>→</span>
           </button>
           <button data-testid="agent-loop" disabled={busy || !st} onClick={() => void act(() => api.agentLoop(!st?.loop, INTERVAL_S, instructions))} className={BTN_LIGHT}>
-            {st?.loop ? 'Stop autopilot' : `Autopilot every ${INTERVAL_S}s`}
+            {st?.loop ? 'Stop autopilot' : `Autopilot every ${formatEvery(INTERVAL_S)}`}
           </button>
         </div>
       </div>
@@ -136,7 +136,7 @@ export function AgentAutopilot({ instructions }: { instructions: string }) {
 
 const MODES: { id: AgentMode; title: string; text: string }[] = [
   { id: 'autopilot', title: 'Let the agent manage the money',
-    text: `Every ${AGENT_INTERVAL_S}s, once monitoring starts, the agent reads the markets, your Safe and the alerts, and moves funds itself. Inside the list and the caps it executes; above the signature threshold you sign.` },
+    text: `Every ${formatEvery(AGENT_INTERVAL_S)}, once monitoring starts, the agent reads the markets, your Safe and the alerts, and moves funds itself. Inside the list and the caps it executes; above the signature threshold you sign.` },
   { id: 'on_demand', title: 'Only when I ask',
     text: 'The agent runs one cycle each time you click "Let the agent manage". Same tools, same checks.' },
 ]
