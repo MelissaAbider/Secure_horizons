@@ -79,6 +79,8 @@ export const api = {
   },
   /** Clicks on the withdraw buttons of the Discord alert, newest first (none in fixture mode). */
   discordActions(): Promise<DiscordAction[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/discord/actions') },
+  /** The MCP tools the agent can call (names, descriptions, schemas). */
+  agentTools(): Promise<{ name: string; description: string; read_only: boolean }[]> { return getJson('/api/agent/tools') },
   agentStatus(): Promise<AgentStatus> { return getJson('/api/agent/status') },
   agentCycles(): Promise<AgentCycle[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/agent/cycles') },
   agentMoves(): Promise<AgentMoveRecord[]> { return isFixtureMode() ? Promise.resolve([]) : getJson('/api/agent/moves') },

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { api, ApiError } from '../api'
 import { usePolling } from '../hooks/usePolling'
 import { formatUsd, formatUtc, shortHash } from '../lib/format'
+import type { AgentMode } from '../lib/setup'
+import { AGENT_INTERVAL_S } from '../lib/setup'
 import type { AgentCycle, AgentMoveRecord } from '../types'
 import { Pill } from './ui'
 
@@ -12,7 +14,7 @@ import { Pill } from './ui'
 const CARD = 'rounded-2xl border border-ink-700 bg-white p-5'
 const BTN = 'inline-flex items-center justify-center gap-2 rounded-2xl bg-fog-100 px-5 py-3 text-[15px] font-semibold text-ink-950 transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40'
 const BTN_LIGHT = 'inline-flex items-center justify-center gap-2 rounded-2xl border border-ink-700 bg-white px-4 py-2 text-[14px] font-semibold text-fog-100 transition hover:border-fog-500 disabled:cursor-not-allowed disabled:opacity-40'
-const INTERVAL_S = 30
+const INTERVAL_S = AGENT_INTERVAL_S
 
 const STATUS: Record<AgentMoveRecord['status'], { label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' | 'violet' }> = {
   executed: { label: 'executed', tone: 'ok' },
@@ -129,5 +131,55 @@ export function AgentAutopilot({ instructions }: { instructions: string }) {
         </div>
       </div>
     </section>
+  )
+}
+
+const MODES: { id: AgentMode; title: string; text: string }[] = [
+  { id: 'autopilot', title: 'Let the agent manage the money',
+    text: `Every ${AGENT_INTERVAL_S}s, once monitoring starts, the agent reads the markets, your Safe and the alerts, and moves funds itself. Inside the list and the caps it executes; above the signature threshold you sign.` },
+  { id: 'on_demand', title: 'Only when I ask',
+    text: 'The agent runs one cycle each time you click "Let the agent manage". Same tools, same checks.' },
+]
+
+/** Step 3 of the setup: who drives the money, and the MCP tools the agent may call. */
+export function AgentModeChoice({ mode, onChange }: { mode: AgentMode; onChange: (m: AgentMode) => void }) {
+  const tools = usePolling(() => api.agentTools(), 60000)
+  const status = usePolling(() => api.agentStatus(), 15000)
+  const st = status.data
+  return (
+    <div className="space-y-3" data-testid="agent-mode">
+      <div className="flex items-center justify-between">
+        <span className="font-semibold">Who manages the money</span>
+        {st && <Pill tone={st.model_configured ? 'ok' : 'warn'}>{st.model_configured ? `Claude on Bedrock · ${st.region}` : 'fallback planner (no model)'}</Pill>}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {MODES.map((m) => (
+          <button key={m.id} type="button" data-testid={`agent-mode-${m.id}`} onClick={() => onChange(m.id)}
+            className={`rounded-2xl border p-4 text-left transition ${mode === m.id ? 'border-[#2747E0] bg-blue-50' : 'border-ink-700 bg-white hover:border-fog-500'}`}>
+            <div className="flex items-center gap-2 font-semibold">
+              <span className={`h-3.5 w-3.5 rounded-full border-2 ${mode === m.id ? 'border-[#2747E0] bg-[#2747E0]' : 'border-fog-500'}`} />{m.title}
+            </div>
+            <p className="mt-1.5 text-[13px] text-fog-400">{m.text}</p>
+          </button>
+        ))}
+      </div>
+      <div className="rounded-2xl bg-ink-950 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[14px] font-semibold">What the agent can do (MCP tools)</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-fog-400">no key, never signs</span>
+        </div>
+        {tools.error ? <p className="mt-2 text-[13px] text-fog-400">Start the backend to list the tools.</p> : (
+          <ul className="mt-2 space-y-1.5 text-[13px]">
+            {(tools.data ?? []).map((t) => (
+              <li key={t.name} className="flex gap-2">
+                <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] ${t.read_only ? 'bg-white text-fog-300' : 'bg-blue-50 text-blue-700'}`}>{t.name}</span>
+                <span className="text-fog-400">{t.description}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-[12px] text-fog-400">Every move is re-checked by the platform against the chain and the guaranteed rules, then goes through your Safe's teller window. Your text above guides the strategy; it cannot widen a right.</p>
+      </div>
+    </div>
   )
 }

@@ -1,13 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CHANNEL_NAMES, ChannelLogo } from '../components/ChannelLogo'
-import { ApiError } from '../api'
+import { api, ApiError } from '../api'
 import rabbyLogo from '../assets/rabby.svg'
-import { AgentAutopilot } from '../components/AgentAutopilot'
+import { AgentAutopilot, AgentModeChoice } from '../components/AgentAutopilot'
 import { LiveDemo } from '../components/LiveDemo'
 import { SafePanel } from '../components/SafePanel'
 import { usePolling } from '../hooks/usePolling'
 import { safeApi } from '../lib/safeApi'
 import {
+  AGENT_INTERVAL_S,
   PROTOCOLS, defaultSetup, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
   type SetupState,
 } from '../lib/setup'
@@ -243,13 +244,14 @@ export function Setup() {
                                 ))}
                               </div>
                             </div>
+                            <AgentModeChoice mode={s.agentMode} onChange={(agentMode) => update({ agentMode, agentSaved: false })} />
                             <button data-testid="save-agent" onClick={() => { update({ agentSaved: true }); goNext(2) }} className={BTN}>Save the agent <Arrow /></button>
                           </div>
                         )}
 
                         {i === 3 && (
                           <div className="space-y-4">
-                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules, alerts your team on Discord and drafts the DORA notification. Pulling funds back on its own is phase 2.</p>
+                            <p className="text-fog-400">Your signers seal the policy. From then on, every block, the guard checks the five detection rules, alerts your team on Discord and drafts the DORA notification.{s.agentMode === 'autopilot' ? ` The agent starts managing the money: a cycle every ${AGENT_INTERVAL_S}s, inside the list and the caps.` : ' The agent runs when you ask it.'}</p>
                             <ul className="grid gap-2 sm:grid-cols-2">
                               {['Forged bridge release', 'rsETH collateral surge', 'Market liquidity drain', 'Our withdrawable share', 'Bridge or market contained'].map((r, k) => (
                                 <li key={r} className="flex items-center gap-3 rounded-xl border border-ink-700 bg-white px-4 py-3 text-[14px]">
@@ -257,7 +259,10 @@ export function Setup() {
                                 </li>
                               ))}
                             </ul>
-                            <button data-testid="go-live" onClick={() => { update({ live: true, liveSince: new Date().toISOString() }); setOpen(-1) }} className={BTN}>
+                            <button data-testid="go-live" onClick={() => {
+                              update({ live: true, liveSince: new Date().toISOString() }); setOpen(-1)
+                              if (s.agentMode === 'autopilot') void api.agentLoop(true, AGENT_INTERVAL_S, s.instructions).catch(() => undefined)
+                            }} className={BTN}>
                               Sign with the Safe and start <Arrow />
                             </button>
                           </div>

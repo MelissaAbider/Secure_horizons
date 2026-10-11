@@ -3,6 +3,8 @@
 // phase 2), so the setup lives in this browser and can be downloaded as a policy file.
 
 export type Network = 'fuji' | 'local'
+export type AgentMode = 'autopilot' | 'on_demand'
+export const AGENT_INTERVAL_S = 30
 
 export interface Protocol { id: string; label: string; available: boolean }
 export const PROTOCOLS: Protocol[] = [
@@ -31,6 +33,7 @@ export interface SetupState {
   protocols: string[] // integration ids, e.g. 'lend-eth:WETH'
   rules: Rules
   instructions: string
+  agentMode: AgentMode // autopilot: the agent manages the money on its own once monitoring starts
   agentSaved: boolean
   channels: { discord: boolean; telegram: boolean; slack: boolean; email: boolean }
   live: boolean
@@ -44,7 +47,7 @@ export function defaultSetup(): SetupState {
     safe: '', network: 'fuji', threshold: 1, signers: 1, connected: false, owner: '', sealed: false,
     protocols: ['lend-eth:WETH', 'lend-avax:USDC'],
     rules: { maxPerProtocolPct: 40, maxLossPct: 0.5, humanAboveUsd: 100000, circuitBreaker: true, protocolCaps: {} },
-    instructions: DEFAULT_INSTRUCTIONS, agentSaved: false,
+    instructions: DEFAULT_INSTRUCTIONS, agentMode: 'autopilot', agentSaved: false,
     channels: { discord: true, telegram: false, slack: false, email: true },
     live: false, liveSince: null,
   }
