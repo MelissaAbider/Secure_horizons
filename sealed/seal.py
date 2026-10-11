@@ -16,18 +16,35 @@ from typing import Any, Sequence
 from backend import chain, settings
 from sealed import safe as S
 from sealed.deploy import link
-from sealed.tree import MerkleTree, Operation, check_published, protocol_operations
+from sealed.tree import MerkleTree, Operation, check_published, integration_operations
 
 
-def operations(protocols: Sequence[str], safe_address: str) -> list[Operation]:
+ASSETS = ("USDC", "WETH")
+
+
+def parse_integration(item: str) -> tuple[str, str]:
+    """"lend-eth:WETH" -> ("lend-eth", "WETH"); a bare protocol id means its USDC integration."""
+    protocol, _, asset = item.partition(":")
+    return protocol, asset or "USDC"
+
+
+def available_integrations(dep: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every protocol x asset the asset manager can tick, from deployments/<network>.json (T1)."""
+    return [{"id": f"{m['id']}:{a}", "protocol": m["id"], "asset": a, "label": f"{m['label']} · {a}",
+             "market": m["address"], "token": dep["assets"][a]} for m in dep["lending"] for a in ASSETS]
+
+
+def operations(integrations: Sequence[str], safe_address: str) -> list[Operation]:
     dep = chain.load_deployment()
-    markets = {x["id"]: x["address"] for x in dep["lending"]}
-    unknown = [p for p in protocols if p not in markets]
+    known = {x["id"]: x for x in available_integrations(dep)}
+    ids = [":".join(parse_integration(i)) for i in integrations]
+    unknown = [i for i in ids if i not in known]
     if unknown:
-        raise SystemExit(f"unknown protocol(s) {unknown}; known: {sorted(markets)}")
+        raise ValueError(f"unknown integration(s) {unknown}; known: {sorted(known)}")
     ops = []
-    for p in protocols:
-        ops += protocol_operations(p, markets[p], dep["assets"]["USDC"], safe_address)
+    for i in ids:
+        x = known[i]
+        ops += integration_operations(x["protocol"], x["market"], x["asset"], x["token"], safe_address)
     return ops
 
 
@@ -44,6 +61,7 @@ def seal(protocols: Sequence[str]) -> dict[str, Any]:
     state["root"] = "0x" + tree.root.hex()
     state["sealed"] = {
         "protocols": list(protocols),
+        "integrations": [":".join(parse_integration(p)) for p in protocols],
         "root": state["root"],
         "leaves": [op.to_json() for op in ops],
         "safe_tx_hash": signed["safe_tx_hash"],
@@ -82,7 +100,8 @@ def _short(value: str) -> str:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--protocols", default="lend-avax", help="comma separated lending deployment ids")
+    parser.add_argument("--protocols", default="lend-avax",
+                        help="comma separated integrations: lend-avax (USDC), lend-eth:WETH, ...")
     parser.add_argument("--show", action="store_true", help="print the sealed list and check the on-chain root")
     args = parser.parse_args(argv)
     if args.show:

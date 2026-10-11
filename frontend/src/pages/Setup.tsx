@@ -1,10 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CHANNEL_NAMES, ChannelLogo } from '../components/ChannelLogo'
+import { ApiError } from '../api'
 import { LiveDemo } from '../components/LiveDemo'
+import { SafePanel } from '../components/SafePanel'
+import { usePolling } from '../hooks/usePolling'
+import { safeApi } from '../lib/safeApi'
 import {
-  PROTOCOLS, defaultSetup, isAddress, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
+  PROTOCOLS, defaultSetup, loadSetup, ruleHints, saveSetup, shortAddr, stepsDone,
   type SetupState,
 } from '../lib/setup'
+import { connectWallet, hasWallet, signTypedData, walletError } from '../lib/wallet'
 
 const STEPS = ['Connect your Safe', 'Choose your protocols', 'Set your agent', 'Start monitoring']
 const NEXT = ['connect your Safe.', 'choose your protocols.', 'set your agent.', 'start monitoring.']
@@ -47,20 +52,56 @@ export function Setup() {
   const count = done.filter(Boolean).length
   const firstOpen = done.findIndex((d) => !d)
   const [open, setOpen] = useState<number>(firstOpen === -1 ? -1 : firstOpen)
-  const [addrError, setAddrError] = useState('')
+  const [busy, setBusy] = useState<'connect' | 'module' | 'seal'>()
+  const [err, setErr] = useState('')
   const hints = ruleHints(s.instructions, s.protocols).filter((h) => s.rules.protocolCaps[h.protocolId] !== h.pct)
+  const safe = usePolling(() => safeApi.status(), 5000)
+  const sd = safe.data
+  const integrations = sd?.integrations_available ?? []
+  const labelOf = (id: string) => integrations.find((x) => x.id === id)?.label ?? id
+  const explorer = sd?.network === 'fuji' ? sd.explorer_url : undefined
 
   useEffect(() => { saveSetup(s) }, [s])
+  // the chain is the truth for the Safe: connected once the module is on, sealed once a root is signed
+  useEffect(() => {
+    if (!sd) return
+    const connected = !!(sd.connected && sd.module_enabled)
+    const sealed = connected && sd.seal_status !== 'none'
+    setS((x) => (x.connected === connected && x.sealed === sealed && x.safe === (sd.safe ?? '') && x.owner === (sd.owner ?? ''))
+      ? x : { ...x, connected, sealed, safe: sd.safe ?? '', owner: sd.owner ?? '' })
+  }, [sd])
 
   const update = (p: Partial<SetupState>) => setS((x) => ({ ...x, ...p }))
   const goNext = (i: number) => setOpen(i + 1 < 4 ? i + 1 : -1)
 
-  function connect() {
-    if (!isAddress(s.safe)) { setAddrError('A Safe address is 0x followed by 40 letters or digits.'); return }
-    setAddrError('')
-    update({ connected: true, safe: s.safe.trim() })
-    goNext(0)
+  async function withWallet(step: 'connect' | 'seal', fn: () => Promise<void>) {
+    setErr(''); setBusy(step)
+    try { await fn(); await safe.refresh() }
+    catch (e) { setErr(e instanceof ApiError ? e.detail : walletError(e)) }
+    finally { setBusy(undefined) }
   }
+  // connect the wallet; the platform creates the owner's Safe (1 of 1) and credits test tokens; the owner signs once
+  // to switch on the teller-window module
+  const connect = () => withWallet('connect', async () => {
+    const owner = await connectWallet(sd?.chain_id ?? 43113)
+    let st = await safeApi.connect(owner)
+    if (!st.module_enabled) {
+      setBusy('module')
+      const req = await safeApi.prepare('enable_module')
+      st = (await safeApi.submit(req.safe_tx_hash, await signTypedData(owner, req.typed_data))).status
+    }
+    update({ connected: true, safe: st.safe ?? '', owner })
+    goNext(0)
+  })
+  // the owner signs the Merkle root of the ticked integrations; the platform relays it to the module
+  const seal = () => withWallet('seal', async () => {
+    const owner = await connectWallet(sd?.chain_id ?? 43113)
+    if (owner.toLowerCase() !== (sd?.owner ?? '').toLowerCase()) throw new Error(`Switch your wallet to the Safe owner ${shortAddr(sd?.owner ?? '')}.`)
+    const req = await safeApi.prepare('seal', s.protocols)
+    await safeApi.submit(req.safe_tx_hash, await signTypedData(owner, req.typed_data))
+    update({ sealed: true })
+    goNext(1)
+  })
   function nextAction() {
     const i = done.findIndex((d) => !d)
     if (i === -1) return
@@ -96,7 +137,7 @@ export function Setup() {
               <div className="flex flex-col items-center gap-2">
                 <Ring pct={count * 25} />
                 {count > 0 && (
-                  <button data-testid="restart-setup" onClick={() => { setS(defaultSetup()); setAddrError(''); setOpen(0) }}
+                  <button data-testid="restart-setup" onClick={() => { setS(defaultSetup()); setErr(''); setOpen(0) }}
                     className="rounded-full border border-ink-700 bg-white px-3 py-1 text-[13px] font-medium text-fog-300 transition hover:border-fog-500 hover:text-fog-100">↺ Restart</button>
                 )}
               </div>
@@ -123,32 +164,31 @@ export function Setup() {
                       <div className="px-5 pb-6 pt-1 sm:pl-[4.25rem]">
                         {i === 0 && (
                           <div className="space-y-4">
-                            <p className="text-fog-400">Paste the address of your company's Safe. We only read it: the money stays in the vault and we never hold a key.</p>
-                            <label className="block">
-                              <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Safe address</span>
-                              <input data-testid="safe-input" value={s.safe} onChange={(e) => update({ safe: e.target.value, connected: false })}
-                                placeholder="0x…" spellCheck={false} className={`${INPUT} font-mono`} />
-                            </label>
-                            {addrError && <p role="alert" className="text-[14px] text-rose-glow">{addrError}</p>}
-                            <label className="block">
-                              <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.18em] text-fog-400">Network</span>
-                              <select value={s.network} onChange={(e) => update({ network: e.target.value as SetupState['network'] })} className={INPUT}>
-                                <option value="fuji">Avalanche Fuji (test network)</option>
-                                <option value="local">Local (anvil)</option>
-                              </select>
-                            </label>
-                            <button data-testid="connect-safe" onClick={connect} className={BTN}>Connect the Safe <Arrow /></button>
+                            <p className="text-fog-400">Connect the wallet that controls your treasury. We create a Safe that only you own, credited with test tokens, and you sign once to switch on the guard module. We never hold your key: the platform only relays and pays the gas.</p>
+                            {sd?.connected && (
+                              <div data-testid="safe-summary" className="rounded-xl border border-ink-700 bg-white px-4 py-3 text-[14px]">
+                                <div className="flex justify-between gap-3"><span className="text-fog-400">Safe</span>
+                                  {explorer ? <a href={`${explorer}/address/${sd.safe}`} target="_blank" rel="noreferrer" className="font-mono text-signal-violet hover:underline">{shortAddr(sd.safe ?? '')} ↗</a> : <span className="font-mono">{shortAddr(sd.safe ?? '')}</span>}</div>
+                                <div className="mt-1 flex justify-between gap-3"><span className="text-fog-400">Owner (your wallet)</span><span className="font-mono">{shortAddr(sd.owner ?? '')}</span></div>
+                                <div className="mt-1 flex justify-between gap-3"><span className="text-fog-400">Guard module</span><span>{sd.module_enabled ? 'on' : 'waiting for your signature'}</span></div>
+                              </div>
+                            )}
+                            {!hasWallet() && <p role="alert" className="text-[14px] text-rose-glow">No browser wallet found: install Rabby and turn on testnets.</p>}
+                            {err && open === 0 && <p role="alert" className="text-[14px] text-rose-glow">{err}</p>}
+                            <button data-testid="connect-safe" onClick={() => void connect()} disabled={!!busy || !hasWallet()} className={BTN}>
+                              {busy === 'connect' ? 'Creating your Safe…' : busy === 'module' ? 'Sign in your wallet…' : sd?.connected && sd.module_enabled ? 'Connect again' : 'Connect Rabby'} <Arrow />
+                            </button>
                           </div>
                         )}
 
                         {i === 1 && (
                           <div className="space-y-4">
-                            <p className="text-fog-400">Tick what the agent may use. This becomes the sealed list your signers approve.</p>
+                            <p className="text-fog-400">Tick where your Safe may go, protocol by asset. The platform turns it into a list of operations; you sign its Merkle root, and the module will refuse anything else.</p>
                             <div className="grid gap-3 sm:grid-cols-2">
-                              {PROTOCOLS.map((p) => {
+                              {integrations.map((p) => {
                                 const on = s.protocols.includes(p.id)
                                 return (
-                                  <button key={p.id} type="button" disabled={!p.available} data-testid={`proto-${p.id}`}
+                                  <button key={p.id} type="button" data-testid={`proto-${p.id}`}
                                     onClick={() => update({ protocols: on ? s.protocols.filter((x) => x !== p.id) : [...s.protocols, p.id] })}
                                     className={`flex items-center justify-between rounded-xl border px-4 py-3.5 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${on ? 'border-signal-violet bg-blue-50/70' : 'border-ink-700 bg-white hover:border-fog-500'}`}>
                                     <span className="font-medium">{p.label}</span>
@@ -157,7 +197,10 @@ export function Setup() {
                                 )
                               })}
                             </div>
-                            <button onClick={() => goNext(1)} disabled={s.protocols.length === 0} className={BTN}>Save the list <Arrow /></button>
+                            {err && open === 1 && <p role="alert" className="text-[14px] text-rose-glow">{err}</p>}
+                            <button data-testid="seal" onClick={() => void seal()} disabled={!!busy || !sd?.connected || s.protocols.length === 0} className={BTN}>
+                              {busy === 'seal' ? 'Sign in your wallet…' : 'Seal the list (sign)'} <Arrow />
+                            </button>
                           </div>
                         )}
 
@@ -266,7 +309,8 @@ export function Setup() {
             <dl className="mt-7 divide-y divide-ink-700 text-[15px]">
               {[
                 ['Safe', s.connected ? <span key="safe" className="font-mono">{shortAddr(s.safe)}</span> : '—'],
-                ['Allowed', s.protocols.length ? s.protocols.map((p) => PROTOCOLS.find((x) => x.id === p)?.label).join(', ') : '—'],
+                ['Owner', s.owner ? <span key="owner" className="font-mono">{shortAddr(s.owner)}</span> : '—'],
+                ['Allowed', sd?.sealed_integrations?.length ? sd.sealed_integrations.map(labelOf).join(', ') : '—'],
                 ['Max per protocol', `${s.rules.maxPerProtocolPct}%`],
                 ...Object.entries(s.rules.protocolCaps).map(([pid, pct]) => [`Max on ${PROTOCOLS.find((p) => p.id === pid)?.label ?? pid}`, `${pct}%`]),
                 ['Human signature', `above $${s.rules.humanAboveUsd.toLocaleString('en-US')}`],
@@ -299,6 +343,7 @@ export function Setup() {
           </aside>
         </div>
 
+        {s.live && <SafePanel safe={safe} ticked={s.protocols} />}
         {s.live && <LiveDemo />}
       </div>
     </div>

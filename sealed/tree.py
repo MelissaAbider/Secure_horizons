@@ -76,15 +76,21 @@ class Operation:
                 "leaf": "0x" + self.leaf.hex()}
 
 
-def protocol_operations(protocol_id: str, market: str, usdc: str, safe: str) -> list[Operation]:
-    """What ticking one protocol adds to the list: approve, deposit, withdraw back to the Safe (USDC)."""
-    market, usdc, safe = (to_checksum_address(x) for x in (market, usdc, safe))
+def integration_operations(protocol_id: str, market: str, asset: str, token: str, safe: str) -> list[Operation]:
+    """What ticking one integration (a protocol for one asset) adds to the list: approve, deposit, withdraw back to
+    the Safe. The market, the token and the recipient are pinned; amounts stay free."""
+    market, token, safe = (to_checksum_address(x) for x in (market, token, safe))
     return [
-        Operation(f"Approve USDC for {protocol_id}", usdc, "approve(address,uint256)", (market, FREE)),
-        Operation(f"Deposit USDC on {protocol_id}", market, "supply(address,uint256,address)", (usdc, FREE, safe)),
-        Operation(f"Withdraw USDC from {protocol_id} to the Safe", market, "withdraw(address,uint256,address)",
-                  (usdc, FREE, safe)),
+        Operation(f"Approve {asset} for {protocol_id}", token, "approve(address,uint256)", (market, FREE)),
+        Operation(f"Deposit {asset} on {protocol_id}", market, "supply(address,uint256,address)", (token, FREE, safe)),
+        Operation(f"Withdraw {asset} from {protocol_id} to the Safe", market, "withdraw(address,uint256,address)",
+                  (token, FREE, safe)),
     ]
+
+
+def protocol_operations(protocol_id: str, market: str, usdc: str, safe: str) -> list[Operation]:
+    """The USDC integration of a protocol (the first version of the list)."""
+    return integration_operations(protocol_id, market, "USDC", usdc, safe)
 
 
 def hash_pair(a: bytes, b: bytes) -> bytes:

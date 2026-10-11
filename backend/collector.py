@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -64,6 +65,22 @@ def _configure_poa(client) -> None:
         onion.inject(middleware, name="t3-poa", layer=0)
 
 
+SEALED_STATE_DIR = settings.ROOT / "sealed" / "deployments"  # T10: where a connected Safe is recorded
+
+
+def treasury_wallet(dep: dict, client, block_number: int) -> str:
+    """The monitored wallet: the client's Safe once a wallet is connected (T10, sealed/deployments/<network>.json)
+    and the Safe exists on this chain at this block; otherwise the scenario TreasuryVault."""
+    vault = Web3.to_checksum_address(dep["contracts"]["TreasuryVault"])
+    try:
+        safe = json.loads((SEALED_STATE_DIR / f"{settings.NETWORK}.json").read_text()).get("safe")
+        if safe and len(client.eth.get_code(Web3.to_checksum_address(safe), block_identifier=block_number)) > 0:
+            return Web3.to_checksum_address(safe)
+    except Exception:  # no connected Safe, or a client that cannot tell: keep the vault
+        pass
+    return vault
+
+
 def build_snapshot(block_number: int, client=None) -> Snapshot:
     _uint(block_number)
     client = chain.w3() if client is None else client
@@ -78,7 +95,8 @@ def build_snapshot(block_number: int, client=None) -> Snapshot:
     by_address = {address.lower(): symbol for symbol, address in assets.items()}
     if len(assets) != len(by_address):
         raise ValueError("Duplicate asset addresses in deployment")
-    vault_address = Web3.to_checksum_address(dep["contracts"]["TreasuryVault"])
+    vault_address = treasury_wallet(dep, client, block_number)
+    is_vault = vault_address == Web3.to_checksum_address(dep["contracts"]["TreasuryVault"])
     first = client.eth.get_block(block_number)
     if first["number"] != block_number or not first.get("hash"):
         raise ValueError("RPC did not return the requested mined block")
@@ -92,7 +110,7 @@ def build_snapshot(block_number: int, client=None) -> Snapshot:
         return getattr(obj.functions, name)(*args).call(block_identifier=block_number)
 
     oracle, _ = contract("MockOracle", dep["contracts"]["MockOracle"])
-    vault, _ = contract("TreasuryVault", vault_address)
+    vault, _ = contract("TreasuryVault", dep["contracts"]["TreasuryVault"])
     bridge, bridge_abi = contract("MockBridge", dep["contracts"]["MockBridge"])
     bridge_functions = {entry.get("name") for entry in bridge_abi if entry.get("type") == "function"}
     metadata, tokens, pending_cache = {}, [], {}
@@ -176,7 +194,7 @@ def build_snapshot(block_number: int, client=None) -> Snapshot:
                                                    withdrawable_usd=_usd(withdrawable, decimals, price_e8)))
         if known_reserves != set(assets):
             raise ValueError("Configured MiniLend inventory is incomplete")
-    deposits_paused = call(vault, "depositsPaused")
+    deposits_paused = call(vault, "depositsPaused") if is_vault else False  # a Safe has no deposit switch
     if type(deposits_paused) is not bool:
         raise ValueError("Invalid treasury pause state")
     idle = {symbol: str(_uint(call(obj, "balanceOf", vault_address))) for symbol, (obj, _, _) in metadata.items()}

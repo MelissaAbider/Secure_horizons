@@ -26,8 +26,11 @@ def run_attack(p: AttackParams, run_id: str, emit: Emitter, skip_seed_check: boo
     from scenario.seed import detect_seed_state
 
     preflight(("attacker", "protocol_guardian"), (0,))
-    if not skip_seed_check and detect_seed_state() != "seeded":
-        raise PreflightError("chain not in the reference state: run make reset (or make seed on a fresh deployment)")
+    if not skip_seed_check:
+        state = detect_seed_state()  # "partial" is fine as long as the attack was not played yet (e.g. a Safe deposited)
+        played = chain.bridge().functions.conservationGap().call() > 0 or reserve(p.market, "rsETH")["frozen"]
+        if state == "empty" or (state == "partial" and played):
+            raise PreflightError("the attack was already played on this deployment (or nothing is seeded): run make reset")
     w3 = chain.w3()
     attacker, protocol_guardian, lender = chain.account("attacker"), chain.account("protocol_guardian"), chain.bot_accounts()[0]
     market, A = chain.lending(p.market), p.drain_asset

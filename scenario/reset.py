@@ -11,7 +11,7 @@ import subprocess
 import sys
 from typing import Optional, Sequence
 
-from backend import settings
+from backend import chain, settings
 from scenario.common import Emitter, ScenarioError, maintenance, new_run_id, run_main
 from scenario.seed import run_seed
 
@@ -25,6 +25,23 @@ def _fingerprint() -> Optional[tuple]:
     except ValueError:
         block = None
     return f.stat().st_mtime_ns, block
+
+
+def refund_safe(emit: Emitter) -> None:
+    """T10: the connected Safe gets its test tokens again on the new token contracts. Its list points to the old
+    markets, so the dashboard asks the owner to seal it again (a new signature)."""
+    try:
+        from sealed import live
+        from sealed import safe as S
+
+        state = S.load_state()
+        if not len(chain.w3().eth.get_code(state["safe"])):
+            return
+        live.fund(state)
+    except Exception as exc:  # no connected Safe on this network: nothing to do
+        emit("safe", f"no Safe to credit ({type(exc).__name__})", status="info")
+        return
+    emit("safe", f"Safe {state['safe']} credited with test tokens; its list must be sealed again", status="info")
 
 
 def run_reset(emit: Emitter, deploy_cmd: Sequence[str] = ("make", "deploy", "FORCE=1")) -> None:
@@ -42,6 +59,7 @@ def run_reset(emit: Emitter, deploy_cmd: Sequence[str] = ("make", "deploy", "FOR
         if _fingerprint() in (None, before):
             raise ScenarioError(f"{settings.DEPLOYMENTS_FILE.name} was not rewritten by the deployment")
         run_seed(emit, manage_maintenance=False)
+        refund_safe(emit)
 
 
 def main(argv: Optional[list[str]] = None) -> int:

@@ -64,7 +64,7 @@ One row per task. The check is the task's `make test-tN`, plus its acceptance te
 | T7 | Evaluation and metrics | not started | measurement | `make test-t7` |
 | T8 | AWS, CI and hosted demo | not started | hosting | `make test-t8` |
 | T9 | Jury deliverables | not started | pitch | `make test-t9` |
-| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1, the asset manager signs alone (12 Foundry + 8 pytest on anvil; Fuji run below); caps and the facts gate not built | 1, 2, 4 (list only) | `make test-t10` |
+| T10 | Sealed list: Safe, teller-window module, Merkle root (`docs/tasks/T10.md`) | done v1 + dashboard: Rabby-owned Safe (owner signs module and seal in the wallet, platform relays), USDC and WETH integrations, allocate from the setup page, monitor watches the Safe | 1, 2, 4 (list only) | `make test-t10` |
 
 ### Fuji run (2026-10-11, default attack, seed 0, T3 engine live on Alchemy RPC, polling every ~12 s)
 

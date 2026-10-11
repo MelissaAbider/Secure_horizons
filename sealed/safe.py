@@ -149,3 +149,60 @@ def exec_safe_tx(safe_address: str, to: str, data: bytes, signers: Sequence, rel
     if receipt["status"] != 1:
         raise RuntimeError(f"Safe transaction {receipt['tx_hash']} failed")
     return {**receipt, "safe_tx_hash": Web3.to_hex(safe_tx_hash), "signers": [a.address for a in ordered]}
+
+
+# ---------- Safe transactions signed in the asset manager's wallet (Rabby) ----------
+
+SAFE_TX_TYPES = [
+    {"name": "to", "type": "address"}, {"name": "value", "type": "uint256"}, {"name": "data", "type": "bytes"},
+    {"name": "operation", "type": "uint8"}, {"name": "safeTxGas", "type": "uint256"}, {"name": "baseGas", "type": "uint256"},
+    {"name": "gasPrice", "type": "uint256"}, {"name": "gasToken", "type": "address"},
+    {"name": "refundReceiver", "type": "address"}, {"name": "nonce", "type": "uint256"},
+]
+
+
+def safe_tx_request(safe_address: str, to: str, data: bytes | str) -> dict[str, Any]:
+    """What the owner's wallet signs (eth_signTypedData_v4): a Safe v1.4.1 SafeTx, CALL, no value, no refund."""
+    from web3 import Web3
+
+    data = Web3.to_bytes(hexstr=data) if isinstance(data, str) else data
+    safe = contract("SafeL2", safe_address)
+    to = Web3.to_checksum_address(to)
+    nonce = safe.functions.nonce().call()
+    safe_tx_hash = safe.functions.getTransactionHash(to, 0, data, 0, 0, 0, 0, ZERO, ZERO, nonce).call()
+    typed = {
+        "types": {"EIP712Domain": [{"name": "chainId", "type": "uint256"}, {"name": "verifyingContract", "type": "address"}],
+                  "SafeTx": SAFE_TX_TYPES},
+        "domain": {"chainId": settings.CHAIN_ID, "verifyingContract": Web3.to_checksum_address(safe_address)},
+        "primaryType": "SafeTx",
+        "message": {"to": to, "value": 0, "data": Web3.to_hex(data), "operation": 0, "safeTxGas": 0, "baseGas": 0,
+                    "gasPrice": 0, "gasToken": ZERO, "refundReceiver": ZERO, "nonce": nonce},
+    }
+    return {"typed_data": typed, "safe_tx_hash": Web3.to_hex(safe_tx_hash), "to": to, "data": Web3.to_hex(data)}
+
+
+def submit_signed_safe_tx(request: dict[str, Any], signature: str, owner: str, relayer) -> dict[str, Any]:
+    """Checks the wallet signed exactly this SafeTx with the owner's key, then the relayer submits execTransaction.
+    The platform pays the gas and never holds the owner's key."""
+    from eth_account import Account
+    from eth_account.messages import encode_typed_data
+    from web3 import Web3
+
+    sig = bytearray(Web3.to_bytes(hexstr=signature))
+    if len(sig) != 65:
+        raise ValueError("expected a 65-byte signature")
+    if sig[64] < 27:  # some wallets return v as 0/1
+        sig[64] += 27
+    signable = encode_typed_data(full_message=request["typed_data"])
+    signer = Account.recover_message(signable, signature=bytes(sig))
+    if signer.lower() != owner.lower():
+        raise PermissionError(f"signed by {signer}, not by the Safe owner {owner}")
+    safe = contract("SafeL2", request["typed_data"]["domain"]["verifyingContract"])
+    to, data = request["to"], Web3.to_bytes(hexstr=request["data"])
+    nonce = request["typed_data"]["message"]["nonce"]
+    if safe.functions.nonce().call() != nonce:
+        raise ValueError("the Safe nonce moved since this request: prepare it again")
+    receipt = chain.send(safe.functions.execTransaction(to, 0, data, 0, 0, 0, 0, ZERO, ZERO, bytes(sig)), relayer)
+    if receipt["status"] != 1:
+        raise RuntimeError(f"Safe transaction {receipt['tx_hash']} failed")
+    return {**receipt, "safe_tx_hash": request["safe_tx_hash"], "signers": [Web3.to_checksum_address(signer)]}
