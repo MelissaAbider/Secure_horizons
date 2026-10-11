@@ -48,7 +48,7 @@ describe('Setup page', () => {
     await userEvent.click(await screen.findByTestId('seal'))
     await waitFor(() => expect(screen.getByTestId('setup-count')).toHaveTextContent('2 of 4 steps done'))
     expect(signed).toEqual(['enable_module', 'seal'])
-    expect(await screen.findByTestId('rule-hint')).toHaveTextContent('Never more than 30% on Aave')
+    expect(screen.queryByTestId('rule-hint')).toBeNull()  // the default instructions hold no hidden rule
     await userEvent.click(screen.getByTestId('save-agent'))
     expect(screen.queryByTestId('live-demo')).toBeNull()
     await userEvent.click(screen.getByTestId('go-live'))

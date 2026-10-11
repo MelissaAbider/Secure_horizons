@@ -35,6 +35,7 @@ data/external/*
 !data/external/README.md
 deployments/local.json
 deployments/*.pending.json
+deployments/*.raw.json
 deployments/history/local-*
 frontend/.env*
 !frontend/.env.example

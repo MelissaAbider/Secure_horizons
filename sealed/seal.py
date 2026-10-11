@@ -28,9 +28,13 @@ def parse_integration(item: str) -> tuple[str, str]:
     return protocol, asset or "USDC"
 
 
+CHAINS = {"lend-eth": "Ethereum", "lend-avax": "Avalanche"}  # the network each lending deployment stands for
+
+
 def available_integrations(dep: dict[str, Any]) -> list[dict[str, Any]]:
-    """Every protocol x asset the asset manager can tick, from deployments/<network>.json (T1)."""
-    return [{"id": f"{m['id']}:{a}", "protocol": m["id"], "asset": a, "label": f"{m['label']} · {a}",
+    """Every protocol x asset the asset manager can tick, from deployments/<network>.json (T1): "lend-weth on Ethereum"."""
+    return [{"id": f"{m['id']}:{a}", "protocol": m["id"], "asset": a,
+             "label": f"lend-{a.lower()} on {CHAINS.get(m['id'], m['id'])}",
              "market": m["address"], "token": dep["assets"][a]} for m in dep["lending"] for a in ASSETS]
 
 

@@ -37,7 +37,7 @@ export interface SetupState {
   liveSince: string | null
 }
 
-export const DEFAULT_INSTRUCTIONS = 'Capital preservation first.\nAim for 5 to 7% a year on stablecoins.\nPrefer protocols older than two years.\nAt most three moves a day.\nNever more than 30% on Aave.'
+export const DEFAULT_INSTRUCTIONS = 'Capital preservation first.\nAim for 5 to 7% a year on stablecoins.\nPrefer protocols older than two years.\nAt most three moves a day.'
 
 export function defaultSetup(): SetupState {
   return {

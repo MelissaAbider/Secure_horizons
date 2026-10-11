@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CHANNEL_NAMES, ChannelLogo } from '../components/ChannelLogo'
 import { ApiError } from '../api'
+import rabbyLogo from '../assets/rabby.svg'
 import { LiveDemo } from '../components/LiveDemo'
 import { SafePanel } from '../components/SafePanel'
 import { usePolling } from '../hooks/usePolling'
@@ -21,6 +22,7 @@ function Eyebrow({ children }: { children: ReactNode }) {
 const BTN = 'inline-flex items-center justify-center gap-2 rounded-2xl bg-fog-100 px-6 py-3.5 text-[15px] font-semibold text-ink-950 shadow-[0_8px_24px_-10px_rgba(14,20,36,.6)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40'
 const BTN_LIGHT = 'inline-flex items-center justify-center gap-2 rounded-2xl border border-ink-700 bg-white px-6 py-3.5 text-[15px] font-semibold text-fog-100 transition hover:border-fog-500'
 const INPUT = 'w-full rounded-xl border border-ink-700 bg-white px-4 py-3 text-[15px] outline-none transition focus:border-signal-violet focus:ring-4 focus:ring-blue-100'
+const WALLET_BTN = 'inline-flex items-center gap-3 rounded-2xl border border-ink-700 bg-white px-5 py-3 text-[15px] font-semibold text-fog-100 shadow-soft transition hover:border-[#7084FF] disabled:cursor-not-allowed disabled:opacity-50'
 const Arrow = () => <span aria-hidden>→</span>
 
 function Ring({ pct }: { pct: number }) {
@@ -34,15 +36,6 @@ function Ring({ pct }: { pct: number }) {
       </svg>
       <span data-testid="setup-pct" className="font-display text-[17px] font-semibold tabular-nums">{pct}%</span>
     </div>
-  )
-}
-
-function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? 'bg-signal-violet' : 'bg-ink-600'}`}>
-      <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-6' : 'left-1'}`} />
-    </button>
   )
 }
 
@@ -175,8 +168,9 @@ export function Setup() {
                             )}
                             {!hasWallet() && <p role="alert" className="text-[14px] text-rose-glow">No browser wallet found: install Rabby and turn on testnets.</p>}
                             {err && open === 0 && <p role="alert" className="text-[14px] text-rose-glow">{err}</p>}
-                            <button data-testid="connect-safe" onClick={() => void connect()} disabled={!!busy || !hasWallet()} className={BTN}>
-                              {busy === 'connect' ? 'Creating your Safe…' : busy === 'module' ? 'Sign in your wallet…' : sd?.connected && sd.module_enabled ? 'Connect again' : 'Connect Rabby'} <Arrow />
+                            <button data-testid="connect-safe" onClick={() => void connect()} disabled={!!busy || !hasWallet()} className={WALLET_BTN}>
+                              <img src={rabbyLogo} alt="" className="h-7 w-7" />
+                              {busy === 'connect' ? 'Creating your Safe…' : busy === 'module' ? 'Sign in Rabby…' : sd?.connected && sd.module_enabled ? 'Reconnect Rabby' : 'Connect Rabby'}
                             </button>
                           </div>
                         )}
@@ -184,19 +178,20 @@ export function Setup() {
                         {i === 1 && (
                           <div className="space-y-4">
                             <p className="text-fog-400">Tick where your Safe may go, protocol by asset. The platform turns it into a list of operations; you sign its Merkle root, and the module will refuse anything else.</p>
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            <ul className="divide-y divide-ink-700 overflow-hidden rounded-xl border border-ink-700 bg-white" data-testid="integrations">
                               {integrations.map((p) => {
                                 const on = s.protocols.includes(p.id)
                                 return (
-                                  <button key={p.id} type="button" data-testid={`proto-${p.id}`}
-                                    onClick={() => update({ protocols: on ? s.protocols.filter((x) => x !== p.id) : [...s.protocols, p.id] })}
-                                    className={`flex items-center justify-between rounded-xl border px-4 py-3.5 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${on ? 'border-signal-violet bg-blue-50/70' : 'border-ink-700 bg-white hover:border-fog-500'}`}>
-                                    <span className="font-medium">{p.label}</span>
-                                    <span className={`grid h-5 w-5 place-items-center rounded-md text-[12px] ${on ? 'bg-signal-violet text-white' : 'border border-ink-600'}`}>{on ? '✓' : ''}</span>
-                                  </button>
+                                  <li key={p.id}>
+                                    <label data-testid={`proto-${p.id}`} className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-[15px] transition hover:bg-blue-50/50">
+                                      <input type="checkbox" checked={on} className="h-4 w-4 accent-[#2747E0]"
+                                        onChange={() => update({ protocols: on ? s.protocols.filter((x) => x !== p.id) : [...s.protocols, p.id] })} />
+                                      <span className="font-mono">{p.label}</span>
+                                    </label>
+                                  </li>
                                 )
                               })}
-                            </div>
+                            </ul>
                             {err && open === 1 && <p role="alert" className="text-[14px] text-rose-glow">{err}</p>}
                             <button data-testid="seal" onClick={() => void seal()} disabled={!!busy || !sd?.connected || s.protocols.length === 0} className={BTN}>
                               {busy === 'seal' ? 'Sign in your wallet…' : 'Seal the list (sign)'} <Arrow />
@@ -222,17 +217,6 @@ export function Setup() {
                                   <input type="range" min={0.1} max={2} step={0.1} value={s.rules.maxLossPct} aria-label="Max loss per move"
                                     onChange={(e) => update({ rules: { ...s.rules, maxLossPct: Number(e.target.value) }, agentSaved: false })} className="mt-2 w-full accent-[#2747E0]" />
                                 </label>
-                                <label className="flex items-center justify-between gap-3 text-[14px]">
-                                  <span className="text-fog-300">Human signature above</span>
-                                  <select value={s.rules.humanAboveUsd} onChange={(e) => update({ rules: { ...s.rules, humanAboveUsd: Number(e.target.value) }, agentSaved: false })}
-                                    className="rounded-lg border border-ink-700 bg-white px-2 py-1.5 font-mono">
-                                    {[25000, 50000, 100000, 250000].map((v) => <option key={v} value={v}>${v.toLocaleString('en-US')}</option>)}
-                                  </select>
-                                </label>
-                                <div className="flex items-center justify-between text-[14px]">
-                                  <span className="text-fog-300">Circuit breaker</span>
-                                  <Toggle on={s.rules.circuitBreaker} label="Circuit breaker" onChange={(v) => update({ rules: { ...s.rules, circuitBreaker: v }, agentSaved: false })} />
-                                </div>
                                 {Object.entries(s.rules.protocolCaps).map(([pid, pct]) => (
                                   <div key={pid} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-[14px]">
                                     <span className="text-fog-300">Max on {PROTOCOLS.find((p) => p.id === pid)?.label ?? pid}</span>
@@ -256,7 +240,6 @@ export function Setup() {
                                       className="mt-2 rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white hover:bg-amber-700">Make it a rule</button>
                                   </div>
                                 ))}
-                                <p className="text-[13px] text-fog-400">Instructions guide the agent's choices. They give it no rights.</p>
                               </div>
                             </div>
                             <button data-testid="save-agent" onClick={() => { update({ agentSaved: true }); goNext(2) }} className={BTN}>Save the agent <Arrow /></button>
@@ -313,7 +296,6 @@ export function Setup() {
                 ['Allowed', sd?.sealed_integrations?.length ? sd.sealed_integrations.map(labelOf).join(', ') : '—'],
                 ['Max per protocol', `${s.rules.maxPerProtocolPct}%`],
                 ...Object.entries(s.rules.protocolCaps).map(([pid, pct]) => [`Max on ${PROTOCOLS.find((p) => p.id === pid)?.label ?? pid}`, `${pct}%`]),
-                ['Human signature', `above $${s.rules.humanAboveUsd.toLocaleString('en-US')}`],
               ].map(([k, v]) => (
                 <div key={String(k)} className="flex items-start justify-between gap-4 py-3">
                   <dt className="text-fog-400">{k}</dt><dd className="text-right font-medium">{v}</dd>

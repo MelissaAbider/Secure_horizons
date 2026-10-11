@@ -9,11 +9,24 @@ const CHAINS: Record<number, { chainName: string; rpcUrls: string[]; blockExplor
   31337: { chainName: 'Anvil (local)', rpcUrls: ['http://127.0.0.1:8545'], blockExplorerUrls: [] },
 }
 
-export function hasWallet(): boolean { return typeof window !== 'undefined' && !!window.ethereum }
+// EIP-6963: each installed wallet announces itself (name, icon, rdns), so Rabby is used even next to MetaMask
+interface Announced { info: { uuid: string; name: string; icon: string; rdns: string }; provider: Eip1193 }
+const announced: Announced[] = []
+if (typeof window !== 'undefined') {
+  window.addEventListener('eip6963:announceProvider', (e) => {
+    const d = (e as CustomEvent<Announced>).detail
+    if (d && !announced.some((x) => x.info.uuid === d.info.uuid)) announced.push(d)
+  })
+  window.dispatchEvent(new Event('eip6963:requestProvider'))
+}
+
+export function hasWallet(): boolean { return typeof window !== 'undefined' && (announced.length > 0 || !!window.ethereum) }
 
 function wallet(): Eip1193 {
-  if (!window.ethereum) throw new Error('No browser wallet found: install Rabby and turn on testnets.')
-  return window.ethereum
+  const rabby = announced.find((d) => d.info.rdns === 'io.rabby')?.provider
+  const any = rabby ?? window.ethereum ?? announced[0]?.provider
+  if (!any) throw new Error('No browser wallet found: install Rabby and turn on testnets.')
+  return any
 }
 
 /** Asks for the account, then switches the wallet to the backend's chain (adding it when unknown). */
