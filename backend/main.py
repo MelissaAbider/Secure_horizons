@@ -36,6 +36,9 @@ if engine and responder:
     engine.on_alerts(responder.handle)
 if responder and incidents:
     responder.on_decisions(incidents.handle)
+_alerting = _optional("backend.alerting")
+if engine and _alerting and not responder:  # detection-only mode: Discord + DORA draft, no fund movement
+    engine.on_alerts(_alerting.Alerting(store).handle)
 
 
 @asynccontextmanager
